@@ -1616,7 +1616,7 @@ wanlink_hook(int eid, webs_t wp, int argc, char **argv)
 				man_ifstate = get_if_state(man_ifname, addr4_man);
 				
 				/* skip PPPoE traffic collect with HW_NAT enabled */
-				if (wan_ifstate > 0 && (wisp || wan_proto != IPV4_WAN_PROTO_PPPOE || nvram_get_int("hw_nat_mode") == 2)) {
+				if (wan_ifstate > 0 && (wisp || wan_proto != IPV4_WAN_PROTO_PPPOE || nvram_get_int("hw_nat_mode") == 0)) {
 					wan_bytes_rx = get_ifstats_bytes_rx(wan_ifname);
 					wan_bytes_tx = get_ifstats_bytes_tx(wan_ifname);
 				}
@@ -1629,7 +1629,7 @@ wanlink_hook(int eid, webs_t wp, int argc, char **argv)
 #if !defined (USE_SINGLE_MAC)
 								strcmp(man_ifname, IFNAME_MAC2) == 0 ||
 #endif
-								nvram_get_int("hw_nat_mode") == 2
+								nvram_get_int("hw_nat_mode") == 0
 							)
 				    ) {
 					wan_bytes_rx = get_ifstats_bytes_rx(man_ifname);
@@ -2228,11 +2228,6 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 #else
 	int found_app_vlmcsd = 0;
 #endif
-#if defined(APP_NAPT66)
-	int found_app_napt66 = 1;
-#else
-	int found_app_napt66 = 0;
-#endif
 #if defined(APP_SHADOWSOCKS)
 	int found_app_shadowsocks = 1;
 #else
@@ -2411,7 +2406,6 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 		"function found_app_scutclient() { return %d;}\n"
 		"function found_app_ttyd() { return %d;}\n"
 		"function found_app_vlmcsd() { return %d;}\n"
-		"function found_app_napt66() { return %d;}\n"
 		"function found_app_dnsforwarder() { return %d;}\n"
 		"function found_app_shadowsocks() { return %d;}\n"
 		"function found_app_xupnpd() { return %d;}\n"
@@ -2433,7 +2427,6 @@ ej_firmware_caps_hook(int eid, webs_t wp, int argc, char **argv)
 		found_app_scutclient,
 		found_app_ttyd,
 		found_app_vlmcsd,
-		found_app_napt66,
 		found_app_dnsforwarder,
 		found_app_shadowsocks,
 		found_app_xupnpd,
@@ -2941,6 +2934,8 @@ void get_memdata(struct mem_stats *st)
 		{
 			fgets(line_buf, sizeof(line_buf), fp);
 			sscanf(line_buf, "MemFree: %lu %*s", &st->free);
+
+			fgets(line_buf, sizeof(line_buf), fp);	/* skip MemAvailable */
 			
 			fgets(line_buf, sizeof(line_buf), fp);
 			sscanf(line_buf, "Buffers: %lu %*s", &st->buffers);

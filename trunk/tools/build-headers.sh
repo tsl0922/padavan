@@ -4,11 +4,7 @@ THISDIR=`pwd`
 
 . ${THISDIR}/../.config
 
-if [ "$CONFIG_LINUXDIR" = "linux-3.0.x" ] ; then
-	CONFIG_CROSS_COMPILER_PATH="$CONFIG_TOOLCHAIN_DIR/toolchain-3.0.x/bin"
-elif [ "$CONFIG_LINUXDIR" = "linux-3.4.x" ] ; then
-	CONFIG_CROSS_COMPILER_PATH="$CONFIG_TOOLCHAIN_DIR/toolchain-3.4.x/bin"
-fi
+CONFIG_CROSS_COMPILER_PATH="$CONFIG_TOOLCHAIN_DIR/toolchain-4.4.x/bin"
 
 export PATH="${CONFIG_CROSS_COMPILER_PATH}:$PATH"
 

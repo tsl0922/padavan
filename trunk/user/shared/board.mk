@@ -1,8 +1,9 @@
 ##################################################################
 # Board PID # Board Name       # PRODUCT # Note
 ##################################################################
-# RT-N56U   # ASUS RT-N56U     # RT3883  #
+# AC860M    # AC860M           # MT7621  #
 ##################################################################
 
-CFLAGS += -DBOARD_N56U -DVENDOR_ASUS
-BOARD_NUM_USB_PORTS=2
+CFLAGS += -DBOARD_AC860M
+BOARD_NUM_USB_PORTS=1
+CONFIG_BOARD_RAM_SIZE=256

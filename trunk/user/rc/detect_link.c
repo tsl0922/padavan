@@ -344,7 +344,7 @@ dl_update_leds(void)
 		dl_handle_link_usb(1);
 	}
 #endif
-#if defined (BOARD_K2P) || defined (BOARD_PSG1218)
+#if 0
 	LED_CONTROL(BOARD_GPIO_LED_WIFI, (dl_state) ? LED_OFF : LED_ON);
 #elif defined (BOARD_GPIO_LED_WIFI)
 	LED_CONTROL(BOARD_GPIO_LED_WIFI, LED_ON);

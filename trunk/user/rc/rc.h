@@ -507,8 +507,6 @@ int start_rstats(void);
 void restart_rstats(void);
 int start_logger(int showinfo);
 void stop_logger(void);
-void start_watchdog_cpu(void);
-void restart_watchdog_cpu(void);
 int start_services_once(int is_ap_mode);
 void stop_services(int stopall);
 void stop_services_lan_wan(void);
@@ -544,9 +542,6 @@ void update_gfwlist(void);
 void stop_vlmcsd(void);
 void start_vlmcsd(void);
 void restart_vlmcsd(void);
-#endif
-#if defined(APP_NAPT66)
-void start_napt66(void);
 #endif
 #if defined(APP_DNSFORWARDER)
 void stop_dnsforwarder(void);
@@ -656,7 +651,6 @@ void stop_lpd(void);
 void start_p910nd(char *devlp);
 void stop_p910nd(void);
 void safe_remove_usb_device(int port, const char *dev_name);
-void power_control_usb_port(int port, int power_on);
 void restart_usb_printer_spoolers(void);
 void stop_usb_printer_spoolers(void);
 void try_start_usb_printer_spoolers(void);

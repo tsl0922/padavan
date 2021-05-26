@@ -411,7 +411,6 @@ struct nvram_pair router_defaults[] = {
 	{ "hdd_apmoff", "0" },
 
 	{ "ip6_service", "" },
-	{ "ip6_ppe_on", "0" },
 	{ "ip6_wan_if", "0" },
 
 	{ "ip6_6in4_remote", "" },
@@ -536,9 +535,6 @@ struct nvram_pair router_defaults[] = {
 	/* ttyd related */
 	{ "ttyd_enable", "0" },
 	{ "ttyd_port", "7681" },
-
-	/* NAPT66 */
-	{ "napt66_enable", "0" },
 #endif
 
 #if defined(APP_VLMCSD)
@@ -726,7 +722,6 @@ struct nvram_pair router_defaults[] = {
 	{ "fn2_action_short", "0" },
 	{ "fn2_action_long", "0" },
 #endif
-	{ "watchdog_cpu", "1" },
 	{ "front_led_all", "1" },
 	{ "front_led_wan", "2" },
 	{ "front_led_lan", "2" },
@@ -738,7 +733,6 @@ struct nvram_pair router_defaults[] = {
 	{ "ether_uport", "0" },		/* WAN port in AP mode is static upstream by default */
 	{ "ether_m2u", "2" },
 	{ "ether_green", "1" },
-	{ "ether_eee", "0" },
 #if defined(USE_RTL8367)
 	{ "ether_jumbo", "1" },
 #else
@@ -771,16 +765,7 @@ struct nvram_pair router_defaults[] = {
 	{ "ether_flow_lan7", "0" },
 #endif
 #endif
-
-#if defined(CONFIG_RALINK_MT7621) || (defined(CONFIG_RALINK_MT7620) && !defined(BOARD_N14U))
-#if defined(USE_MT7615_AP) || (USE_MT7915_AP) // hwnat is disabled by default
-	{ "hw_nat_mode", "2" },
-#else
-	{ "hw_nat_mode", "4" },
-#endif
-#else
-	{ "hw_nat_mode", "1" },
-#endif
+	{ "hw_nat_mode", "0" },
 	{ "sw_nat_mode", "0" },
 #if defined(USE_SFE)
 	{ "sfe_enable", "0" },
@@ -800,7 +785,6 @@ struct nvram_pair router_defaults[] = {
 	{ "nf_alg_ftp1", "" },
 	{ "nf_alg_pptp", "0" },
 	{ "nf_alg_h323", "0" },
-	{ "nf_alg_rtsp", "0" },
 	{ "nf_alg_sip", "0" },
 
 	{ "help_enable", "1" },

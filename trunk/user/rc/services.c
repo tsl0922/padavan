@@ -381,23 +381,6 @@ void restart_dnsforwarder(void){
 }
 #endif
 
-#if defined(APP_NAPT66)
-void start_napt66(void){
-	int napt66_mode = nvram_get_int("napt66_enable");
-	char *wan6_ifname = nvram_get("wan0_ifname_t");
-	if (napt66_mode == 1) {
-		if (wan6_ifname) {
-			char napt66_para[32];
-			logmessage("napt66","wan6 ifname: %s",wan6_ifname);
-			snprintf(napt66_para,sizeof(napt66_para),"wan_if=%s",wan6_ifname);
-			module_smart_load("napt66", napt66_para);
-		} else {
-			logmessage("napt66","Invalid wan6 ifname!");
-		}
-	}
-}
-#endif
-
 void
 start_httpd(int restart_fw)
 {
@@ -554,22 +537,6 @@ stop_logger(void)
 	kill_services(svcs, 3, 1);
 }
 
-void
-start_watchdog_cpu(void)
-{
-	if (nvram_get_int("watchdog_cpu") != 0)
-		module_smart_load("rt_timer_wdg", NULL);
-}
-
-void
-restart_watchdog_cpu(void)
-{
-	if (nvram_get_int("watchdog_cpu") == 0)
-		module_smart_unload("rt_timer_wdg", 0);
-	else
-		module_smart_load("rt_timer_wdg", NULL);
-}
-
 int
 start_services_once(int is_ap_mode)
 {
@@ -616,7 +583,6 @@ start_services_once(int is_ap_mode)
 	start_vlmcsd();
 #endif
 	start_lltd();
-	start_watchdog_cpu();
 	start_crond();
 	start_networkmap(1);
 	start_rstats();

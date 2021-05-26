@@ -17,7 +17,7 @@
 
 int get_usb_root_port_by_sd_device(const char *device_name)
 {
-	char usb_path[PATH_MAX];
+	char usb_path[PATH_MAX] = {0};
 
 	if (!get_blk_sd_path_by_device(device_name, usb_path, sizeof(usb_path)))
 		return -1;

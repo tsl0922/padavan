@@ -16,7 +16,7 @@ cp -f configs/templates/$1.config .config
 ROOTDIR=`pwd`
 export ROOTDIR=$ROOTDIR
 
-kernel_id="3.4.x"
+kernel_id="4.4.x"
 kernel_cf=""
 kernel_tf=""
 busybox_id="1.24.x"
@@ -119,150 +119,6 @@ cp -fL "$kernel_cf" "$kernel_tf"
 cp -fL "$busybox_cf" "$busybox_tf"
 cp -fL "$board_mk" "$ROOTDIR/user/shared/board.mk"
 cp -fL "$board_h" "$ROOTDIR/user/shared/include/ralink_board.h"
-############################# WI-FI ###################################
-dir_wifi_src="$ROOTDIR/proprietary/rt_wifi"
-dir_wifi_dst="$ROOTDIR/$CONFIG_LINUXDIR/drivers/net/wireless/ralink"
-dir_wifi_ver="2.7.X.X"
-rm -rf "$dir_wifi_dst/rt2860v2"
-rm -rf "$dir_wifi_dst/rt3090"
-rm -rf "$dir_wifi_dst/rt5392"
-rm -rf "$dir_wifi_dst/rt5592"
-rm -rf "$dir_wifi_dst/rt3593"
-rm -rf "$dir_wifi_dst/mt7610"
-rm -rf "$dir_wifi_dst/mt76x2"
-rm -rf "$dir_wifi_dst/mt76x3"
-rm -rf "$dir_wifi_dst/mt7628"
-rm -rf "$dir_wifi_dst/mt7615"
-rm -rf "$dir_wifi_dst/mt7915"
-
-mkdir -p "$dir_wifi_dst/mt76x3"
-cp -f "$dir_wifi_src/rtpci/4.1.X.X/mt76x3/Kconfig" "$dir_wifi_dst/mt76x3/Kconfig"
-mkdir -p "$dir_wifi_dst/mt7615/embedded"
-cp -f "$dir_wifi_src/rtpci/5.0.4.0/mt7615/embedded/Kconfig" "$dir_wifi_dst/mt7615/embedded/Kconfig"
-mkdir -p "$dir_wifi_dst/mt7915/embedded"
-cp -f "$dir_wifi_src/rtpci/7.3.0.1/mt7915/embedded/Kconfig" "$dir_wifi_dst/mt7915/embedded/Kconfig"
-
-if [ -n "$CONFIG_RT2860V2_AP" ] ; then
-	dir_wifi_ver="2.7.X.X"
-	if [ "$CONFIG_RALINK_RT3883" = "y" ] && [ "$CONFIG_FIRMWARE_WIFI5_DRIVER" = "2.4" ] ; then
-		dir_wifi_ver="2.4.X.X"
-	fi
-	if [ "$CONFIG_RALINK_MT7620" = "y" ] ; then
-		if [ "$CONFIG_FIRMWARE_WIFI2_DRIVER" = "3.0" ] && [ -n "$CONFIG_MT76X2_AP" ] ; then
-			func_disable_kernel_param "CONFIG_RT_FIRST_IF_RT2860"
-			func_enable_kernel_param "CONFIG_RT_FIRST_IF_MT7620"
-			CONFIG_RT_FIRST_IF_RT2860=""
-		else
-			func_enable_kernel_param "CONFIG_RT_FIRST_IF_RT2860"
-			func_disable_kernel_param "CONFIG_RT_FIRST_IF_MT7620"
-			CONFIG_RT_FIRST_IF_RT2860=y
-		fi
-	fi
-	if [ "$CONFIG_RT_FIRST_IF_RT2860" = "y" ] ; then
-		cp -rfL "$dir_wifi_src/rtsoc/$dir_wifi_ver/rt2860v2" "$dir_wifi_dst/"
-		cp -rfL "$dir_wifi_src/rtsoc/$dir_wifi_ver/rt2860v2_ap" "$dir_wifi_dst/"
-	fi
-fi
-if [ -n "$CONFIG_RT3090_AP" ] ; then
-	dir_wifi_ver="2.7.X.X"
-	if [ "$CONFIG_FIRMWARE_WIFI2_DRIVER" = "2.5" ] ; then
-		dir_wifi_ver="2.5.X.X"
-	fi
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/rt3090" "$dir_wifi_dst/"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/rt3090_ap" "$dir_wifi_dst/"
-fi
-if [ -n "$CONFIG_RT5392_AP" ] ; then
-	dir_wifi_ver="2.7.X.X"
-	if [ "$CONFIG_FIRMWARE_WIFI2_DRIVER" = "2.5" ] ; then
-		dir_wifi_ver="2.5.X.X"
-	fi
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/rt5392" "$dir_wifi_dst/"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/rt5392_ap" "$dir_wifi_dst/"
-fi
-if [ -n "$CONFIG_RT5592_AP" ] ; then
-	dir_wifi_ver="2.7.X.X"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/rt5592" "$dir_wifi_dst/"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/rt5592_ap" "$dir_wifi_dst/"
-fi
-if [ -n "$CONFIG_RT3593_AP" ] ; then
-	dir_wifi_ver="2.7.X.X"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/rt3593" "$dir_wifi_dst/"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/rt3593_ap" "$dir_wifi_dst/"
-fi
-if [ -n "$CONFIG_MT7610_AP" ] ; then
-	dir_wifi_ver="3.0.X.X"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/mt7610" "$dir_wifi_dst/"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/mt7610_ap" "$dir_wifi_dst/"
-fi
-if [ -n "$CONFIG_MT76X2_AP" ] ; then
-	dir_wifi_ver="3.0.X.X"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/mt76x2" "$dir_wifi_dst/"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/mt76x2_ap" "$dir_wifi_dst/"
-fi
-if [ -n "$CONFIG_MT76X3_AP" ] ; then
-	dir_wifi_ver="4.1.X.X"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/mt76x3" "$dir_wifi_dst/"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/mt76x3_ap" "$dir_wifi_dst/"
-fi
-if [ -n "$CONFIG_MT7628_AP" ] ; then
-	dir_wifi_ver="4.1.X.X"
-	cp -rfL "$dir_wifi_src/rtsoc/$dir_wifi_ver/mt7628" "$dir_wifi_dst/"
-	cp -rfL "$dir_wifi_src/rtsoc/$dir_wifi_ver/mt7628_ap" "$dir_wifi_dst/"
-fi
-if [ -n "$CONFIG_MT7615_AP" ] ; then
-	dir_wifi_ver="5.0.4.0"
-	if [ "$CONFIG_FIRMWARE_WIFI_DRIVER" = "4.4.2.1" ] || \
-		[ "$CONFIG_FIRMWARE_WIFI2_DRIVER" = "4.4.2.1" ] || \
-		[ "$CONFIG_FIRMWARE_WIFI5_DRIVER" = "4.4.2.1" ]; then
-		dir_wifi_ver="4.4.2.1"
-	fi
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/mt7615" "$dir_wifi_dst/"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/mt7615_ap" "$dir_wifi_dst/"
-fi
-if [ -n "$CONFIG_MT7915_AP" ] ; then
-	dir_wifi_ver="7.3.0.1"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/mt7915" "$dir_wifi_dst/"
-	cp -rfL "$dir_wifi_src/rtpci/$dir_wifi_ver/mt7915_ap" "$dir_wifi_dst/"
-fi
-############################ HWNAT ####################################
-dir_ppe_src="$ROOTDIR/proprietary/rt_ppe"
-dir_ppe_dst="$ROOTDIR/$CONFIG_LINUXDIR/net/nat"
-rm -rf "$dir_ppe_dst/hw_nat"
-cp -rf "$dir_ppe_src/hw_nat" "$dir_ppe_dst/"
-############################ EIP93 ####################################
-dir_eip_src="$ROOTDIR/proprietary/rt_eip"
-dir_eip_dst="$ROOTDIR/$CONFIG_LINUXDIR/drivers/net"
-if [ "$CONFIG_PRODUCT" = "MT7621" ] ; then
-	if [ -d "$dir_eip_src" ] ; then
-		rm -rf "$dir_eip_dst/rt_eip"
-		cp -rf "$dir_eip_src" "$dir_eip_dst/"
-	fi
-fi
-############################# CPU #####################################
-if [ "$CONFIG_FIRMWARE_CPU_SLEEP" = "y" -o "$CONFIG_RALINK_SYSTICK_COUNTER" = "y" ] ; then
-	func_enable_kernel_param "CONFIG_RALINK_SYSTICK_COUNTER"
-	func_enable_kernel_param "CONFIG_RALINK_CPUSLEEP"
-	func_enable_kernel_param "CONFIG_HZ_1000"
-	func_disable_kernel_param "CONFIG_HZ_250"
-	func_disable_kernel_param "CONFIG_HZ_100"
-	func_disable_kernel_param "CONFIG_CLKSRC_MIPS_GIC"
-	func_disable_kernel_param "CONFIG_HIGH_RES_TIMERS"
-fi
-if [ "$CONFIG_RALINK_MT7620" = "y" ] ; then
-	if [ "$CONFIG_FIRMWARE_CPU_600MHZ" = "y" ] ; then
-		func_enable_kernel_param "CONFIG_RALINK_MT7620_PLL600"
-	fi
-fi
-if [ "$CONFIG_RALINK_MT7621" = "y" ] ; then
-	if [ "$CONFIG_FIRMWARE_CPU_900MHZ" = "y" ] ; then
-		func_enable_kernel_param "CONFIG_RALINK_MT7621_PLL900"
-	fi
-	if [ "$CONFIG_FIRMWARE_RAM_MOD_256" = "y" ] ; then
-		func_disable_kernel_param "CONFIG_RT2880_DRAM_64M"
-		func_disable_kernel_param "CONFIG_RT2880_DRAM_128M"
-		func_enable_kernel_param "CONFIG_RT2880_DRAM_256M"
-	fi
-fi
 ############################# SMP #####################################
 if [ -n "$CONFIG_SMP" ] ; then
 	func_enable_busybox_param "CONFIG_FEATURE_TOP_SMP_CPU"
@@ -272,30 +128,13 @@ fi
 if [ -n "$CONFIG_RTC_CLASS" ] ; then
 	func_enable_busybox_param "CONFIG_HWCLOCK"
 fi
-############################# IPV6 ####################################
-if [ "$CONFIG_FIRMWARE_ENABLE_IPV6" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_INET_TUNNEL"
-	func_disable_kernel_param "CONFIG_IPV6"
-	func_disable_busybox_param "CONFIG_PING6"
-	func_disable_busybox_param "CONFIG_FEATURE_IPV6"
-	func_disable_busybox_param "CONFIG_FEATURE_PREFER_IPV4_ADDRESS"
-	func_disable_busybox_param "CONFIG_TRACEROUTE6"
-	func_disable_busybox_param "CONFIG_FEATURE_UDHCP_RFC5969"
-	func_disable_busybox_param "CONFIG_DHCP6C"
-	func_enable_busybox_param "CONFIG_IP"
-	func_enable_busybox_param "CONFIG_FEATURE_IP_ADDRESS"
-	func_enable_busybox_param "CONFIG_FEATURE_IP_LINK"
-	func_enable_busybox_param "CONFIG_FEATURE_IP_ROUTE"
-fi
-#SFE
+# SFE
 if [ "$CONFIG_FIRMWARE_INCLUDE_SFE" = "y" ] ; then
 	func_enable_kernel_param "CONFIG_SHORTCUT_FE"
-	func_enable_kernel_param "CONFIG_NF_CONNTRACK_EVENTS"
-	func_enable_kernel_param "CONFIG_NF_CONNTRACK_CHAIN_EVENTS"
-else
-	func_disable_kernel_param "CONFIG_SHORTCUT_FE"
-	func_disable_kernel_param "CONFIG_NF_CONNTRACK_EVENTS"
-	func_disable_kernel_param "CONFIG_NF_CONNTRACK_CHAIN_EVENTS"
+fi
+# wireguard
+if [ "$CONFIG_FIRMWARE_INCLUDE_WIREGUARD" = "y" ]; then
+	func_enable_kernel_param "CONFIG_WIREGUARD"
 fi
 ############################# USB #####################################
 if [ "$CONFIG_FIRMWARE_ENABLE_USB" != "y" ] || [ -z "$CONFIG_USB_SUPPORT" ] ; then
@@ -315,167 +154,28 @@ if [ "$CONFIG_FIRMWARE_ENABLE_USB" != "y" ] || [ -z "$CONFIG_USB_SUPPORT" ] ; th
 	func_disable_busybox_param "CONFIG_FEATURE_VOLUMEID_XFS"
 	func_disable_busybox_param "CONFIG_FEATURE_VOLUMEID_LINUXSWAP"
 else
-############################# UFSD ####################################
-if [ "$CONFIG_FIRMWARE_ENABLE_UFSD" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_UFSD_FS"
-fi
 if [ "$CONFIG_FIRMWARE_ENABLE_UFSD" != "y" ] || [ $paragon_hfsplus -eq 0 ] ; then
-	func_disable_kernel_param "CONFIG_MAC_PARTITION"
 	func_disable_busybox_param "CONFIG_FEATURE_VOLUMEID_HFS"
-fi
-############################# FAT #####################################
-if [ "$CONFIG_FIRMWARE_ENABLE_FAT" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_FAT_FS"
-	func_disable_kernel_param "CONFIG_MSDOS_FS"
-	func_disable_kernel_param "CONFIG_VFAT_FS"
 fi
 ############################ exFAT ####################################
 if [ "$CONFIG_FIRMWARE_ENABLE_EXFAT" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_EXFAT_FS"
 	func_disable_busybox_param "CONFIG_FEATURE_VOLUMEID_EXFAT"
-fi
-############################# EXT2 ####################################
-if [ "$CONFIG_FIRMWARE_ENABLE_EXT2" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_EXT2_FS"
-fi
-############################# EXT3 ####################################
-if [ "$CONFIG_FIRMWARE_ENABLE_EXT3" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_EXT3_FS"
-fi
-############################# EXT4 ####################################
-if [ "$CONFIG_FIRMWARE_ENABLE_EXT4" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_EXT4_FS"
 fi
 ############################# XFS #####################################
 if [ "$CONFIG_FIRMWARE_ENABLE_XFS" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_XFS_FS"
 	func_disable_busybox_param "CONFIG_FEATURE_VOLUMEID_XFS"
-fi
-############################# FUSE ####################################
-if [ "$CONFIG_FIRMWARE_ENABLE_FUSE" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_FUSE_FS"
 fi
 ############################# SWAP ####################################
 if [ "$CONFIG_FIRMWARE_ENABLE_SWAP" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_SWAP"
 	func_disable_busybox_param "CONFIG_MKSWAP"
 	func_disable_busybox_param "CONFIG_SWAPONOFF"
 fi
-############################# NFSD ####################################
-# if [ "$CONFIG_FIRMWARE_INCLUDE_NFSD" != "y" ] ; then
-#	func_disable_kernel_param "CONFIG_NFSD"
-# fi
-############################# UVC #####################################
-#if [ "$CONFIG_FIRMWARE_INCLUDE_UVC" != "y" ] ; then
-#	func_disable_kernel_param "CONFIG_MEDIA_SUPPORT"
-#fi
-############################# HID #####################################
-if [ "$CONFIG_FIRMWARE_INCLUDE_HID" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_INPUT"
-	func_disable_kernel_param "CONFIG_HID_SUPPORT"
-	func_disable_kernel_param "CONFIG_USB_HID"
-fi
-############################# UART ####################################
-if [ "$CONFIG_FIRMWARE_INCLUDE_SERIAL" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_USB_SERIAL_CH341"
-	func_disable_kernel_param "CONFIG_USB_SERIAL_PL2303"
-fi
 fi
 ############################# XFRM ####################################
-if [ "$CONFIG_FIRMWARE_INCLUDE_SSWAN" = "y" ] ; then
-	CONFIG_FIRMWARE_INCLUDE_XFRM=y
-fi
-if [ "$CONFIG_PRODUCT" = "MT7621" ] ; then
-if [ "$CONFIG_FIRMWARE_INCLUDE_XFRM" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_XFRM"
-	func_disable_kernel_param "CONFIG_XFRM_USER"
-	func_disable_kernel_param "CONFIG_XFRM_IPCOMP"
-	func_disable_kernel_param "CONFIG_NET_KEY"
-	func_disable_kernel_param "CONFIG_INET_AH"
-	func_disable_kernel_param "CONFIG_INET_ESP"
-	func_disable_kernel_param "CONFIG_INET_IPCOMP"
-	func_disable_kernel_param "CONFIG_INET_XFRM_TUNNEL"
-	func_disable_kernel_param "CONFIG_INET_XFRM_MODE_TRANSPORT"
-	func_disable_kernel_param "CONFIG_INET_XFRM_MODE_TUNNEL"
-	func_disable_kernel_param "CONFIG_INET_XFRM_MODE_BEET"
-	func_disable_kernel_param "CONFIG_INET6_AH"
-	func_disable_kernel_param "CONFIG_INET6_ESP"
-	func_disable_kernel_param "CONFIG_INET6_IPCOMP"
-	func_disable_kernel_param "CONFIG_INET6_XFRM_TUNNEL"
-	func_disable_kernel_param "CONFIG_INET6_XFRM_MODE_TRANSPORT"
-	func_disable_kernel_param "CONFIG_INET6_XFRM_MODE_TUNNEL"
-	func_disable_kernel_param "CONFIG_INET6_XFRM_MODE_BEET"
-	func_disable_kernel_param "CONFIG_NETFILTER_XT_MATCH_ESP"
-	func_disable_kernel_param "CONFIG_NETFILTER_XT_MATCH_POLICY"
-	func_disable_kernel_param "CONFIG_IP_NF_MATCH_AH"
-	func_disable_kernel_param "CONFIG_IP6_NF_MATCH_AH"
-	func_disable_kernel_param "CONFIG_IPV6_MULTIPLE_TABLES"
-	func_disable_kernel_param "CONFIG_CRYPTO_AEAD"
-	func_disable_kernel_param "CONFIG_CRYPTO_AEAD2"
-	func_disable_kernel_param "CONFIG_CRYPTO_AUTHENC"
-	func_disable_kernel_param "CONFIG_CRYPTO_CBC"
-	func_disable_kernel_param "CONFIG_CRYPTO_HMAC"
-	func_disable_kernel_param "CONFIG_CRYPTO_MD5"
-	func_disable_kernel_param "CONFIG_CRYPTO_SHA256"
-	func_disable_kernel_param "CONFIG_CRYPTO_AES"
-	func_disable_kernel_param "CONFIG_CRYPTO_DES"
-	func_disable_kernel_param "CONFIG_CRYPTO_DEFLATE"
-fi
-fi
-############################ IPSET ####################################
-if [ "$CONFIG_FIRMWARE_INCLUDE_IPSET" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_NETFILTER_NETLINK"
-fi
-############################# QOS #####################################
-if [ "$CONFIG_FIRMWARE_INCLUDE_QOS" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_NET_SCHED"
-	func_disable_kernel_param "CONFIG_NET_CLS"
-	func_disable_kernel_param "CONFIG_NETFILTER_XT_TARGET_CLASSIFY"
-	func_disable_kernel_param "CONFIG_NETFILTER_XT_TARGET_IMQ"
-	func_disable_kernel_param "CONFIG_IMQ"
-fi
-############################# IMQ #####################################
-if [ "$CONFIG_FIRMWARE_INCLUDE_IMQ" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_NETFILTER_XT_TARGET_IMQ"
-	func_disable_kernel_param "CONFIG_IMQ"
-fi
-############################# IFB #####################################
-if [ "$CONFIG_FIRMWARE_INCLUDE_IFB" != "y" ] ; then
-	func_disable_kernel_param "CONFIG_NET_SCH_INGRESS"
-	func_disable_kernel_param "CONFIG_NET_CLS_ACT"
-	func_disable_kernel_param "CONFIG_IFB"
-fi
-############################# NFSC ####################################
-#if [ "$CONFIG_FIRMWARE_INCLUDE_NFSC" != "y" ] ; then
-#	func_disable_kernel_param "CONFIG_FSCACHE"
-#	func_disable_kernel_param "CONFIG_NFS_FS"
+#if [ "$CONFIG_FIRMWARE_INCLUDE_SSWAN" = "y" ] ; then
+#	CONFIG_FIRMWARE_INCLUDE_XFRM=y
 #fi
-############################# CIFS ####################################
-# if [ "$CONFIG_FIRMWARE_INCLUDE_CIFS" != "y" ] ; then
-# 	func_disable_kernel_param "CONFIG_CIFS"
-# 	func_disable_busybox_param "CONFIG_FEATURE_MOUNT_CIFS"
-# fi
-# if [ "$CONFIG_FIRMWARE_INCLUDE_SMBD" != "y" ] ; then
-# 	func_disable_kernel_param "CONFIG_NETFILTER_FP_SMB"
-# fi
-# if [ "$CONFIG_FIRMWARE_INCLUDE_NFSD" != "y" -a "$CONFIG_FIRMWARE_INCLUDE_NFSC" != "y" -a "$CONFIG_FIRMWARE_INCLUDE_CIFS" != "y" ] ; then
-# 	func_disable_kernel_param "CONFIG_NETWORK_FILESYSTEMS"
-# 	if [ "$CONFIG_FIRMWARE_ENABLE_USB" != "y" ] || [ -z "$CONFIG_USB_SUPPORT" ] ; then
-# 		func_disable_kernel_param "CONFIG_NLS"
-# 		func_disable_kernel_param "CONFIG_LBDAF"
-# 	fi
-# fi
-############################# USB AUDIO ###############################
-# if [ "$CONFIG_FIRMWARE_INCLUDE_AUDIO" != "y" ] || [ "$CONFIG_FIRMWARE_ENABLE_USB" != "y" ] || [ -z "$CONFIG_USB_SUPPORT" ] ; then
-# 	func_disable_kernel_param "CONFIG_FW_LOADER"
-# 	func_disable_kernel_param "CONFIG_SOUND"
-# fi
-#######################################################################
-if [ "$CONFIG_WITHOUT_KERNEL" != "y" ] ; then
 echo --------------------------MAKE-DEP--------------------------------
 make dep
-fi
-if [ "$2" != "kmod" ] ; then
 echo --------------------------MAKE-ALL--------------------------------
 make
-fi

@@ -99,8 +99,8 @@ dir_y						+= iptables
 dir_y						+= coremark
 ifneq ($(CONFIG_WITHOUT_KERNEL),y)
 dir_$(CONFIG_FIRMWARE_INCLUDE_IPSET)		+= ipset
-dir_y						+= accel-pptpd
 endif
+dir_y						+= poptop
 dir_y						+= ebtables
 dir_y						+= iproute2
 dir_y						+= wireless_tools
@@ -113,8 +113,6 @@ dir_y						+= httpd
 dir_y						+= www
 dir_y						+= rc
 dir_$(CONFIG_FIRMWARE_INCLUDE_ANTFS)		+= antfs
-dir_$(CONFIG_FIRMWARE_INCLUDE_NAPT66)		+= napt66
-dir_$(CONFIG_FIRMWARE_INCLUDE_SFE)		+= shortcut-fe
 dir_y						+= infosvr
 dir_y						+= inadyn
 dir_y						+= miniupnpd
@@ -145,7 +143,6 @@ dir_$(CONFIG_FIRMWARE_INCLUDE_SOCAT)	+= socat
 dir_$(CONFIG_FIRMWARE_INCLUDE_SRELAY)	+= srelay
 dir_$(CONFIG_FIRMWARE_INCLUDE_TUNSAFE) += tunsafe
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_WIREGUARD),y)
-dir_y += wireguard-go
 dir_y += wireguard-tools
 endif
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_SMBD36),y)

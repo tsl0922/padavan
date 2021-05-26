@@ -19,11 +19,7 @@ include versions.inc
 ifeq ($(CONFIG_WITHOUT_KERNEL),y)
 all: tools unpack_trx libc_only libs_only user_only romfs image
 else
-ifeq ($(CONFIG_FIRMWARE_TYPE_ROOTFS_IN_RAM),y)
-all: tools modules libc_only libs_only user_only romfs linux image
-else
 all: tools linux libc_only libs_only user_only romfs image
-endif
 endif
 ############################################################################
 #
@@ -59,12 +55,10 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
 	  else echo sh; fi ; fi)
 
-ifneq ($(findstring linux-3.4,$(LINUXDIR)),)
-FIRMWARE_KERNEL_VER="3.4"
-CONFIG_CROSS_COMPILER_ROOT = $(CONFIG_TOOLCHAIN_DIR)/toolchain-3.4.x
+FIRMWARE_KERNEL_VER="4.4"
+CONFIG_CROSS_COMPILER_ROOT = $(CONFIG_TOOLCHAIN_DIR)/toolchain-4.4.x
 CONFIG_CROSS_COMPILER_PATH = $(CONFIG_CROSS_COMPILER_ROOT)/bin
 KERNEL_HEADERS_PATH = $(CONFIG_CROSS_COMPILER_ROOT)/mipsel-linux-uclibc/sysroot/usr/include
-endif
 
 ifeq (config.arch,$(wildcard config.arch))
 ifeq ($(filter %_default, $(MAKECMDGOALS)),)
@@ -169,8 +163,8 @@ dep:
 		echo "ERROR: you need to do a 'make config' first" ; \
 		exit 1 ; \
 	fi
+	$(MAKEARCH_KERNEL) -C $(LINUXDIR) olddefconfig
 	$(MAKEARCH_KERNEL) -C $(LINUXDIR) modules_prepare
-	$(MAKEARCH_KERNEL) -C $(LINUXDIR) dep
 
 .PHONY: tools
 tools:

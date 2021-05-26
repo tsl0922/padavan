@@ -20,7 +20,7 @@
 
 #include <ralink_board.h>
 
-#define FW_MTD_NAME		"Firmware_Stub"
+#define FW_MTD_NAME		"firmware"
 #define FW_IMG_NAME		"/tmp/linux.trx"
 
 #define BTN_PRESSED		0

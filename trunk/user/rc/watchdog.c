@@ -1108,6 +1108,7 @@ catch_sig_watchdog(int sig)
 		break;
 	case SIGTERM:
 		remove(WD_PID_FILE);
+#if 0
 #if defined (BOARD_GPIO_BTN_WPS)
 		cpu_gpio_irq_set(BOARD_GPIO_BTN_WPS, 0, 0, 0);
 #endif
@@ -1119,6 +1120,9 @@ catch_sig_watchdog(int sig)
 #endif
 #if defined (BOARD_GPIO_BTN_RESET)
 		cpu_gpio_irq_set(BOARD_GPIO_BTN_RESET, 0, 0, 0);
+#endif
+#else
+		/* kill uevent helper */
 #endif
 		wd_alarmtimer(0, 0);
 		exit(0);
@@ -1195,7 +1199,7 @@ watchdog_main(int argc, char *argv[])
 	}
 
 	nvram_set_int_temp("wd_notify_id", 0);
-
+#if 0
 #if defined (BOARD_GPIO_BTN_WPS)
 	cpu_gpio_irq_set(BOARD_GPIO_BTN_WPS, 0, 1, pid);
 #endif
@@ -1208,7 +1212,7 @@ watchdog_main(int argc, char *argv[])
 #if defined (BOARD_GPIO_BTN_RESET)
 	cpu_gpio_irq_set(BOARD_GPIO_BTN_RESET, 0, 1, pid);
 #endif
-
+#endif
 	/* set timer */
 	wd_alarmtimer(WD_NORMAL_PERIOD, 0);
 

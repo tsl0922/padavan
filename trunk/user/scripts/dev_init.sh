@@ -24,6 +24,8 @@ mount -t tmpfs tmpfs /var   -o size=$size_var
 mkdir /dev/pts
 mount -t devpts devpts /dev/pts
 
+mount -t debugfs debugfs /sys/kernel/debug
+
 ln -sf /etc_ro/mdev.conf /etc/mdev.conf
 mdev -s
 

@@ -18,19 +18,9 @@ PART_ALIGN	= 16
 endif
 
 ifeq ($(CONFIG_PRODUCT),MT7621)
-LOAD_ADDR = 80001000
+LOAD_ADDR = 81001000
 else
 LOAD_ADDR = 80000000
-endif
-
-ifeq ($(CONFIG_RT2880_FLASH_32M),y)
-FLASH_SIZE = 32
-else
-ifeq ($(CONFIG_RT2880_FLASH_16M),y)
-FLASH_SIZE = 16
-else
-FLASH_SIZE = 8
-endif
 endif
 
 ifeq ($(CONFIG_WITHOUT_KERNEL),y)
@@ -77,9 +67,7 @@ romfs.post::
 	[ -d $(IMAGEDIR) ] || mkdir -p $(IMAGEDIR)
 	rm -f $(RAMDISK)
 	rm -f $(KERNELZ).*
-ifeq ($(CONFIG_RT2880_ROOTFS_IN_FLASH),y)
 	$(ROOTDIR)/tools/mksquashfs_xz/mksquashfs $(ROMFSDIR) $(RAMDISK) -all-root -no-exports -noappend -nopad -noI -no-xattrs
-endif
 
 image:
 	##############CREATE IMAGE#################
@@ -94,51 +82,6 @@ else
 	cd $(IMAGEDIR); rm -f $(KERNELZ).*; $(ROOTDIR)/tools/lzma/lzma e -a1 -d25 $(KERNELZ) $(KERNELZ).$(COMP)
 endif
 endif
-ifeq ($(CONFIG_BLK_DEV_INITRD),)
-ifeq ($(CONFIG_ROOTFS_IN_FLASH_NO_PADDING),)
-	@#============================================================
-	@# uboot hdr(64B) + mtdblock0(192KB) + mtdblock1(64KB) + 
-	@# mtdblock2(64KB) + mtdblock3 + mtdblock4 + mtdblock5
-	@# 
-	@# Padding size of mtdblock3 is equal to "MTD_KRN_PART_SIZE 
-	@# - 64B - the size of compressed kernel image"
-	@#
-	@# In Other Words:
-	@# MTD Kernel Partition Size is MUST bigger than 
-	@# "Original Kernel Image Size + 64B"
-	@#============================================================
-	#========<< This is README not Warning Message>>==============
-	# Please make sure that original kernel image size can't 
-	# bigger or equal to Kernel Partition Size. 
-	#
-	# For Example:
-	# 
-	# Original kernel image size is 563421 Bytes(0x898DD Bytes).
-	# Flash sector size is 0x10000, so MTD kernel 
-	# partition size MUST bigger than 0x90000.
-	#
-	# #make menuconfig
-	#
-	# Kernel/Library/Defaults Selection  --->
-	#   [*] Customize Kernel Settings (NEW)
-	#      Machine selection  --->
-	#        (90000) MTD Kernel Partition Size (Unit:Bytes)
-	#=============================================================
-	# Original Kernel Image Size
-	@wc -c $(KERNELZ).$(COMP)
-	# !!! Please make sure that Padded Kernel Image > Original Kernel Image Size !!!
-ifeq ($(findstring 0x, $(CONFIG_MTD_KERNEL_PART_SIZ)),0x)
-	@SIZE=`wc -c $(KERNELZ).$(COMP) | awk '{ print $$1 }'` ; \
-	MTD_KRN_PART_SIZE=`printf "%d" $(CONFIG_MTD_KERNEL_PART_SIZ)` ; \
-	PAD=`expr $$MTD_KRN_PART_SIZE - 64 - $$SIZE` ; \
-	dd if=/dev/zero count=1 bs=$$PAD conv=sync 2> /dev/null | tr \\000 \\377 >> $(KERNELZ).$(COMP)
-else
-	@SIZE=`wc -c $(KERNELZ).$(COMP) | awk '{ print $$1 }'` ; \
-	MTD_KRN_PART_SIZE=`printf "%d" 0x$(CONFIG_MTD_KERNEL_PART_SIZ)` ; \
-	PAD=`expr $$MTD_KRN_PART_SIZE - 64 - $$SIZE` ; \
-	dd if=/dev/zero count=1 bs=$$PAD conv=sync 2> /dev/null | tr \\000 \\377 >> $(KERNELZ).$(COMP)
-endif
-else
 	@SIZE=`wc -c $(KERNELZ).$(COMP) | awk '{ print $$1 }'` ; \
 	SIZE=`expr $$SIZE + 64` ; \
 	DIV=`expr $$SIZE % $(PART_ALIGN)` ; \
@@ -146,33 +89,11 @@ else
 		PAD=`expr $(PART_ALIGN) - $$DIV` ; \
 		dd if=/dev/zero count=1 bs=$$PAD conv=sync 2> /dev/null | tr \\000 \\377 >> $(KERNELZ).$(COMP) ; \
 	fi
-endif
 	# Padded Kernel Image + Compressed Rootfs Size
 	@cat $(RAMDISK) >> $(KERNELZ).$(COMP)
 	@wc -c $(KERNELZ).$(COMP)
-	# !!! Please make sure that Padded Kernel Image + Compressed Rootfs size
-ifneq ($(filter y,$(CONFIG_MTD_NAND_MTK) $(CONFIG_MTD_NAND_RALINK)),)
-	@MAX_SIZE=$$(($(CONFIG_MTD_FIRMWARE_PART_SIZ))) ; \
-	if [ "$$MAX_SIZE" -gt 33554432 ]; then MAX_SIZE=33554432 ; fi ; \
-	echo "# can't bigger than $$MAX_SIZE !!!"
-else
-ifneq ($(CONFIG_RT2880_FLASH_AUTO),y)
-	@MAX_SIZE=$$(( $(FLASH_SIZE)*1024*1024 - 320*1024 - $(CONFIG_MTD_STORE_PART_SIZ) - 64 )) ; \
-	echo "# can't bigger than: $$MAX_SIZE !!!"
-else
-	# can't bigger than: flash size - storage partition size -
-	# uboot_hdr(64B) - mtd0(192KiB) - mtd1(64KiB) - mtd2(64KiB) !!!
-endif
-endif
 	#===========================================
-endif
 	# Pack final image and write headers
-ifeq ($(CONFIG_ROOTFS_IN_FLASH_NO_PADDING),)
-	@cd $(IMAGEDIR) ; \
-	ENTRY=`LANG=C LC_ALL=C $(ENTRY_CMD)` ; \
-	$(MKIMAGE_DIR)/mkimage -A mips -O linux -T kernel -C $(COMP) -a $(LOAD_ADDR) -e $$ENTRY \
-	-n $(CONFIG_FIRMWARE_PRODUCT_ID) -V $(FIRMWARE_KERNEL_VER) $(FIRMWARE_ROOTFS_VER) -d $(KERNELZ).$(COMP) $(IMAGE)
-else
 	# For No padded, need write kernel size in image header 
 	# to correct mount partition in mtd drivers address
 	@cd $(IMAGEDIR) ; \
@@ -182,5 +103,3 @@ else
 	KRN_SIZE=`expr $$ISIZE - $$RSIZE + 64` ; \
 	$(MKIMAGE_DIR)/mkimage -A mips -O linux -T kernel -C $(COMP) -a $(LOAD_ADDR) -e $$ENTRY -k $$KRN_SIZE \
 	-n $(CONFIG_FIRMWARE_PRODUCT_ID) -V $(FIRMWARE_KERNEL_VER) $(FIRMWARE_ROOTFS_VER) -d $(KERNELZ).$(COMP) $(IMAGE)
-endif
-

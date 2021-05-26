@@ -133,9 +133,6 @@
 #if defined (APP_VLMCSD)
 			{"vlmcsd_enable", "", NULL, EVM_RESTART_VLMCSD},
 #endif
-#if defined (APP_NAPT66)
-			{"napt66_enable", "", NULL, FALSE},
-#endif
 			{"http_username", "", NULL, EVM_RESTART_CROND|EVM_BLOCK_UNSAFE},
 			{"http_passwd", "", NULL, EVM_BLOCK_UNSAFE},
 			{"modem_rule", "", NULL, EVM_RESTART_MODEM},
@@ -188,7 +185,6 @@
 			{"front_led_usb", "", NULL, EVM_RESTART_TWEAKS},
 			{"front_led_wif", "", NULL, EVM_RESTART_TWEAKS},
 			{"front_led_pwr", "", NULL, EVM_RESTART_TWEAKS},
-			{"watchdog_cpu", "", NULL, EVM_RESTART_WDG},
 			{"u2ec_enable", "", NULL, EVM_RESTART_SPOOLER},
 			{"lprd_enable", "", NULL, EVM_RESTART_SPOOLER},
 			{"rawd_enable", "", NULL, EVM_RESTART_SPOOLER},
@@ -341,7 +337,6 @@
 	struct variable variables_IP6Connection[] = {
 #if defined (USE_IPV6)
 			{"ip6_service", "", NULL, EVM_RESTART_IPV6},
-			{"ip6_ppe_on", "", NULL, EVM_RESTART_FIREWALL},
 			{"ip6_wan_if", "", NULL, EVM_RESTART_IPV6},
 			{"ip6_6in4_remote", "", NULL, EVM_RESTART_IPV6},
 			{"ip6_6to4_relay", "", NULL, EVM_RESTART_IPV6},
@@ -415,7 +410,6 @@
 			{"udpxy_wport", "", NULL, EVM_RESTART_FIREWALL},
 			{"misc_lpr_x", "", NULL, EVM_RESTART_FIREWALL},
 			{"misc_ping_x", "", NULL, EVM_RESTART_FIREWALL},
-			{"fw_pt_pppoe", "", NULL, EVM_RESTART_SYSCTL},
 			{"fw_lw_enable_x", "", NULL, EVM_RESTART_FIREWALL},
 			{"filter_lw_date_x", "", NULL, EVM_RESTART_FIREWALL},
 			{"filter_lw_time_x", "", NULL, EVM_RESTART_FIREWALL},
@@ -447,7 +441,6 @@
 			{"nf_alg_ftp1", "", NULL, EVM_RESTART_FIREWALL},
 			{"nf_alg_pptp", "", NULL, EVM_RESTART_FIREWALL},
 			{"nf_alg_h323", "", NULL, EVM_RESTART_FIREWALL},
-			{"nf_alg_rtsp", "", NULL, EVM_RESTART_FIREWALL},
 			{"nf_alg_sip", "", NULL, EVM_RESTART_FIREWALL},
 			{"LWFilterList", "Group", ARGV((char*)variables_FirewallConfig_LWFilterList, "32", "63", "filter_lw_num_x"), EVM_RESTART_FIREWALL},
 			{"UrlList", "Group", ARGV((char*)variables_FirewallConfig_UrlList, "128", "36", "url_num_x"), EVM_RESTART_FIREWALL},
@@ -533,7 +526,6 @@
 			{"ether_led1", "", NULL, EVM_RESTART_SWITCH_CFG},
 			{"ether_jumbo", "", NULL, EVM_RESTART_SWITCH_CFG},
 			{"ether_green", "", NULL, EVM_RESTART_SWITCH_CFG},
-			{"ether_eee", "", NULL, EVM_RESTART_SWITCH_CFG},
 
 			{"ether_link_wan",  "", NULL, EVM_RESTART_SWITCH_CFG},
 			{"ether_flow_wan",  "", NULL, EVM_RESTART_SWITCH_CFG},
@@ -1022,7 +1014,6 @@
 		{EVM_RESTART_CROND,		EVT_RESTART_CROND,		RCN_RESTART_CROND,	0},
 		{EVM_RESTART_SYSCTL,		EVT_RESTART_SYSCTL,		RCN_RESTART_SYSCTL,	0},
 		{EVM_RESTART_TWEAKS,		EVT_RESTART_TWEAKS,		RCN_RESTART_TWEAKS,	0},
-		{EVM_RESTART_WDG,		EVT_RESTART_WDG,		RCN_RESTART_WDG,	0},
 		{EVM_RESTART_DI,		EVT_RESTART_DI,			RCN_RESTART_DI,		0},
 #if defined(USE_USB_SUPPORT)
 		{EVM_RESTART_SPOOLER,		EVT_RESTART_SPOOLER,		RCN_RESTART_SPOOLER,	0},

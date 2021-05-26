@@ -44,9 +44,9 @@ ifdef CONFIG_RTL8367
 OBJS += switch_rtl8367.o
 CFLAGS += -I$(ROOTDIR)/$(LINUXDIR)/drivers/net/rtl8367
 else
-ifdef CONFIG_MT7530_GSW
+ifdef CONFIG_RAETH
 OBJS += switch_mtk_esw.o
-CFLAGS += -I$(ROOTDIR)/$(LINUXDIR)/drivers/net/raeth
+CFLAGS += -I$(ROOTDIR)/$(LINUXDIR)/drivers/net/ethernet/raeth
 else
 ifdef CONFIG_RAETH_ESW
 OBJS += switch_mtk_esw.o
@@ -132,7 +132,7 @@ endif
 ifdef CONFIG_RAETH_ESW
 	cd $(INSTALLDIR)/sbin && ln -sf rc mtk_esw
 endif
-ifdef CONFIG_MT7530_GSW
+ifdef CONFIG_RAETH
 	cd $(INSTALLDIR)/sbin && ln -sf rc mtk_esw
 endif
 ifdef CONFIG_RT3352_INIC_MII

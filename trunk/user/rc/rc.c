@@ -49,7 +49,6 @@ extern struct nvram_pair router_defaults[];
 /* static values */
 static int nvram_modem_type = 0;
 static int nvram_modem_rule = 0;
-static int nvram_nf_nat_type = 0;
 static int nvram_ipv6_type = 0;
 
 static int
@@ -95,7 +94,6 @@ nvram_restore_defaults(void)
 	/* load static values */
 	nvram_modem_type = nvram_get_int("modem_type");
 	nvram_modem_rule = nvram_get_int("modem_rule");
-	nvram_nf_nat_type = nvram_get_int("nf_nat_type");
 	nvram_ipv6_type = get_ipv6_type();
 
 	return restore_defaults;
@@ -118,10 +116,6 @@ load_wireless_modules(void)
 
 #if defined (USE_MT7615_AP)
 	module_smart_load("mt_7615e", NULL);
-#endif
-
-#if defined (USE_MT7915_AP)
-	module_smart_load("mt_7915", NULL);
 #endif
 
 #if defined (USE_RT3090_AP)
@@ -161,6 +155,7 @@ load_usb_modules(void)
 		char xhci_param[32];
 		snprintf(xhci_param, sizeof(xhci_param), "%s=%d", "usb3_disable", nvram_get_int("usb3_disable"));
 		module_smart_load("xhci_hcd", xhci_param);
+		module_smart_load("xhci_mtk", NULL);
 	}
 #else
 	module_smart_load("ehci_hcd", NULL);
@@ -190,7 +185,7 @@ load_mmc_modules(void)
 
 	/* start mmc host */
 #if defined (USE_MTK_MMC)
-	module_smart_load("mtk_sd", NULL);
+	module_smart_load("mt7621-sd", NULL);
 #endif
 }
 #endif
@@ -284,53 +279,9 @@ init_gpio_leds_buttons(void)
 #if defined (BOARD_CR660x)
 	cpu_gpio_set_pin_direction(14, 1);
 	cpu_gpio_set_pin(14, LED_OFF);
-#elif defined (BOARD_Q20)
-	cpu_gpio_set_pin_direction(14, 1);
-	cpu_gpio_set_pin(14, LED_ON); // set GPIO to low
 #endif
 	cpu_gpio_set_pin_direction(BOARD_GPIO_LED_POWER, 1);
 	LED_CONTROL(BOARD_GPIO_LED_POWER, LED_ON);
-#endif
-
-	/* enable USB port 5V power */
-#if defined (BOARD_GPIO_PWR_USB)
-	cpu_gpio_set_pin_direction(BOARD_GPIO_PWR_USB, 1);
-	cpu_gpio_set_pin(BOARD_GPIO_PWR_USB, BOARD_GPIO_PWR_USB_ON);
-#endif
-#if defined (BOARD_GPIO_PWR_USB2)
-	cpu_gpio_set_pin_direction(BOARD_GPIO_PWR_USB2, 1);
-	cpu_gpio_set_pin(BOARD_GPIO_PWR_USB2, BOARD_GPIO_PWR_USB_ON);
-#endif
-
-	/* init BTN Reset  */
-#if defined (BOARD_GPIO_BTN_RESET)
-	cpu_gpio_set_pin_direction(BOARD_GPIO_BTN_RESET, 0);
-#endif
-	/* init BTN WPS  */
-#if defined (BOARD_GPIO_BTN_WPS)
-	cpu_gpio_set_pin_direction(BOARD_GPIO_BTN_WPS, 0);
-#endif
-	/* init BTN FN1  */
-#if defined (BOARD_GPIO_BTN_FN1)
-	cpu_gpio_set_pin_direction(BOARD_GPIO_BTN_FN1, 0);
-#endif
-	/* init BTN FN2  */
-#if defined (BOARD_GPIO_BTN_FN2)
-	cpu_gpio_set_pin_direction(BOARD_GPIO_BTN_FN2, 0);
-#endif
-	/* init BTN ROUTER  */
-#if defined (BOARD_GPIO_BTN_ROUTER)
-	cpu_gpio_set_pin_direction(BOARD_GPIO_BTN_ROUTER, 0);
-#endif
-	/* init BTN POWER  */
-#if defined (BOARD_GPIO_BTN_PWR_CUT) && defined (BOARD_GPIO_BTN_PWR_INT)
-	/* Shortcut POWER button */
-	cpu_gpio_set_pin_direction(BOARD_GPIO_BTN_PWR_CUT, 1);
-	cpu_gpio_set_pin(BOARD_GPIO_BTN_PWR_CUT, 1);
-
-	/* IRQ on rising edge POWER, send SIGUSR2 to pid 1 */
-	cpu_gpio_set_pin_direction(BOARD_GPIO_BTN_PWR_INT, 0);
-	cpu_gpio_irq_set(BOARD_GPIO_BTN_PWR_INT, 1, 0, 1);
 #endif
 }
 
@@ -427,17 +378,6 @@ nvram_convert_misc_values(void)
 {
 	char buff[64];
 	int sw_mode;
-#if defined (BOARD_GPIO_BTN_ROUTER)
-	int i_router_switch = BTN_PRESSED;
-
-	if (cpu_gpio_get_pin(BOARD_GPIO_BTN_ROUTER, &i_router_switch) < 0)
-		i_router_switch = BTN_PRESSED;
-
-	if (i_router_switch != BTN_PRESSED)
-		nvram_set_int("sw_mode", 3);
-	else if (nvram_get_int("sw_mode") == 3)
-		nvram_set_int("sw_mode", 1);
-#endif
 
 	/* check router mode */
 	sw_mode = nvram_get_int("sw_mode");
@@ -914,13 +854,6 @@ init_router(void)
 	if (log_remote)
 		start_logger(1);
 
-#if defined (BOARD_HC5761A)
-	cpu_gpio_mode_set_bit(38, 1);
-	cpu_gpio_mode_set_bit(39, 0);
-	cpu_gpio_set_pin_direction(BOARD_GPIO_PWR_USB, 1);
-	cpu_gpio_set_pin(BOARD_GPIO_PWR_USB, BOARD_GPIO_PWR_USB_ON);
-#endif
-
 	start_dns_dhcpd(is_ap_mode);
 #if defined (APP_SMBD) || defined (APP_NMBD)
 	start_wins();
@@ -940,9 +873,7 @@ init_router(void)
 	notify_leds_detect_link();
 
 	start_rwfs_optware();
-#if defined(APP_NAPT66)
-	start_napt66();
-#endif
+
 	if (init_crontab()) {
 		write_storage_to_mtd();
 		restart_crond();
@@ -1008,7 +939,6 @@ shutdown_router(int level)
 
 	if (use_halt) {
 		module_smart_unload("hw_nat", 0);
-		module_smart_unload("rt_timer_wdg", 0);
 	}
 
 #if defined (BOARD_GPIO_LED_LAN)
@@ -1399,10 +1329,6 @@ handle_notifications(void)
 			stop_logger();
 			start_logger(0);
 		}
-		else if (strcmp(entry->d_name, RCN_RESTART_WDG) == 0)
-		{
-			restart_watchdog_cpu();
-		}
 		else if (strcmp(entry->d_name, RCN_RESTART_TWEAKS) == 0)
 		{
 			notify_leds_detect_link();
@@ -1438,15 +1364,7 @@ handle_notifications(void)
 		}
 		else if (strcmp(entry->d_name, RCN_RESTART_SYSCTL) == 0)
 		{
-			int nf_nat_type = nvram_get_int("nf_nat_type");
-			
 			restart_all_sysctl();
-			
-			/* flush conntrack after NAT model changing */
-			if (nvram_nf_nat_type != nf_nat_type) {
-				nvram_nf_nat_type = nf_nat_type;
-				flush_conntrack_table(NULL);
-			}
 		}
 		else if (!strcmp(entry->d_name, RCN_RESTART_WIFI5))
 		{
@@ -1901,19 +1819,6 @@ main(int argc, char **argv)
 		}
 	}
 #if defined (USE_USB_SUPPORT)
-	else if (!strcmp(base, "usb5v")) {
-		if (argc > 1) {
-#if defined (BOARD_GPIO_PWR_USB) || defined (BOARD_GPIO_PWR_USB2)
-			int port = 0;
-			int power_on = atoi(argv[1]);
-			if (argc > 2)
-				port = atoi(argv[2]);
-			power_control_usb_port(port, power_on);
-#endif
-		} else {
-			printf("Usage: %s <power> [port]\n\n", base);
-		}
-	}
 	else if (!strcmp(base, "ejusb")) {
 		int port = 0;
 		char *devn = NULL;
