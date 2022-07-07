@@ -377,14 +377,14 @@ Change_iptable () {
     case $action in
     stop)
         if [ "$snds_redirected" = 2 ] ; then
-            iptables -t nat -D PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports "$sdns_ported" >/dev/null 2>&1
-            iptables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports "$sdns_ported" >/dev/null 2>&1
-            ip6tables -t nat -D PREROUTING -p tdp --dport 53 -j REDIRECT --to-ports "$sdns_ported" >/dev/null 2>&1
-            ip6tables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports "$sdns_ported" >/dev/null 2>&1
+            iptables -t nat -D PREROUTING -p tcp -d "$IPS4" --dport 53 -j REDIRECT --to-ports "$sdns_ported" >/dev/null 2>&1
+            iptables -t nat -D PREROUTING -p udp -d "$IPS4" --dport 53 -j REDIRECT --to-ports "$sdns_ported" >/dev/null 2>&1
+            ip6tables -t nat -D PREROUTING -p tcp -d "$IPS6" --dport 53 -j REDIRECT --to-ports "$sdns_ported" >/dev/null 2>&1
+            ip6tables -t nat -D PREROUTING -p udp -d "$IPS6" --dport 53 -j REDIRECT --to-ports "$sdns_ported" >/dev/null 2>&1
             [ "$sdns_enable" = 0 ] && logger -t "SmartDNS" "恢复重定向 $IPS4:$sdns_ported 至 xxx.xxx.xxx:53"
         fi
         if [ "$snds_redirected" = 1 ] ; then
-            iptables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53 >/dev/null 2>&1
+            iptables -t nat -D PREROUTING -p udp -d "$IPS4" --dport 53 -j REDIRECT --to-ports 53 >/dev/null 2>&1
         fi
         ;;
     start)
@@ -398,16 +398,16 @@ Change_iptable () {
             statu=1
         fi
         if [ "$snds_redirect" = 1 ] ; then
-            iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53 >/dev/null 2>&1
+            iptables -t nat -A PREROUTING -p udp -d "$IPS4" --dport 53 -j REDIRECT --to-ports 53 >/dev/null 2>&1
         fi
         ;;
     esac
     if [ "$statu" = 1 ] ; then
-        [ "$sdns_tcp_server" = "1" ] && iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports "$sdns_port" >/dev/null 2>&1
-        iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports "$sdns_port" >/dev/null 2>&1
+        [ "$sdns_tcp_server" = "1" ] && iptables -t nat -A PREROUTING -p tcp -d "$IPS4" --dport 53 -j REDIRECT --to-ports "$sdns_port" >/dev/null 2>&1
+        iptables -t nat -A PREROUTING -p udp -d "$IPS4" --dport 53 -j REDIRECT --to-ports "$sdns_port" >/dev/null 2>&1
         if [ "$sdns_ipv6_server" = "1" ] ; then
-            [ "$sdns_tcp_server" = "1" ] && ip6tables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports "$sdns_port" >/dev/null 2>&1
-            ip6tables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports "$sdns_port" >/dev/null 2>&1
+            [ "$sdns_tcp_server" = "1" ] && ip6tables -t nat -A PREROUTING -p tcp -d "$IPS6" --dport 53 -j REDIRECT --to-ports "$sdns_port" >/dev/null 2>&1
+            ip6tables -t nat -A PREROUTING -p udp -d "$IPS6" --dport 53 -j REDIRECT --to-ports "$sdns_port" >/dev/null 2>&1
         fi
     fi
 }
