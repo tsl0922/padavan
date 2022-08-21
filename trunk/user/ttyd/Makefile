@@ -1,5 +1,5 @@
-SRC_NAME=ttyd-1.6.2
-SRC_URL=https://github.com/tsl0922/ttyd/archive/1.6.2.tar.gz
+SRC_NAME=ttyd-1.7.1
+SRC_URL=https://github.com/tsl0922/ttyd/archive/1.7.1.tar.gz
 
 THISDIR = $(shell pwd)
 
