@@ -37,5 +37,5 @@ clean:
 	rm -f config_done
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/src/obfs-server /usr/bin/obfs-server
+#	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/src/obfs-server /usr/bin/obfs-server
 	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/src/obfs-local /usr/bin/obfs-local
