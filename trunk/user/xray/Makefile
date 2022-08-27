@@ -26,7 +26,7 @@ build_Xray:
 	if [ $(GOPROXY_ON) = "y" ]; then \
 	go env -w GOPROXY=https://goproxy.cn,direct ; \
 	fi ; \
-	GOOS=linux GOARCH=mipsle go build -ldflags "-w -s" -o $(THISDIR)/bin/xray; \
+	GOOS=linux GOARCH=mipsle go build -ldflags "-w -s -buildid=" -trimpath -o $(THISDIR)/bin/xray; \
 	)
 else
 all:
