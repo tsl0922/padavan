@@ -2,7 +2,7 @@ include $(ROOTDIR)/coustom
 THISDIR = $(shell pwd)
 #export GO111MODULE=on
 #export GOPROXY=https://goproxy.bj.bcebos.com/
-Xray_VERSION := 1.5.3
+Xray_VERSION := 1.5.5
 Xray_URL := https://codeload.github.com/XTLS/Xray-core/tar.gz/v$(Xray_VERSION)
 Xray_dir = xray-core/Xray-core-$(Xray_VERSION)/main
 ifeq ($(GITHUB_ACTION),n)
