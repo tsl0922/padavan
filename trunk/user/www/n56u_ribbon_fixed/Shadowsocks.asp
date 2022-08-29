@@ -2600,8 +2600,8 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 													<tr>
 														<td colspan="3">
 															<i class="icon-hand-right"></i> <a
-																href="javascript:spoiler_toggle('script8')"><span>游戏模式LAN IP（客户端UDP所有端口,TCP跟随主服务器端口模式,强制走绕过大陆模式）:</span></a>
-															<div id="script8">
+																href="javascript:spoiler_toggle('script13')"><span>游戏模式LAN IP（客户端UDP所有端口,TCP跟随主服务器端口模式,强制走绕过大陆模式）:</span></a>
+															<div id="script13">
 																<textarea rows="8" wrap="off" spellcheck="false"
 																	maxlength="314571" class="span12"
 																	name="scripts.ss_lan_gmip.sh"
