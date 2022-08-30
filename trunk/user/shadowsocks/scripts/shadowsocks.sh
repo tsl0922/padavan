@@ -63,14 +63,13 @@ find_bin() {
 }
 
 gen_config_file() {
-
 	fastopen="false"
 	case "$2" in
 	0) config_file=$CONFIG_FILE && local stype=$(nvram get d_type) ;;
 	1) config_file=$CONFIG_UDP_FILE && local stype=$(nvram get ud_type) ;;
 	*) config_file=$CONFIG_SOCK5_FILE && local stype=$(nvram get s5_type) ;;
 	esac
-local type=$stype
+	local type=$stype
 	case "$type" in
 	ss)
 		lua /etc_ro/ss/genssconfig.lua $1 $3 >$config_file
@@ -81,7 +80,6 @@ local type=$stype
 		sed -i 's/\\//g' $config_file
 		;;
 	trojan)
-		tj_bin="/usr/bin/trojan"
 		if [ "$2" = "0" ]; then
 		lua /etc_ro/ss/gentrojanconfig.lua $1 nat 1080 >$trojan_json_file
 		sed -i 's/\\//g' $trojan_json_file
@@ -91,7 +89,6 @@ local type=$stype
 		fi
 		;;
 	v2ray)
-		v2_bin="/usr/bin/v2ray"
 		v2ray_enable=1
 		if [ "$2" = "1" ]; then
 		lua /etc_ro/ss/genv2config.lua $1 udp 1080 >/tmp/v2-ssr-reudp.json
@@ -102,7 +99,6 @@ local type=$stype
 		fi
 		;;
 	xray)
-		v2_bin="/usr/bin/v2ray"
 		v2ray_enable=1
 		if [ "$2" = "1" ]; then
 		lua /etc_ro/ss/genxrayconfig.lua $1 udp 1080 >/tmp/v2-ssr-reudp.json
@@ -287,17 +283,7 @@ start_redir_udp() {
 		esac
 	fi
 	return 0
-	}
-	ss_switch=$(nvram get backup_server)
-	if [ $ss_switch != "nil" ]; then
-		switch_time=$(nvram get ss_turn_s)
-		switch_timeout=$(nvram get ss_turn_ss)
-		#/usr/bin/ssr-switch start $switch_time $switch_timeout &
-		socks="-o"
-	fi
-	#return $?
-
-
+}
 
 start_dns() {
 		echo "create china hash:net family inet hashsize 1024 maxelem 65536" >/tmp/china.ipset
@@ -508,10 +494,10 @@ clear_iptable()
 }
 
 kill_process() {
-	v2ray_process=$(pidof v2ray)
+	v2ray_process=$(pidof v2ray || pidof xray)
 	if [ -n "$v2ray_process" ]; then
 		logger -t "SS" "关闭V2Ray进程..."
-		killall v2ray >/dev/null 2>&1
+		killall v2ray xray >/dev/null 2>&1
 		kill -9 "$v2ray_process" >/dev/null 2>&1
 	fi
 	ssredir=$(pidof ss-redir)

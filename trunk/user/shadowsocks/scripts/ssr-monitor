@@ -58,12 +58,17 @@ do
 	fi
 	#V2RAY
 	if [ $v2ray_process -gt 0 ] ;then
-		icount=`ps -w  | grep v2ray |grep -v grep| wc -l`
+		bin="v2ray"
+		if [ "$(nvram get d_type)" == "xray" ] && [ -f "/usr/bin/xray" ]
+		then
+			bin="xray"
+		fi
+		icount=`ps -w  | grep $bin |grep -v grep| wc -l`
 		if [ $icount -lt $v2ray_process ]  #如果进程挂掉就重启它
 		then
-			logger -t "$NAME" "检测到V2ray进程挂掉，重新启动!"
-			killall -q -9 v2ray
-			/tmp/v2ray -config /tmp/v2-redir.json >/dev/null 2>&1 &
+			logger -t "$NAME" "检测到 $bin 进程挂掉，重新启动!"
+			killall -q -9 $bin
+			/usr/bin/$bin -config /tmp/v2-redir.json >/dev/null 2>&1 &
 		fi   
 	fi
 	#local
