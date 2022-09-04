@@ -185,19 +185,19 @@ start_rules() {
 		proxyport="-m multiport --dports 22,53,587,465,995,993,143,80,443"
 	fi
 	/usr/bin/ss-rules \
-	-s "$server" \
-	-l "$local_port" \
-	-S "$udp_server" \
-	-L "$udp_local_port" \
-	-a "$ac_ips" \
-	-i "" \
-	-b "$wan_bp_ips" \
-	-w "$wan_fw_ips" \
-	-p "$lan_fp_ips" \
-	-G "$lan_gm_ips" \
-	-D "$proxyport" \
-	-k "$lancon" \
-	$(get_arg_out) $gfwmode $ARG_UDP
+		-s "$server" \
+		-l "$local_port" \
+		-S "$udp_server" \
+		-L "$udp_local_port" \
+		-a "$ac_ips" \
+		-i "" \
+		-b "$wan_bp_ips" \
+		-w "$wan_fw_ips" \
+		-p "$lan_fp_ips" \
+		-G "$lan_gm_ips" \
+		-D "$proxyport" \
+		-k "$lancon" \
+		$(get_arg_out) $gfwmode $ARG_UDP
 	return $?
 }
 
@@ -247,7 +247,7 @@ start_redir_tcp() {
 	    ;;
 	esac
 	return 0
-	}
+}
 	
 start_redir_udp() {
 	if [ "$UDP_RELAY_SERVER" != "nil" ]; then
@@ -437,26 +437,25 @@ EOF
 # ================================= 启动 SS ===============================
 ssp_start() { 
     ss_enable=`nvram get ss_enable`
-if rules; then
+	if rules; then
 		if start_redir_tcp; then
-		start_redir_udp
-        #start_rules
-		#start_AD
-        start_dns
+			start_redir_udp
+			#start_rules
+			#start_AD
+			start_dns
 		fi
-		fi
-        start_local
-        start_watchcat
-        auto_update
-        ENABLE_SERVER=$(nvram get global_server)
-        [ "$ENABLE_SERVER" = "-1" ] && return 1
-
-        logger -t "SS" "启动成功。"
-        logger -t "SS" "内网IP控制为:$lancons"
-        nvram set check_mode=0
-        if [ "$pppoemwan" -ne 0 ]; then
+	fi
+	start_local
+	start_watchcat
+	auto_update
+	ENABLE_SERVER=$(nvram get global_server)
+	[ "$ENABLE_SERVER" = "-1" ] && return 1
+	logger -t "SS" "启动成功。"
+	logger -t "SS" "内网IP控制为:$lancons"
+	nvram set check_mode=0
+    if [ "$pppoemwan" = 0 ]; then
         /usr/bin/detect.sh
-        fi
+    fi
 }
 
 # ================================= 关闭SS ===============================
@@ -477,9 +476,9 @@ ssp_close() {
 	fi
 	clear_iptable
 	/sbin/restart_dhcpd
-	if [ "$pppoemwan" -ne 0 ]; then
+	if [ "$pppoemwan" = 0 ]; then
         /usr/bin/detect.sh
-        fi
+    fi
 }
 
 
@@ -490,7 +489,6 @@ clear_iptable()
 	iptables -t filter -D INPUT -p tcp --dport $s5_port -j ACCEPT
 	ip6tables -t filter -D INPUT -p tcp --dport $s5_port -j ACCEPT
 	ip6tables -t filter -D INPUT -p tcp --dport $s5_port -j ACCEPT
-	
 }
 
 kill_process() {
