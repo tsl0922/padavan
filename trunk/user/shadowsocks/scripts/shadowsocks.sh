@@ -49,7 +49,7 @@ find_bin() {
 			ret="/usr/bin/xray" 
 		fi
 		;;
-	xray) 
+	xray)
 		if [ -f "/usr/bin/xray" ]; then
 			ret="/usr/bin/xray" 
 		else
@@ -81,31 +81,31 @@ gen_config_file() {
 		;;
 	trojan)
 		if [ "$2" = "0" ]; then
-		lua /etc_ro/ss/gentrojanconfig.lua $1 nat 1080 >$trojan_json_file
-		sed -i 's/\\//g' $trojan_json_file
+			lua /etc_ro/ss/gentrojanconfig.lua $1 nat 1080 >$trojan_json_file
+			sed -i 's/\\//g' $trojan_json_file
 		else
-		lua /etc_ro/ss/gentrojanconfig.lua $1 client 10801 >/tmp/trojan-ssr-reudp.json
-		sed -i 's/\\//g' /tmp/trojan-ssr-reudp.json
+			lua /etc_ro/ss/gentrojanconfig.lua $1 client 10801 >/tmp/trojan-ssr-reudp.json
+			sed -i 's/\\//g' /tmp/trojan-ssr-reudp.json
 		fi
 		;;
 	v2ray)
 		v2ray_enable=1
 		if [ "$2" = "1" ]; then
-		lua /etc_ro/ss/genv2config.lua $1 udp 1080 >/tmp/v2-ssr-reudp.json
-		sed -i 's/\\//g' /tmp/v2-ssr-reudp.json
+			lua /etc_ro/ss/genv2config.lua $1 udp 1080 >/tmp/v2-ssr-reudp.json
+			sed -i 's/\\//g' /tmp/v2-ssr-reudp.json
 		else
-		lua /etc_ro/ss/genv2config.lua $1 tcp 1080 >$v2_json_file
-		sed -i 's/\\//g' $v2_json_file
+			lua /etc_ro/ss/genv2config.lua $1 tcp 1080 >$v2_json_file
+			sed -i 's/\\//g' $v2_json_file
 		fi
 		;;
 	xray)
 		v2ray_enable=1
 		if [ "$2" = "1" ]; then
-		lua /etc_ro/ss/genxrayconfig.lua $1 udp 1080 >/tmp/v2-ssr-reudp.json
-		sed -i 's/\\//g' /tmp/v2-ssr-reudp.json
+			lua /etc_ro/ss/genxrayconfig.lua $1 udp 1080 >/tmp/v2-ssr-reudp.json
+			sed -i 's/\\//g' /tmp/v2-ssr-reudp.json
 		else
-		lua /etc_ro/ss/genxrayconfig.lua $1 tcp 1080 >$v2_json_file
-		sed -i 's/\\//g' $v2_json_file
+			lua /etc_ro/ss/genxrayconfig.lua $1 tcp 1080 >$v2_json_file
+			sed -i 's/\\//g' $v2_json_file
 		fi
 		;;	
 	esac
@@ -176,8 +176,8 @@ start_rules() {
 		lancons="指定IP走代理,请到规则管理页面添加需要走代理的IP。"
 		cat /etc/storage/ss_lan_bip.sh | grep -v '^!' | grep -v "^$" >$lan_fp_ips
 	fi
-		rm -f $lan_gm_ips
-		cat /etc/storage/ss_lan_gmip.sh | grep -v '^!' | grep -v "^$" >$lan_gm_ips
+	rm -f $lan_gm_ips
+	cat /etc/storage/ss_lan_gmip.sh | grep -v '^!' | grep -v "^$" >$lan_gm_ips
 	dports=$(nvram get s_dports)
 	if [ $dports = "0" ]; then
 		proxyport=" "
@@ -241,14 +241,14 @@ start_redir_tcp() {
 		;;	
 	socks5)
 		for i in $(seq 1 $threads); do
-		lua /etc_ro/ss/gensocks.lua $GLOBAL_SERVER 1080 >/dev/null 2>&1 &
-		usleep 500000
+			lua /etc_ro/ss/gensocks.lua $GLOBAL_SERVER 1080 >/dev/null 2>&1 &
+			usleep 500000
 		done
 	    ;;
 	esac
 	return 0
 }
-	
+
 start_redir_udp() {
 	if [ "$UDP_RELAY_SERVER" != "nil" ]; then
 		redir_udp=1
@@ -278,7 +278,7 @@ start_redir_udp() {
 			ipt2socks -U -b 0.0.0.0 -4 -s 127.0.0.1 -p 10801 -l 1080 >/dev/null 2>&1 &
 			;;
 		socks5)
-		echo "1"
+			echo "1"
 		    ;;
 		esac
 	fi
@@ -286,19 +286,19 @@ start_redir_udp() {
 }
 
 start_dns() {
-		echo "create china hash:net family inet hashsize 1024 maxelem 65536" >/tmp/china.ipset
-		awk '!/^$/&&!/^#/{printf("add china %s'" "'\n",$0)}' /etc/storage/chinadns/chnroute.txt >>/tmp/china.ipset
-		ipset -! flush china
-		ipset -! restore </tmp/china.ipset 2>/dev/null
-		rm -f /tmp/china.ipset
-case "$run_mode" in
+	echo "create china hash:net family inet hashsize 1024 maxelem 65536" >/tmp/china.ipset
+	awk '!/^$/&&!/^#/{printf("add china %s'" "'\n",$0)}' /etc/storage/chinadns/chnroute.txt >>/tmp/china.ipset
+	ipset -! flush china
+	ipset -! restore </tmp/china.ipset 2>/dev/null
+	rm -f /tmp/china.ipset
+	case "$run_mode" in
 	router)
 		dnsstr="$(nvram get tunnel_forward)"
 		dnsserver=$(echo "$dnsstr" | awk -F '#' '{print $1}')
 		#dnsport=$(echo "$dnsstr" | awk -F '#' '{print $2}')
 		logger -st "SS" "启动dns2tcp：5353端口..."
 		dns2tcp -L"127.0.0.1#5353" -R"$dnsstr" >/dev/null 2>&1 &
-		pdnsd_enable_flag=0	
+		pdnsd_enable_flag=0
 		logger -st "SS" "开始处理gfwlist..."
 	;;
 	gfw)
@@ -308,7 +308,7 @@ case "$run_mode" in
 		ipset add gfwlist $dnsserver 2>/dev/null
 		logger -st "SS" "启动dns2tcp：5353端口..."
 		dns2tcp -L"127.0.0.1#5353" -R"$dnsstr" >/dev/null 2>&1 &
-		pdnsd_enable_flag=0	
+		pdnsd_enable_flag=0
 		logger -st "SS" "开始处理gfwlist..."
 		;;
 	oversea)
@@ -338,7 +338,7 @@ start_AD() {
 		if [ -f "/tmp/adnew.conf" ]; then
 			check = `grep -wq "address=" /tmp/adnew.conf`
 	  		if [ ! -n "$check" ] ; then
-	    			cp /tmp/adnew.conf /tmp/dnsmasq.dom/ad.conf
+	    		cp /tmp/adnew.conf /tmp/dnsmasq.dom/ad.conf
 	  		else
 			    cat /tmp/adnew.conf | grep ^\|\|[^\*]*\^$ | sed -e 's:||:address\=\/:' -e 's:\^:/0\.0\.0\.0:' > /tmp/dnsmasq.dom/ad.conf
 			fi
@@ -346,7 +346,6 @@ start_AD() {
 	fi
 	rm -f /tmp/adnew.conf
 }
-
 
 # ================================= 启动 Socks5代理 ===============================
 start_local() {
@@ -399,7 +398,7 @@ rules() {
 	[ "$GLOBAL_SERVER" = "nil" ] && return 1
 	UDP_RELAY_SERVER=$(nvram get udp_relay_server)
 	if [ "$UDP_RELAY_SERVER" = "same" ]; then
-	UDP_RELAY_SERVER=$GLOBAL_SERVER
+		UDP_RELAY_SERVER=$GLOBAL_SERVER
 	fi
 	if start_rules; then
 		return 0
@@ -440,7 +439,6 @@ ssp_start() {
 	if rules; then
 		if start_redir_tcp; then
 			start_redir_udp
-			#start_rules
 			#start_AD
 			start_dns
 		fi
@@ -482,8 +480,7 @@ ssp_close() {
 }
 
 
-clear_iptable()
-{
+clear_iptable() {
 	s5_port=$(nvram get socks5_port)
 	iptables -t filter -D INPUT -p tcp --dport $s5_port -j ACCEPT
 	iptables -t filter -D INPUT -p tcp --dport $s5_port -j ACCEPT
@@ -575,7 +572,6 @@ kill_process() {
 		kill -9 "$microsocks_process" >/dev/null 2>&1
 	fi
 }
-
 
 # ================================= 重启 SS ===============================
 ressp() {

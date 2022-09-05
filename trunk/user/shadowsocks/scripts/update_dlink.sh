@@ -4,11 +4,11 @@
 
 
 start_link() {
-logger -t "SS" "开始运行订阅脚本...请稍后..."
-grep -v '^#' /etc/storage/ss_dlink.sh | grep -v "^$" > /tmp/dlist.txt
-dbus list ssconf_basic_json | cut -d '_' -f 4 | cut -d '=' -f 1 > /tmp/dlinkold.txt
-lua /etc_ro/ss/dlink.lua
-mtd_storage.sh save >/dev/null 2>&1
+	logger -t "SS" "开始运行订阅脚本...请稍后..."
+	grep -v '^#' /etc/storage/ss_dlink.sh | grep -v "^$" > /tmp/dlist.txt
+	dbus list ssconf_basic_json | cut -d '_' -f 4 | cut -d '=' -f 1 > /tmp/dlinkold.txt
+	lua /etc_ro/ss/dlink.lua
+	mtd_storage.sh save >/dev/null 2>&1
 }
 
 reset_link() {
@@ -28,24 +28,23 @@ reset_link() {
 }
 
 update_link() {
-logger -t "SS" "开始更新订阅脚本..."
-grep -v '^#' /etc/storage/ss_dlink.sh | grep -v "^$" > /tmp/dlist.txt
-dbus list ssconf_basic_json | cut -d '_' -f 4 | cut -d '=' -f 1 > /tmp/dlinkold.txt
-lua /etc_ro/ss/dlink.lua
-mtd_storage.sh save >/dev/null 2>&1
+	logger -t "SS" "开始更新订阅脚本..."
+	grep -v '^#' /etc/storage/ss_dlink.sh | grep -v "^$" > /tmp/dlist.txt
+	dbus list ssconf_basic_json | cut -d '_' -f 4 | cut -d '=' -f 1 > /tmp/dlinkold.txt
+	lua /etc_ro/ss/dlink.lua
+	mtd_storage.sh save >/dev/null 2>&1
 }
 
 case $1 in
-start)
-	start_link
-	;;
-reset)
-	reset_link
-	;;
-update)
-	update_link
-	;;
-*) 
-    ;;
-
+	start)
+		start_link
+		;;
+	reset)
+		reset_link
+		;;
+	update)
+		update_link
+		;;
+	*) 
+		;;
 esac
