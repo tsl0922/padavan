@@ -216,6 +216,7 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 			showhide_div('row_v2_vid', 0);
 			showhide_div('row_v2_webs_host', 0);
 			showhide_div('row_v2_webs_path', 0);
+			showhide_div('row_v2_grpc_path', 0);
 			showhide_div('row_s5_enable', 0);
 			showhide_div('row_s5_username', 0);
 			showhide_div('row_s5_password', 0);
@@ -297,6 +298,8 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 			} else if (b == "ws") {
 				showhide_div('row_v2_webs_host', 1);
 				showhide_div('row_v2_webs_path', 1);
+			} else if (b == "grpc") {
+				showhide_div('row_v2_grpc_path', 1);
 			} else if (b == "h2") {
 				showhide_div('row_v2_http2_host', 1);
 				showhide_div('row_v2_http2_path', 1);
@@ -718,6 +721,8 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 			//v2 ws
 			document.getElementById("v2_ws_host").value = '';
 			document.getElementById("v2_ws_path").value = '';
+			//v2 grpc
+			document.getElementById("v2_grpc_path").value = '';
 			//v2 h2
 			document.getElementById("v2_h2_host").value = '';
 			document.getElementById("v2_h2_path").value = '';
@@ -779,6 +784,8 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 				} else if (transport == "ws") {
 					document.getElementById("v2_ws_host").value = getProperty(ss, 'ws_host', '');
 					document.getElementById("v2_ws_path").value = getProperty(ss, 'ws_path', '');
+				} else if (transport == "grpc") {
+					document.getElementById("v2_grpc_path").value = getProperty(ss, 'grpc_path', '');
 				} else if (transport == "h2") {
 					document.getElementById("v2_h2_host").value = getProperty(ss, 'h2_host', '');
 					document.getElementById("v2_h2_path").value = getProperty(ss, 'h2_path', '');
@@ -1087,13 +1094,13 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 				var port = parseInt(others[0]);
 				var queryParam = {}
 				if (others.length > 1) {
-				var queryParams = others[1]
-				var queryArray = queryParams.split('&');
-				for (i = 0; i < queryArray.length; i++) {
-					var params = queryArray[i].split('=');
-					queryParam[decodeURIComponent(params[0])] = decodeURIComponent(params[1] || '');
+					var queryParams = others[1]
+					var queryArray = queryParams.split('&');
+					for (i = 0; i < queryArray.length; i++) {
+						var params = queryArray[i].split('=');
+						queryParam[decodeURIComponent(params[0])] = decodeURIComponent(params[1] || '');
+					}
 				}
-			}
 				document.getElementById('ssp_server').value = serverPart[0];
 				document.getElementById('ssp_prot').value = port || '443';;
 				document.getElementById('ss_password').value = password;
@@ -1125,21 +1132,23 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 				document.getElementById('v2_transport').dispatchEvent(event);
 				if (ssm.net == "tcp") {
 					if (ssm.type && ssm.type != "http") {
-					ssm.type = "none"
+						ssm.type = "none"
 					}
 					document.getElementById('v2_tcp_guise').value = ssm.type;
 					document.getElementById('v2_http_host').value = ssm.host;
-					 if (ssm.path != undefined){
-					            document.getElementById('v2_http_path').value = ssm.path;
-						}
-					    else
-					    	{
-						    document.getElementById('v2_http_path').value = '/';
-						}
+					if (ssm.path != undefined){
+						document.getElementById('v2_http_path').value = ssm.path;
+					}
+					else {
+						document.getElementById('v2_http_path').value = '/';
+					}
 				} 
 				if (ssm.net == "ws") {
 					document.getElementById('v2_ws_host').value = ssm.host;
 					document.getElementById('v2_ws_path').value = ssm.path;
+				}
+				if (ssm.net == "grpc") {
+					document.getElementById('v2_grpc_path').value = ssm.path;
 				}
 				if (ssm.net == "h2") {
 					document.getElementById('v2_h2_host').value = ssm.host;
@@ -1203,6 +1212,9 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 				if (queryParam.type == "ws") {
 					document.getElementById('v2_ws_host').value = queryParam.host;
 					document.getElementById('v2_ws_path').value =  queryParam.path;
+				}
+				if (queryParam.type == "grpc") {
+					document.getElementById('v2_grpc_path').value =  queryParam.serviceName;
 				}
 				if (queryParam.type == "h2") {
 					document.getElementById('v2_h2_host').value = queryParam.host;
@@ -1363,6 +1375,8 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 				} else if (document.getElementById("v2_transport").value == "ws") {
 					DataObj.ws_host = document.getElementById("v2_ws_host").value;
 					DataObj.ws_path = document.getElementById("v2_ws_path").value;
+				} else if (document.getElementById("v2_transport").value == "grpc") {
+					DataObj.grpc_path = document.getElementById("v2_grpc_path").value;
 				} else if (document.getElementById("v2_transport").value == "h2") {
 					DataObj.h2_host = document.getElementById("v2_h2_host").value;
 					DataObj.h2_path = document.getElementById("v2_h2_path").value;
@@ -2150,6 +2164,7 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 																	<option value="tcp">TCP</option>
 																	<option value="kcp">mKCP</option>
 																	<option value="ws">WebSocket</option>
+																	<option value="grpc">GRPC</option>
 																	<option value="h2">HTTP/2</option>
 																	<option value="quic">QUIC</option>
 																</select>
@@ -2256,6 +2271,15 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 																	value="<% nvram_get_x("","v2_webs_path_x_0"); %>" />
 															</td>
 														</tr>
+													</tr>
+													<tr id="row_v2_grpc_path" style="display:none;">
+														<th width="50%">GRPC Path (serviceName)</th>
+														<td>
+															<input type="text" class="input" size="15"
+																name="v2_grpc_path" id="v2_grpc_path"
+																style="width: 200px" value="" />
+														</td>
+													</tr>
 														<tr id="row_v2_http2_host" style="display:none;">
 															<th width="50%">HTTP/2 Host</th>
 															<td>

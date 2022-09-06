@@ -69,7 +69,6 @@ local v2ray = {
 				allowInsecure = (server.insecure ~= "0") and true or false,
 				serverName = server.tls_host
 			} or nil,
-
 		        tcpSettings = (server.transport == "tcp" and server.tls ~= '2') and {
 				header = {
 					type = server.tcp_guise, --伪装
@@ -98,6 +97,9 @@ local v2ray = {
 				headers = (server.ws_host ~= nil) and {
 					Host = server.ws_host
 				} or nil,
+			} or nil,
+			grpcSettings = (server.transport == "grpc") and (server.grpc_path ~= nil) and {
+				serviceName = server.grpc_path
 			} or nil,
 			httpSettings = (server.transport == "h2") and {
 				path = server.h2_path,
