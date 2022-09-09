@@ -72,9 +72,12 @@ run_bin() {
 cgroups_init() {
 	if [ "$(nvram get ss_cgroups)" = "1" ]; then
 		cgroupfs-mount
+		cpu_limit=$(nvram get ss_cgoups_cpu_s)
+		mem_limit=$(nvram get ss_cgoups_mem_s)
+		logger -t "SS" "启用进程资源限制, CPU: $cpu_limit, 内存: $mem_limit"
 		cgcreate -g cpu,memory:/shadowsocks
-		cgset -r cpu.shares="$(nvram get ss_cgoups_cpu_s)" /shadowsocks
-		cgset -r memory.limit_in_bytes="$(nvram get ss_cgoups_mem_s)" /shadowsocks
+		cgset -r cpu.shares="$cpu_limit" /shadowsocks
+		cgset -r memory.limit_in_bytes="$mem_limit" /shadowsocks
 	fi
 }
 
