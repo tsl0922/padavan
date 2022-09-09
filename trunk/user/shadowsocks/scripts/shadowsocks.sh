@@ -14,7 +14,6 @@ http_username=`nvram get http_username`
 CONFIG_FILE=/tmp/${NAME}.json
 CONFIG_UDP_FILE=/tmp/${NAME}_u.json
 CONFIG_SOCK5_FILE=/tmp/${NAME}_s.json
-CONFIG_KUMASOCKS_FILE=/tmp/kumasocks.toml
 v2_json_file="/tmp/v2-redir.json"
 trojan_json_file="/tmp/tj-redir.json"
 server_count=0
@@ -60,6 +59,28 @@ find_bin() {
 	socks5) ret="/usr/bin/ipt2socks" ;;
 	esac
 	echo $ret
+}
+
+run_bin() {
+	if [ "$(nvram get ss_cgroups)" = "1" ]; then
+		(cgexec -g cpu,memory:/shadowsocks "$@" >/dev/null 2>&1) &
+	else
+		("$@" >/dev/null 2>&1) &
+	fi
+}
+
+cgroups_init() {
+	if [ "$(nvram get ss_cgroups)" = "1" ]; then
+		cgroupfs-mount
+		cgcreate -g cpu,memory:/shadowsocks
+		cgset -r cpu.shares="$(nvram get ss_cgoups_cpu_s)" /shadowsocks
+		cgset -r memory.limit_in_bytes="$(nvram get ss_cgoups_mem_s)" /shadowsocks
+	fi
+}
+
+cgroups_clear() {
+	cgdelete -g cpu,memory:/shadowsocks
+	cgroupfs-umount
 }
 
 gen_config_file() {
@@ -218,7 +239,7 @@ start_redir_tcp() {
 		last_config_file=$CONFIG_FILE
 		pid_file="/tmp/ssr-retcp.pid"
 		for i in $(seq 1 $threads); do
-			$bin -c $CONFIG_FILE $ARG_OTA -f /tmp/ssr-retcp_$i.pid >/dev/null 2>&1
+			run_bin $bin -c $CONFIG_FILE $ARG_OTA -f /tmp/ssr-retcp_$i.pid
 			usleep 500000
 		done
 		redir_tcp=1
@@ -226,22 +247,22 @@ start_redir_tcp() {
 		;;
 	trojan)
 		for i in $(seq 1 $threads); do
-			$bin --config $trojan_json_file >>/tmp/ssrplus.log 2>&1 &
+			run_bin $bin --config $trojan_json_file
 			usleep 500000
 		done
 		echo "$(date "+%Y-%m-%d %H:%M:%S") $($bin --version 2>&1 | head -1) Started!" >>/tmp/ssrplus.log
 		;;
 	v2ray)
-		$bin -config $v2_json_file >/dev/null 2>&1 &
+		run_bin $bin -config $v2_json_file
 		echo "$(date "+%Y-%m-%d %H:%M:%S") $($bin -version | head -1) 启动成功!" >>/tmp/ssrplus.log
 		;;
 	xray)
-		$bin -config $v2_json_file >/dev/null 2>&1 &
+		run_bin $bin -config $v2_json_file
 		echo "$(date "+%Y-%m-%d %H:%M:%S") $($bin -version | head -1) 启动成功!" >>/tmp/ssrplus.log
 		;;	
 	socks5)
 		for i in $(seq 1 $threads); do
-			lua /etc_ro/ss/gensocks.lua $GLOBAL_SERVER 1080 >/dev/null 2>&1 &
+			run_bin lua /etc_ro/ss/gensocks.lua $GLOBAL_SERVER 1080
 			usleep 500000
 		done
 	    ;;
@@ -262,20 +283,20 @@ start_redir_udp() {
 			gen_config_file $UDP_RELAY_SERVER 1 1080
 			last_config_file=$CONFIG_UDP_FILE
 			pid_file="/var/run/ssr-reudp.pid"
-			$bin -c $last_config_file $ARG_OTA -U -f /var/run/ssr-reudp.pid >/dev/null 2>&1
+			run_bin $bin -c $last_config_file $ARG_OTA -U -f /var/run/ssr-reudp.pid
 			;;
 		v2ray)
 			gen_config_file $UDP_RELAY_SERVER 1
-			$bin -config /tmp/v2-ssr-reudp.json >/dev/null 2>&1 &
+			run_bin $bin -config /tmp/v2-ssr-reudp.json
 			;;
 		xray)
-			gen_config_file $UDP_RELAY_SERVER 1
-			$bin -config /tmp/v2-ssr-reudp.json >/dev/null 2>&1 &
+			run_bin gen_config_file $UDP_RELAY_SERVER 1
+			$bin -config /tmp/v2-ssr-reudp.json
 			;;	
 		trojan)
 			gen_config_file $UDP_RELAY_SERVER 1
 			$bin --config /tmp/trojan-ssr-reudp.json >/dev/null 2>&1 &
-			ipt2socks -U -b 0.0.0.0 -4 -s 127.0.0.1 -p 10801 -l 1080 >/dev/null 2>&1 &
+			run_bin ipt2socks -U -b 0.0.0.0 -4 -s 127.0.0.1 -p 10801 -l 1080
 			;;
 		socks5)
 			echo "1"
@@ -363,30 +384,30 @@ start_local() {
 		[ ! -f "$bin" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:Can't find $bin program, can't start!" >>/tmp/ssrplus.log && return 1
 		[ "$type" == "ssr" ] && name="ShadowsocksR"
 		gen_config_file $local_server 3 $s5_port
-		$bin -c $CONFIG_SOCK5_FILE -u -f /var/run/ssr-local.pid >/dev/null 2>&1
+		run_bin $bin -c $CONFIG_SOCK5_FILE -u -f /var/run/ssr-local.pid
 		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$name Started!" >>/tmp/ssrplus.log
 		;;
 	v2ray)
 		lua /etc_ro/ss/genv2config.lua $local_server tcp 0 $s5_port >/tmp/v2-ssr-local.json
 		sed -i 's/\\//g' /tmp/v2-ssr-local.json
-		$bin -config /tmp/v2-ssr-local.json >/dev/null 2>&1 &
+		run_bin $bin -config /tmp/v2-ssr-local.json
 		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$($bin -version | head -1) Started!" >>/tmp/ssrplus.log
 		;;
 	xray)
 		lua /etc_ro/ss/genxrayconfig.lua $local_server tcp 0 $s5_port >/tmp/v2-ssr-local.json
 		sed -i 's/\\//g' /tmp/v2-ssr-local.json
-		$bin -config /tmp/v2-ssr-local.json >/dev/null 2>&1 &
+		run_bin $bin -config /tmp/v2-ssr-local.json
 		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$($bin -version | head -1) Started!" >>/tmp/ssrplus.log
 		;;
 	trojan)
 		lua /etc_ro/ss/gentrojanconfig.lua $local_server client $s5_port >/tmp/trojan-ssr-local.json
 		sed -i 's/\\//g' /tmp/trojan-ssr-local.json
-		$bin --config /tmp/trojan-ssr-local.json >/dev/null 2>&1 &
+		run_bin $bin --config /tmp/trojan-ssr-local.json
 		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$($bin --version 2>&1 | head -1) Started!" >>/tmp/ssrplus.log
 		;;
 	*)
 		[ -e /proc/sys/net/ipv6 ] && local listenip='-i ::'
-		microsocks $listenip -p $s5_port ssr-local >/dev/null 2>&1 &
+		run_bin microsocks $listenip -p $s5_port ssr-local
 		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$type Started!" >>/tmp/ssrplus.log
 		;;
 	esac
@@ -437,6 +458,7 @@ EOF
 ssp_start() { 
     ss_enable=`nvram get ss_enable`
 	if rules; then
+		cgroups_init
 		if start_redir_tcp; then
 			start_redir_udp
 			#start_AD
@@ -464,6 +486,7 @@ ssp_close() {
 	kill -9 $(ps | grep ssr-switch | grep -v grep | awk '{print $1}') >/dev/null 2>&1
 	kill -9 $(ps | grep ssr-monitor | grep -v grep | awk '{print $1}') >/dev/null 2>&1
 	kill_process
+	cgroups_clear
 	sed -i '/no-resolv/d' /etc/storage/dnsmasq/dnsmasq.conf
 	sed -i '/server=127.0.0.1/d' /etc/storage/dnsmasq/dnsmasq.conf
 	sed -i '/cdn/d' /etc/storage/dnsmasq/dnsmasq.conf
@@ -521,13 +544,6 @@ kill_process() {
 		logger -t "SS" "关闭trojan进程..."
 		killall trojan >/dev/null 2>&1
 		kill -9 "$trojandir" >/dev/null 2>&1
-	fi
-
-	kumasocks_process=$(pidof kumasocks)
-	if [ -n "$kumasocks_process" ]; then
-		logger -t "SS" "关闭kumasocks进程..."
-		killall kumasocks >/dev/null 2>&1
-		kill -9 "$kumasocks_process" >/dev/null 2>&1
 	fi
 	
 	ipt2socks_process=$(pidof ipt2socks)

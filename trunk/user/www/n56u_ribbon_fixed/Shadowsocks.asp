@@ -38,6 +38,7 @@
 			init_itoggle('switch_enable_x_0');
 			init_itoggle('ss_chdns');
 			init_itoggle('ss_router_proxy', change_ss_watchcat_display);
+			init_itoggle('ss_cgroups');
 			init_itoggle('ss_watchcat');
 			init_itoggle('ss_update_chnroute');
 			init_itoggle('ss_update_gfwlist');
@@ -2406,8 +2407,47 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 											<div id="wnd_ss_ssl" style="display:none">
 												<table width="100%" cellpadding="4" cellspacing="0" class="table">
 													<tr>
-														<th colspan="2" style="background-color: #E3E3E3;">节点故障自动切换设置
-														</th>
+														<th colspan="2" style="background-color: #E3E3E3;">进程资源限制</th>
+													</tr>
+													<tr>
+														<th>启用进程资源限制</th>
+														<td>
+															<div class="main_itoggle">
+																<div id="ss_cgroups_on_of">
+																	<input type="checkbox" id="ss_cgroups_fake"
+																		<% nvram_match_x("", "ss_cgroups", "1", "value=1 checked"); %><% nvram_match_x("", "ss_cgroups", "0", "value=0"); %>>
+																</div>
+															</div>
+															<div style="position: absolute; margin-left: -10000px;">
+																<input type="radio" value="1" name="ss_cgroups"
+																	id="ss_cgroups_1"
+																	<% nvram_match_x("", "ss_cgroups", "1", "checked"); %>>
+																<#checkbox_Yes#>
+																	<input type="radio" value="0" name="ss_cgroups"
+																		id="ss_cgroups_0"
+																		<% nvram_match_x("", "ss_cgroups", "0", "checked"); %>>
+																	<#checkbox_No#>
+															</div>
+														</td>
+													</tr>
+													<tr>
+														<th width="50%">CPU 限制</th>
+														<td>
+															<input type="text" class="input" size="15" name="ss_cgoups_cpu_s"
+																style="width: 200px"
+																value="<% nvram_get_x("","ss_cgoups_cpu_s"); %>" />
+														</td>
+													</tr>
+													<tr>
+														<th width="50%">内存限制</th>
+														<td>
+															<input type="text" class="input" size="15" name="ss_cgoups_mem_s"
+																style="width: 200px"
+																value="<% nvram_get_x("","ss_cgoups_mem_s"); %>" />
+														</td>
+													</tr>
+													<tr>
+														<th colspan="2" style="background-color: #E3E3E3;">节点故障自动切换设置</th>
 													</tr>
 													<tr>
 														<th>启用进程自动守护</th>
@@ -2726,6 +2766,21 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 													</tr>
 													<tr>
 														<th width="100%">此模式会占用一部分内存资源,内存少的机器请谨慎开启。</th>
+													</tr>
+													<tr>
+														<th colspan="2" style="background-color: #E3E3E3;">
+															进程资源限制说明:</th>
+													</tr>
+													<tr>
+														<th width="100%">
+															进程资源限制是为了防止进程占用过多资源导致路由器卡顿或重启,如果你的路由器配置足够,可以适当调高限制值。
+														</th>
+													</tr>
+													<tr>
+														<th width="100%">
+															此功能底层使用 <a href="https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v1/cgroups.html">cgroups</a>, CPU 限制值为一个大于 2 小于 1024 的整数，表示可以使用的 CPU 百分比，如 512 表示 50%;
+															内存限制值需要带上 M 作为单位, 如 20M 表示可以使用 20M 内存，超出会被内核 OOM Killer 自动 kill。
+														</th>
 													</tr>
 												</table>
 											</div>
