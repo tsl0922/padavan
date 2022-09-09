@@ -1,0 +1,31 @@
+#!/bin/sh
+# Copyright 2011 Canonical, Inc
+#           2014 Tianon Gravi
+# Author: Serge Hallyn <serge.hallyn@canonical.com>
+#         Tianon Gravi <tianon@debian.org>
+set -e
+
+# we don't care to move tasks around gratuitously - just umount the cgroups
+
+# if we don't even have the directory we need, something else must be wrong
+if [ ! -d /sys/fs/cgroup ]; then
+	exit 0
+fi
+
+# if /sys/fs/cgroup is not mounted, we don't bother
+if ! mountpoint -q /sys/fs/cgroup; then
+	exit 0
+fi
+
+cd /sys/fs/cgroup
+
+for sys in *; do
+	if mountpoint -q $sys; then
+		umount $sys
+	fi
+	if [ -d $sys ]; then
+		rmdir $sys || true
+	fi
+done
+
+exit 0
