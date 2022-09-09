@@ -1,14 +1,13 @@
-name: K2P
+name: build
 
 on: 
   push:
-    branches: main
   workflow_dispatch:
 
 jobs:
   build:
     name: build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
       - name: Prepare environment
@@ -23,7 +22,7 @@ jobs:
         run: |
           cd trunk
           fakeroot ./build_firmware_ci K2P
-      - name: Upload images to Artifact
+      - name: Upload image
         uses: actions/upload-artifact@v3
         with:
           name: images
