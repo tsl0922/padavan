@@ -443,7 +443,7 @@ function switchPage(id){
                                         <table style="width: 100%; margin-top: 6px; margin-bottom: 6px;">
                                             <tr>
                                                 <td width="100%" align="center" style="text-align: center">
-                                                    <div id="net_chart" style="width: 670px; padding-left: 5px;"></div>
+                                                    <div id="net_chart" style="width: 850px; padding-left: 5px;"></div>
                                                 </td>
                                             </tr>
                                         </table>

@@ -10,7 +10,7 @@ body.body_iframe{
 }
 
 .wrapper {
-    width: 960px;
+    width: 1200px;
     margin: 0 auto;
 }
 
@@ -496,7 +496,7 @@ textarea[readonly] {
 .syslog_panel {
     position: absolute;
     padding: 20px;
-    width: 960px;
+    width: 1200px;
     background: #f5f5f5;
     font-family: Georgia;
     opacity: 0;
