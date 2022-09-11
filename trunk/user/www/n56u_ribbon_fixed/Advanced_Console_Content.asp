@@ -24,11 +24,20 @@ function initial(){
 	show_menu(5,7,6);
 	show_footer();
 
-	if (!login_safe()){
-		$j('#btn_exec').attr('disabled', 'disabled');
-		$j('#SystemCmd').attr('disabled', 'disabled');
-	}else
-		document.form.SystemCmd.focus();
+    if ("<% nvram_get_x("","ttyd_enable"); %>" === "1") {
+        $j('#console-alert').hide();
+        $j('#console-table').hide();
+        $j('#console-form').unbind('keypress');
+
+        var termUrl = window.location.protocol + "//" + window.location.hostname + ":" + "<% nvram_get_x("","ttyd_port"); %>";
+	    $j("#term-iframe").attr("src", termUrl).show();
+    } else {
+        if (!login_safe()){
+            $j('#btn_exec').attr('disabled', 'disabled');
+            $j('#SystemCmd').attr('disabled', 'disabled');
+        } else
+            document.form.SystemCmd.focus();
+    }
 }
 
 function getResponse(){
@@ -81,7 +90,7 @@ function checkEnter(e){
     <div id="Loading" class="popup_bg"></div>
     <iframe name="hidden_frame" id="hidden_frame" src="" width="0" height="0" frameborder="0"></iframe>
 
-    <form method="post" name="form" action="apply.cgi" onkeypress="return !checkEnter(event)">
+    <form id="console-form" method="post" name="form" action="apply.cgi" onkeypress="return !checkEnter(event)">
     <input type="hidden" name="current_page" value="">
     <input type="hidden" name="next_page" value="">
     <input type="hidden" name="next_host" value="">
@@ -114,9 +123,10 @@ function checkEnter(e){
                             <div class="round_bottom">
                                 <div class="row-fluid">
                                     <div id="tabMenu" class="submenuBlock"></div>
-                                    <div class="alert alert-danger" style="margin: 10px;"><#Console_warn#></div>
+                                    <iframe id="term-iframe" style="width: 100%; height: 500px; border: none; display: none;"></iframe>
+                                    <div id="console-alert" class="alert alert-danger" style="margin: 10px;"><#Console_warn#></div>
 
-                                    <table width="100%" cellpadding="4" cellspacing="0" class="table">
+                                    <table id="console-table" width="100%" cellpadding="4" cellspacing="0" class="table">
                                         <tr>
                                             <td width="80%" style="border-top: 0 none"><input type="text" id="SystemCmd" class="span12" name="SystemCmd" maxlength="127" onkeypress="if (checkEnter(event)) startPost();" value=""></td>
                                             <td style="border-top: 0 none"><input class="btn btn-primary span12" id="btn_exec" onClick="startPost()" type="button" value="<#CTL_refresh#>" name="action"></td>
