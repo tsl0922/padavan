@@ -169,6 +169,7 @@ dir_$(SAMBA_ENABLED)				+= samba36
 dir_$(SAMBA_ENABLED)				+= wsdd2
 dir_$(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS)	+= chnroute
 dir_$(CONFIG_FIRMWARE_INCLUDE_TTYD)		+= ttyd
+dir_$(CONFIG_FIRMWARE_INCLUDE_MSD_LITE)		+= msd_lite
 dir_$(CONFIG_FIRMWARE_INCLUDE_LIBCGROUP) 		+= libcgroup
 dir_$(FRP_ENABLE)				+= frp
 dir_$(SOFTETHERVPN_ENABLE)			+= softethervpn
