@@ -242,12 +242,15 @@ start_udpxy(char *wan_ifname)
 		return;
 
 #if defined (APP_MSD_LITE)
-	doSystem("cp -f /etc_ro/msd_lite.conf /tmp/msd_lite.conf");
+	char *src_conf = "/etc_ro/msd_lite.conf";
+	char *dst_conf = "/etc/storage/msd_lite.conf";
+	if (!check_if_file_exist(dst_conf))
+		doSystem("cp -f %s %s", src_conf, dst_conf);
 	char line[256];
 	FILE *fp1, *fp2;
-	fp1 = fopen("/tmp/msd_lite.conf", "w");
+	fp1 = fopen(dst_conf, "w");
 	if (fp1) {
-		fp2 = fopen("/etc_ro/msd_lite.conf", "r");
+		fp2 = fopen(src_conf, "r");
 		if (fp2) {
 			while (fgets(line, sizeof(line), fp2)){
 				if (strstr(line, "<ifName>"))
@@ -263,7 +266,7 @@ start_udpxy(char *wan_ifname)
 		fclose(fp1);
 	}
 	nvram_set("msd_lite_enable", "1");
-	eval("/usr/bin/msd_lite", "-d", "-c", "/tmp/msd_lite.conf");
+	eval("/usr/bin/msd_lite", "-d", "-c", dst_conf);
 #else
 	eval("/usr/sbin/udpxy",
 		"-m", wan_ifname,
