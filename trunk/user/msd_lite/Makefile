@@ -32,3 +32,4 @@ clean:
 
 romfs:
 	$(ROMFSINST) $(THISDIR)/$(SRC_NAME)/build/src/msd_lite /usr/bin/msd_lite
+	$(ROMFSINST) $(THISDIR)/msd_lite.conf /etc_ro/msd_lite.conf

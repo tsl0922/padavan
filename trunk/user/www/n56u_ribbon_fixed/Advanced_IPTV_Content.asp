@@ -185,7 +185,8 @@ var window_xupnpd;
 var window_params="toolbar=yes,location=yes,directories=no,status=yes,menubar=yes,scrollbars=yes,resizable=yes,copyhistory=no,width=800,height=600";
 
 function on_udpxy_link(){
-	var svc_url="http://" + lan_ipaddr + ":" + document.form.udpxy_enable_x.value + "/status";
+    var path = ("<% nvram_get_x("","msd_lite_enable"); %>" === "1") ? "/stat" : "/status";
+	var svc_url="http://" + lan_ipaddr + ":" + document.form.udpxy_enable_x.value + path;
 	window_udpxy = window.open(svc_url, "udpxy", window_params);
 	window_udpxy.focus();
 }
