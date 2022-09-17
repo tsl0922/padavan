@@ -8,6 +8,7 @@
 # See /LICENSE for more information.
 #
 
+NAME=ssr-switch
 cycle_time=10
 switch_time=3
 normal_flag=0
@@ -24,6 +25,11 @@ DEFAULT_SERVER=$(nvram get global_server)
 CURRENT_SERVER=$DEFAULT_SERVER
 BACKUP_SERVER=$(nvram get backup_server)
 
+log() {
+	logger -t "$NAME" "$@"
+	echo "$(date "+%Y-%m-%d %H:%M:%S") $NAME: $@" >> "/tmp/ssrplus.log"
+}
+
 check_proxy() {
   result=0
   for i in $(seq 1 3)
@@ -31,18 +37,18 @@ check_proxy() {
     /usr/bin/ss-check www.google.com 80 $switch_time 1
     check=$?
     if [ "$check" == "0" ]; then
-      # echo "$(date "+%Y-%m-%d %H:%M:%S") Check Google Proxy Success, count=$i" >> /tmp/ssrplus.log
+      # log "Check Google Proxy Success, count=$i"
       result=0
       break
     else
     	/usr/bin/ss-check www.youtube.com 80 $switch_time 1
     check=$?
     if [ "$check" == "0" ]; then
-      # echo "$(date "+%Y-%m-%d %H:%M:%S") Check Google Proxy Success, count=$i" >> /tmp/ssrplus.log
+      # log "Check Google Proxy Success, count=$i"
       result=0
       break
     else
-      # echo "$(date "+%Y-%m-%d %H:%M:%S") Check Google Proxy Fail, count=$i" >> /tmp/ssrplus.log
+      # log "Check Google Proxy Fail, count=$i"
       /usr/bin/ss-check www.baidu.com 80 $switch_time 1
       check=$?
       if [ "$check" == "0" ]; then
@@ -66,13 +72,13 @@ do
 if [ "$current_ret" = "1" ] ;then
 #当前代理错误，判断有无可用的服务器
 if [ $(nvram get check_mode) = "1" ];then
-	echo "$(date "+%Y-%m-%d %H:%M:%S") 备用服务器也故障了,请检测主备服务器是否正常！" >> /tmp/ssrplus.log
+	log "备用服务器也故障了,请检测主备服务器是否正常！"
 	nvram set ss_enable=0
 	nvram set check_mode=0
 	/usr/bin/shadowsocks.sh stop &
 	exit 0
 fi
-echo "$(date "+%Y-%m-%d %H:%M:%S") 检测到主服务器故障，切换到备用服务器。" >> /tmp/ssrplus.log
+log "检测到主服务器故障，切换到备用服务器。"
 nvram set check_mode=1
 /usr/bin/shadowsocks.sh reserver &
 fi

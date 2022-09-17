@@ -6,7 +6,7 @@
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
 #
-NAME=shadowsocksr
+NAME=ssr-monitor
 server_process_count=$1
 redir_tcp_process=$2
 redir_udp_process=$3
@@ -23,6 +23,11 @@ else
 	server=`cat /etc/storage/ssr_ip`
 fi
 
+log() {
+	logger -t "$NAME" "$@"
+	echo "$(date "+%Y-%m-%d %H:%M:%S") $NAME: $@" >> "/tmp/ssrplus.log"
+}
+
 run_bin() {
 	if [ "$(nvram get ss_cgroups)" = "1" ]; then
 		(cgexec -g cpu,memory:/shadowsocks "$@" >/dev/null 2>&1) &
@@ -38,7 +43,7 @@ do
 	if [ $redir_tcp_process -gt 0 ] ;then
 		icount=`ps -w | grep ssr-retcp | grep -v grep | wc -l`
 		if [ $icount = 0 ] ;then
-			logger -t "$NAME" "检测到SS进程挂掉，重新启动!"
+			log "检测到SS进程挂掉，重新启动!"
 			/usr/bin/shadowsocks.sh restart 
 			exit 0
 		fi
@@ -47,7 +52,7 @@ do
 	if [ $redir_udp_process -gt 0 ] ;then
 		icount=`ps -w | grep ssr-reudp | grep -v grep | wc -l`
 		if [ $icount = 0 ] ;then
-			logger -t "$NAME" "检测到SS进程挂掉，重新启动!"
+			log "检测到SS进程挂掉，重新启动!"
 			/usr/bin/shadowsocks.sh restart  
 			exit 0
 		fi
@@ -57,7 +62,7 @@ do
 		icount=`ps -w | grep ssr-server | grep -v grep | wc -l`
 		if [ $icount -lt $server_process_count ]  #如果进程挂掉就重启它
 		then
-			logger -t "$NAME" "ssr server error.restart!"
+			log "ssr server error.restart!"
 			killall -q -9 ssr-server 
 			for i in `seq $server_process_count`
 			do
@@ -75,7 +80,7 @@ do
 		icount=`ps -w | grep $bin | grep -v grep| wc -l`
 		if [ $icount -lt $v2ray_process ]  #如果进程挂掉就重启它
 		then
-			logger -t "$NAME" "检测到 $bin 进程挂掉，重新启动!"
+			log "检测到 $bin 进程挂掉，重新启动!"
 			killall -q -9 $bin
 			run_bin /usr/bin/$bin -config /tmp/v2-redir.json
 		fi   
@@ -85,7 +90,7 @@ do
 		icount=`ps -w | grep ssr-local | grep -v grep | wc -l`
 		if [ $icount -lt $local_process ]  #如果进程挂掉就重启它
 		then
-			logger -t "$NAME" "ssr local error.restart!"
+			log "ssr local error.restart!"
 			/usr/bin/shadowsocks.sh restart
 			exit 0
 		fi   
@@ -95,7 +100,7 @@ do
 		icount=`ps -w | grep pdnsd | grep -v grep | wc -l`
 		if [ $icount -lt $pdnsd_process ]  #如果进程挂掉就重启它
 		then
-			logger -t "$NAME" "pdnsd tunnel error.restart!"
+			log "pdnsd tunnel error.restart!"
 			kill -9 pdnsd
 			/usr/sbin/pdnsd -c /tmp/pdnsd.conf -d &
 		fi   
@@ -105,7 +110,7 @@ do
 		icount=`ps -w | grep chinadns-ng | grep -v grep | wc -l`
 		if [ $icount -lt $chinadnsng_process ]  #如果进程挂掉就重启它
 		then
-			logger -t "$NAME" "chinadns-ng tunnel error.restart!"
+			log "chinadns-ng tunnel error.restart!"
 			kill -9 chinadns-ng
 			kill -9 dns2tcp
 			dns2tcp -L"127.0.0.1#5353" -R"$(nvram get tunnel_forward)" >/dev/null 2>&1 &
@@ -120,7 +125,7 @@ EOF
 		icount=`ps -w  | grep dns2tcp |grep -v grep| wc -l`
 		if [ $icount -lt $chinadnsng_process ]  #如果进程挂掉就重启它
 		then
-			logger -t "$NAME" "chinadns-ng tunnel error.restart!"
+			log "chinadns-ng tunnel error.restart!"
 			kill -9 chinadns-ng
 			kill -9 dns2tcp
 			dns2tcp -L"127.0.0.1#5353" -R"$(nvram get tunnel_forward)" >/dev/null 2>&1 &

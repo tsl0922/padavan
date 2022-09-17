@@ -8,8 +8,9 @@
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
 #
-pppoemwan=`nvram get pppoemwan_enable`
+
 NAME=shadowsocksr
+pppoemwan=`nvram get pppoemwan_enable`
 http_username=`nvram get http_username`
 CONFIG_FILE=/tmp/${NAME}.json
 CONFIG_UDP_FILE=/tmp/${NAME}_u.json
@@ -33,6 +34,11 @@ ss_turn=`nvram get ss_turn`
 lan_con=`nvram get lan_con`
 GLOBAL_SERVER=`nvram get global_server`
 socks=""
+
+log() {
+	logger -t "$NAME" "$@"
+	echo "$(date "+%Y-%m-%d %H:%M:%S") $@" >> "/tmp/ssrplus.log"
+}
 
 find_bin() {
 	case "$1" in
@@ -74,7 +80,7 @@ cgroups_init() {
 		cgroupfs-mount
 		cpu_limit=$(nvram get ss_cgoups_cpu_s)
 		mem_limit=$(nvram get ss_cgoups_mem_s)
-		logger -t "SS" "启用进程资源限制, CPU: $cpu_limit, 内存: $mem_limit"
+		log "启用进程资源限制, CPU: $cpu_limit, 内存: $mem_limit"
 		cgcreate -g cpu,memory:/shadowsocks
 		cgset -r cpu.shares="$cpu_limit" /shadowsocks
 		cgset -r memory.limit_in_bytes="$mem_limit" /shadowsocks
@@ -144,7 +150,7 @@ get_arg_out() {
 }
 
 start_rules() {
-    logger -t "SS" "正在添加防火墙规则..."
+    log "正在添加防火墙规则..."
 	lua /etc_ro/ss/getconfig.lua $GLOBAL_SERVER > /tmp/server.txt
 	server=`cat /tmp/server.txt` 
 	cat /etc/storage/ss_ip.sh | grep -v '^!' | grep -v "^$" >$wan_fw_ips
@@ -230,13 +236,13 @@ start_redir_tcp() {
 	gen_config_file $GLOBAL_SERVER 0 1080
 	stype=$(nvram get d_type)
 	local bin=$(find_bin $stype)
-	[ ! -f "$bin" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") Main node:Can't find $bin program, can't start!" >>/tmp/ssrplus.log && return 1
+	[ ! -f "$bin" ] && log "Main node:Can't find $bin program, can't start!" && return 1
 	if [ "$(nvram get ss_threads)" = "0" ]; then
 		threads=$(cat /proc/cpuinfo | grep 'processor' | wc -l)
 	else
 		threads=$(nvram get ss_threads)
 	fi
-	logger -t "SS" "启动$stype主服务器..."
+	log "启动 $stype 主服务器..."
 	case "$stype" in
 	ss | ssr)
 		last_config_file=$CONFIG_FILE
@@ -246,22 +252,22 @@ start_redir_tcp() {
 			usleep 500000
 		done
 		redir_tcp=1
-		echo "$(date "+%Y-%m-%d %H:%M:%S") Shadowsocks/ShadowsocksR $threads 线程启动成功!" >>/tmp/ssrplus.log
+		log "Shadowsocks/ShadowsocksR $threads 线程启动成功!"
 		;;
 	trojan)
 		for i in $(seq 1 $threads); do
 			run_bin $bin --config $trojan_json_file
 			usleep 500000
 		done
-		echo "$(date "+%Y-%m-%d %H:%M:%S") $($bin --version 2>&1 | head -1) Started!" >>/tmp/ssrplus.log
+		log "$($bin --version 2>&1 | head -1) 启动成功!"
 		;;
 	v2ray)
 		run_bin $bin -config $v2_json_file
-		echo "$(date "+%Y-%m-%d %H:%M:%S") $($bin -version | head -1) 启动成功!" >>/tmp/ssrplus.log
+		log "$($bin -version | head -1) 启动成功!"
 		;;
 	xray)
 		run_bin $bin -config $v2_json_file
-		echo "$(date "+%Y-%m-%d %H:%M:%S") $($bin -version | head -1) 启动成功!" >>/tmp/ssrplus.log
+		log "$($bin -version | head -1) 启动成功!"
 		;;	
 	socks5)
 		for i in $(seq 1 $threads); do
@@ -276,10 +282,10 @@ start_redir_tcp() {
 start_redir_udp() {
 	if [ "$UDP_RELAY_SERVER" != "nil" ]; then
 		redir_udp=1
-		logger -t "SS" "启动$utype游戏UDP中继服务器"
+		log "启动 $utype 游戏 UDP 中继服务器"
 		utype=$(nvram get ud_type)
 		local bin=$(find_bin $utype)
-		[ ! -f "$bin" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") UDP TPROXY Relay:Can't find $bin program, can't start!" >>/tmp/ssrplus.log && return 1
+		[ ! -f "$bin" ] && log "UDP TPROXY Relay:Can't find $bin program, can't start!" && return 1
 		case "$utype" in
 		ss | ssr)
 			ARG_OTA=""
@@ -320,20 +326,20 @@ start_dns() {
 		dnsstr="$(nvram get tunnel_forward)"
 		dnsserver=$(echo "$dnsstr" | awk -F '#' '{print $1}')
 		#dnsport=$(echo "$dnsstr" | awk -F '#' '{print $2}')
-		logger -st "SS" "启动dns2tcp：5353端口..."
+		log "启动 dns2tcp：5353 端口..."
 		dns2tcp -L"127.0.0.1#5353" -R"$dnsstr" >/dev/null 2>&1 &
 		pdnsd_enable_flag=0
-		logger -st "SS" "开始处理gfwlist..."
+		log "开始处理 gfwlist..."
 	;;
 	gfw)
 		dnsstr="$(nvram get tunnel_forward)"
 		dnsserver=$(echo "$dnsstr" | awk -F '#' '{print $1}')
 		#dnsport=$(echo "$dnsstr" | awk -F '#' '{print $2}')
 		ipset add gfwlist $dnsserver 2>/dev/null
-		logger -st "SS" "启动dns2tcp：5353端口..."
+		log "启动 dns2tcp：5353 端口..."
 		dns2tcp -L"127.0.0.1#5353" -R"$dnsstr" >/dev/null 2>&1 &
 		pdnsd_enable_flag=0
-		logger -st "SS" "开始处理gfwlist..."
+		log "开始处理 gfwlist..."
 		;;
 	oversea)
 		ipset add gfwlist $dnsserver 2>/dev/null
@@ -356,9 +362,9 @@ start_AD() {
 	mkdir -p /tmp/dnsmasq.dom
 	curl -k -s -o /tmp/adnew.conf --connect-timeout 10 --retry 3 $(nvram get ss_adblock_url)
 	if [ ! -f "/tmp/adnew.conf" ]; then
-		logger -t "SS" "AD文件下载失败，可能是地址失效或者网络异常！"
+		log "AD文件下载失败，可能是地址失效或者网络异常！"
 	else
-		logger -t "SS" "AD文件下载成功"
+		log "AD文件下载成功"
 		if [ -f "/tmp/adnew.conf" ]; then
 			check = `grep -wq "address=" /tmp/adnew.conf`
 	  		if [ ! -n "$check" ] ; then
@@ -379,39 +385,39 @@ start_local() {
 	[ "$local_server" == "same" ] && local_server=$GLOBAL_SERVER
 	local type=$(nvram get s5_type)
 	local bin=$(find_bin $type)
-	[ ! -f "$bin" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:Can't find $bin program, can't start!" >>/tmp/ssrplus.log && return 1
+	[ ! -f "$bin" ] && log "Global_Socks5:Can't find $bin program, can't start!" && return 1
 	case "$type" in
 	ss | ssr)
 		local name="Shadowsocks"
 		local bin=$(find_bin ss-local)
-		[ ! -f "$bin" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:Can't find $bin program, can't start!" >>/tmp/ssrplus.log && return 1
+		[ ! -f "$bin" ] && log "Global_Socks5:Can't find $bin program, can't start!" && return 1
 		[ "$type" == "ssr" ] && name="ShadowsocksR"
 		gen_config_file $local_server 3 $s5_port
 		run_bin $bin -c $CONFIG_SOCK5_FILE -u -f /var/run/ssr-local.pid
-		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$name Started!" >>/tmp/ssrplus.log
+		log "Global_Socks5:$name Started!"
 		;;
 	v2ray)
 		lua /etc_ro/ss/genv2config.lua $local_server tcp 0 $s5_port >/tmp/v2-ssr-local.json
 		sed -i 's/\\//g' /tmp/v2-ssr-local.json
 		run_bin $bin -config /tmp/v2-ssr-local.json
-		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$($bin -version | head -1) Started!" >>/tmp/ssrplus.log
+		log "Global_Socks5:$($bin -version | head -1) Started!"
 		;;
 	xray)
 		lua /etc_ro/ss/genxrayconfig.lua $local_server tcp 0 $s5_port >/tmp/v2-ssr-local.json
 		sed -i 's/\\//g' /tmp/v2-ssr-local.json
 		run_bin $bin -config /tmp/v2-ssr-local.json
-		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$($bin -version | head -1) Started!" >>/tmp/ssrplus.log
+		log "Global_Socks5:$($bin -version | head -1) Started!"
 		;;
 	trojan)
 		lua /etc_ro/ss/gentrojanconfig.lua $local_server client $s5_port >/tmp/trojan-ssr-local.json
 		sed -i 's/\\//g' /tmp/trojan-ssr-local.json
 		run_bin $bin --config /tmp/trojan-ssr-local.json
-		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$($bin --version 2>&1 | head -1) Started!" >>/tmp/ssrplus.log
+		log "Global_Socks5:$($bin --version 2>&1 | head -1) Started!"
 		;;
 	*)
 		[ -e /proc/sys/net/ipv6 ] && local listenip='-i ::'
 		run_bin microsocks $listenip -p $s5_port ssr-local
-		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$type Started!" >>/tmp/ssrplus.log
+		log "Global_Socks5:$type Started!"
 		;;
 	esac
 	local_enable=1
@@ -473,8 +479,8 @@ ssp_start() {
 	auto_update
 	ENABLE_SERVER=$(nvram get global_server)
 	[ "$ENABLE_SERVER" = "-1" ] && return 1
-	logger -t "SS" "启动成功。"
-	logger -t "SS" "内网IP控制为:$lancons"
+	log "启动成功。"
+	log "内网IP控制为: $lancons"
 	nvram set check_mode=0
     if [ "$pppoemwan" = 0 ]; then
         /usr/bin/detect.sh
@@ -517,76 +523,76 @@ clear_iptable() {
 kill_process() {
 	v2ray_process=$(pidof v2ray || pidof xray)
 	if [ -n "$v2ray_process" ]; then
-		logger -t "SS" "关闭V2Ray进程..."
+		log "关闭 V2Ray 进程..."
 		killall v2ray xray >/dev/null 2>&1
 		kill -9 "$v2ray_process" >/dev/null 2>&1
 	fi
 	ssredir=$(pidof ss-redir)
 	if [ -n "$ssredir" ]; then
-		logger -t "SS" "关闭ss-redir进程..."
+		log "关闭 ss-redir 进程..."
 		killall ss-redir >/dev/null 2>&1
 		kill -9 "$ssredir" >/dev/null 2>&1
 	fi
 
 	rssredir=$(pidof ssr-redir)
 	if [ -n "$rssredir" ]; then
-		logger -t "SS" "关闭ssr-redir进程..."
+		log "关闭 ssr-redir 进程..."
 		killall ssr-redir >/dev/null 2>&1
 		kill -9 "$rssredir" >/dev/null 2>&1
 	fi
 	
 	sslocal_process=$(pidof ss-local)
 	if [ -n "$sslocal_process" ]; then
-		logger -t "SS" "关闭ss-local进程..."
+		log "关闭 ss-local 进程..."
 		killall ss-local >/dev/null 2>&1
 		kill -9 "$sslocal_process" >/dev/null 2>&1
 	fi
 
 	trojandir=$(pidof trojan)
 	if [ -n "$trojandir" ]; then
-		logger -t "SS" "关闭trojan进程..."
+		log "关闭 trojan 进程..."
 		killall trojan >/dev/null 2>&1
 		kill -9 "$trojandir" >/dev/null 2>&1
 	fi
 	
 	ipt2socks_process=$(pidof ipt2socks)
 	if [ -n "$ipt2socks_process" ]; then
-		logger -t "SS" "关闭ipt2socks进程..."
+		log "关闭 ipt2socks 进程..."
 		killall ipt2socks >/dev/null 2>&1
 		kill -9 "$ipt2socks_process" >/dev/null 2>&1
 	fi
 
 	socks5_process=$(pidof srelay)
 	if [ -n "$socks5_process" ]; then
-		logger -t "SS" "关闭socks5进程..."
+		log "关闭 socks5 进程..."
 		killall srelay >/dev/null 2>&1
 		kill -9 "$socks5_process" >/dev/null 2>&1
 	fi
 
 	ssrs_process=$(pidof ssr-server)
 	if [ -n "$ssrs_process" ]; then
-		logger -t "SS" "关闭ssr-server进程..."
+		log "关闭 ssr-server 进程..."
 		killall ssr-server >/dev/null 2>&1
 		kill -9 "$ssrs_process" >/dev/null 2>&1
 	fi
 	
 	cnd_process=$(pidof chinadns-ng)
 	if [ -n "$cnd_process" ]; then
-		logger -t "SS" "关闭chinadns-ng进程..."
+		log "关闭 chinadns-ng 进程..."
 		killall chinadns-ng >/dev/null 2>&1
 		kill -9 "$cnd_process" >/dev/null 2>&1
 	fi
 
 	dns2tcp_process=$(pidof dns2tcp)
 	if [ -n "$dns2tcp_process" ]; then
-		logger -t "SS" "关闭dns2tcp进程..."
+		log "关闭 dns2tcp 进程..."
 		killall dns2tcp >/dev/null 2>&1
 		kill -9 "$dns2tcp_process" >/dev/null 2>&1
 	fi
 	
 	microsocks_process=$(pidof microsocks)
 	if [ -n "$microsocks_process" ]; then
-		logger -t "SS" "关闭socks5服务端进程..."
+		log "关闭 socks5 服务端进程..."
 		killall microsocks >/dev/null 2>&1
 		kill -9 "$microsocks_process" >/dev/null 2>&1
 	fi
@@ -602,8 +608,8 @@ ressp() {
 	start_watchcat
 	auto_update
 	ENABLE_SERVER=$(nvram get global_server)
-	logger -t "SS" "备用服务器启动成功"
-	logger -t "SS" "内网IP控制为:$lancons"
+	log "备用服务器启动成功"
+	log "内网IP控制为: $lancons"
 }
 
 case $1 in
