@@ -1017,7 +1017,7 @@ VOID RRM_EnqueueNeighborRep(
 	}
 
 #endif /* AP_SCAN_SUPPORT */
-	MTWF_LOG(DBG_CAT_ALL, DBG_SUBCAT_ALL, DBG_LVL_ERROR, ("%s() : send Neighbor RSP\n", __func__));
+	MTWF_LOG(DBG_CAT_ALL, DBG_SUBCAT_ALL, DBG_LVL_TRACE, ("%s() : send Neighbor RSP\n", __func__));
 	MiniportMMRequest(pAd, (MGMT_USE_QUEUE_FLAG | QID_AC_BE), pOutBuffer, FrameLen);
 
 	if (pOutBuffer)
