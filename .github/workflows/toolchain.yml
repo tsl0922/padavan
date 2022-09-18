@@ -22,8 +22,15 @@ jobs:
           ./build_toolchain
           cd toolchain-4.4.x
           tar cJf ../mipsel-linux-uclibc.tar.xz .
-      - name: Upload toolchain
+      - name: Upload toolchain to artifact
         uses: actions/upload-artifact@v3
         with:
           name: toolchain
           path: toolchain-mipsel/mipsel-linux-uclibc.tar.xz
+      - name: Upload toolchain to artifact
+        uses: svenstaro/upload-release-action@2.2.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: toolchain-mipsel/mipsel-linux-uclibc.tar.xz
+          tag: toolchain
+          overwrite: true
