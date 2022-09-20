@@ -20,17 +20,17 @@
 		compatible = "gpio-leds";
 
 		stat_r {
-			label = "red";
+			label = "power";
 			gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
 		};
 
 		stat_y {
-			label = "yellow";
+			label = "wifi";
 			gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
 		};
 
 		stat_b {
-			label = "power";
+			label = "wan";
 			gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
 		};
 	};
