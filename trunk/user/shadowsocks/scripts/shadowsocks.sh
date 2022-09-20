@@ -478,7 +478,7 @@ ssp_start() {
 	start_watchcat
 	auto_update
 	ENABLE_SERVER=$(nvram get global_server)
-	[ "$ENABLE_SERVER" = "-1" ] && return 1
+	[ "$ENABLE_SERVER" = "nil" ] && return 1
 	log "启动成功。"
 	log "内网IP控制为: $lancons"
 	nvram set check_mode=0
