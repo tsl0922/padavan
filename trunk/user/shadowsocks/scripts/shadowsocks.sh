@@ -282,8 +282,8 @@ start_redir_tcp() {
 start_redir_udp() {
 	if [ "$UDP_RELAY_SERVER" != "nil" ]; then
 		redir_udp=1
-		log "启动 $utype 游戏 UDP 中继服务器"
 		utype=$(nvram get ud_type)
+		log "启动 $utype 游戏 UDP 中继服务器"
 		local bin=$(find_bin $utype)
 		[ ! -f "$bin" ] && log "UDP TPROXY Relay:Can't find $bin program, can't start!" && return 1
 		case "$utype" in
@@ -299,8 +299,8 @@ start_redir_udp() {
 			run_bin $bin -config /tmp/v2-ssr-reudp.json
 			;;
 		xray)
-			run_bin gen_config_file $UDP_RELAY_SERVER 1
-			$bin -config /tmp/v2-ssr-reudp.json
+			gen_config_file $UDP_RELAY_SERVER 1
+			run_bin $bin -config /tmp/v2-ssr-reudp.json
 			;;	
 		trojan)
 			gen_config_file $UDP_RELAY_SERVER 1
