@@ -27,8 +27,16 @@ jobs:
         run: |
           cd trunk
           fakeroot ./build_firmware_ci ${{ matrix.target }}
+          echo "TAG_ANME=$(date +%Y%m%d)" >> $GITHUB_ENV
       - name: Upload image
         uses: actions/upload-artifact@v3
         with:
           name: images
           path: trunk/images/*.trx
+      - name: Update Release
+        uses: ncipollo/release-action@v1
+        with:
+          commit: ${{ github.sha }}
+          tag: ${{ env.TAG_ANME }}
+          artifacts: trunk/images/*.trx
+          allowUpdates: true
