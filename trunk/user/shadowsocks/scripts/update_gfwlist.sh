@@ -3,6 +3,7 @@
 set -e -o pipefail
 
 NAME=shadowsocksr
+
 log() {
 	logger -t "$NAME" "$@"
 	echo "$(date "+%Y-%m-%d %H:%M:%S") $@" >> "/tmp/ssrplus.log"

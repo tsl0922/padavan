@@ -25,7 +25,7 @@ fi
 
 log() {
 	logger -t "$NAME" "$@"
-	echo "$(date "+%Y-%m-%d %H:%M:%S") $NAME: $@" >> "/tmp/ssrplus.log"
+	echo "$(date "+%Y-%m-%d %H:%M:%S") $@" >> "/tmp/ssrplus.log"
 }
 
 run_bin() {
