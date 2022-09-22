@@ -56,6 +56,25 @@ mkdir -p -m 755 /etc/Wireless
 mkdir -p -m 750 /etc/Wireless/RT2860
 mkdir -p -m 750 /etc/Wireless/iNIC
 
+# mount cgroupfs if kernel provides cgroups
+if [ -e /proc/cgroups ] && [ -d /sys/fs/cgroup ]; then
+	if ! mountpoint -q /sys/fs/cgroup; then
+		mount -t tmpfs -o uid=0,gid=0,mode=0755 cgroup /sys/fs/cgroup
+	fi
+	(cd /sys/fs/cgroup
+	for sys in $(awk '!/^#/ { if ($4 == 1) print $1 }' /proc/cgroups); do
+		mkdir -p $sys
+		if ! mountpoint -q $sys; then
+			if ! mount -n -t cgroup -o $sys cgroup $sys; then
+				rmdir $sys || true
+			fi
+		fi
+	done)
+	if [ -e /sys/fs/cgroup/memory/memory.use_hierarchy ]; then
+		echo 1 > /sys/fs/cgroup/memory/memory.use_hierarchy
+	fi
+fi
+
 # extract storage files
 mtd_storage.sh load
 

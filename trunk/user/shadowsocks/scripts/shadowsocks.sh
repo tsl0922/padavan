@@ -69,7 +69,7 @@ find_bin() {
 
 run_bin() {
 	if [ "$(nvram get ss_cgroups)" = "1" ]; then
-		(cgexec -g cpu,memory:/shadowsocks "$@" >/dev/null 2>&1) &
+		(cgexec -g cpu,memory:$NAME "$@" >/dev/null 2>&1) &
 	else
 		("$@" >/dev/null 2>&1) &
 	fi
@@ -77,19 +77,17 @@ run_bin() {
 
 cgroups_init() {
 	if [ "$(nvram get ss_cgroups)" = "1" ]; then
-		cgroupfs-mount
 		cpu_limit=$(nvram get ss_cgoups_cpu_s)
 		mem_limit=$(nvram get ss_cgoups_mem_s)
 		log "启用进程资源限制, CPU: $cpu_limit, 内存: $mem_limit"
-		cgcreate -g cpu,memory:/shadowsocks
-		cgset -r cpu.shares="$cpu_limit" /shadowsocks
-		cgset -r memory.limit_in_bytes="$mem_limit" /shadowsocks
+		cgcreate -g cpu,memory:$NAME
+		cgset -r cpu.shares="$cpu_limit" $NAME
+		cgset -r memory.limit_in_bytes="$mem_limit" $NAME
 	fi
 }
 
 cgroups_clear() {
-	cgdelete -g cpu,memory:/shadowsocks
-	cgroupfs-umount
+	cgdelete -g cpu,memory:$NAME
 }
 
 gen_config_file() {

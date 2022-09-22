@@ -43,8 +43,6 @@ clean:
 	rm -f config_done
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/cgroupfs-mount /usr/bin/cgroupfs-mount
-	$(ROMFSINST) -p +x $(THISDIR)/cgroupfs-umount /usr/bin/cgroupfs-umount
 	cp -fP $(THISDIR)/$(SRC_NAME)/src/.libs/libcgroup.so* $(ROMFSDIR)/lib
 	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/src/tools/.libs/cgexec /usr/bin/cgexec
 	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/src/tools/.libs/cgcreate /usr/bin/cgcreate
