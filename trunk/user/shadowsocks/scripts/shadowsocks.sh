@@ -68,11 +68,12 @@ find_bin() {
 }
 
 run_bin() {
-	if [ "$(nvram get ss_cgroups)" = "1" ]; then
-		(cgexec -g cpu,memory:$NAME "$@" >/dev/null 2>&1) &
-	else
-		("$@" >/dev/null 2>&1) &
-	fi
+	(if [ "$(nvram get ss_cgroups)" = "1" ]; then
+	 	echo 0 > /sys/fs/cgroup/cpu/$NAME/tasks
+	 	echo 0 > /sys/fs/cgroup/memory/$NAME/tasks
+	 fi
+	 "$@" > /dev/null 2>&1
+	) &
 }
 
 cgroups_init() {
@@ -80,14 +81,18 @@ cgroups_init() {
 		cpu_limit=$(nvram get ss_cgoups_cpu_s)
 		mem_limit=$(nvram get ss_cgoups_mem_s)
 		log "启用进程资源限制, CPU: $cpu_limit, 内存: $mem_limit"
-		cgcreate -g cpu,memory:$NAME
-		cgset -r cpu.shares="$cpu_limit" $NAME
-		cgset -r memory.limit_in_bytes="$mem_limit" $NAME
+		mkdir -p /sys/fs/cgroup/cpu/$NAME
+		mkdir -p /sys/fs/cgroup/memory/$NAME
+		echo $cpu_limit > /sys/fs/cgroup/cpu/$NAME/cpu.shares
+		echo $mem_limit > /sys/fs/cgroup/memory/$NAME/memory.limit_in_bytes
 	fi
 }
 
-cgroups_clear() {
-	cgdelete -g cpu,memory:$NAME
+cgroups_cleanup() {
+	cat /sys/fs/cgroup/cpu/$NAME/tasks > /sys/fs/cgroup/cpu/tasks
+	cat /sys/fs/cgroup/memory/$NAME/tasks > /sys/fs/cgroup/memory/tasks
+	rmdir /sys/fs/cgroup/cpu/$NAME
+	rmdir /sys/fs/cgroup/memory/$NAME
 }
 
 gen_config_file() {
@@ -493,7 +498,7 @@ ssp_close() {
 	kill -9 $(ps | grep ssr-switch | grep -v grep | awk '{print $1}') >/dev/null 2>&1
 	kill -9 $(ps | grep ssr-monitor | grep -v grep | awk '{print $1}') >/dev/null 2>&1
 	kill_process
-	cgroups_clear
+	cgroups_cleanup
 	sed -i '/no-resolv/d' /etc/storage/dnsmasq/dnsmasq.conf
 	sed -i '/server=127.0.0.1/d' /etc/storage/dnsmasq/dnsmasq.conf
 	sed -i '/cdn/d' /etc/storage/dnsmasq/dnsmasq.conf

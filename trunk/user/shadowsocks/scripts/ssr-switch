@@ -8,7 +8,7 @@
 # See /LICENSE for more information.
 #
 
-NAME=ssr-switch
+NAME=shadowsocksr
 cycle_time=10
 switch_time=3
 normal_flag=0
@@ -27,7 +27,7 @@ BACKUP_SERVER=$(nvram get backup_server)
 
 log() {
 	logger -t "$NAME" "$@"
-	echo "$(date "+%Y-%m-%d %H:%M:%S") $NAME: $@" >> "/tmp/ssrplus.log"
+	echo "$(date "+%Y-%m-%d %H:%M:%S") $@" >> "/tmp/ssrplus.log"
 }
 
 check_proxy() {
