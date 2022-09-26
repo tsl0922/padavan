@@ -51,11 +51,12 @@ configure:
 		--disable-libcurl-option \
 		--disable-threaded-resolver \
 		--without-gnutls \
-		--without-ca-bundle \
 		--without-libidn \
 		--without-libssh2 \
 		--without-krb4 \
 		--without-nss \
+		--without-ca-path \
+		--with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
 		--with-random=/dev/urandom \
 		--with-zlib=$(STAGEDIR) \
 		--with-ssl=$(STAGEDIR) \
