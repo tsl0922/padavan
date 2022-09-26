@@ -11,17 +11,15 @@ RANLIB    = ranlib
 STRIP     = strip
 STRIPTOOL = $(STRIP)
 SSTRIP_NAME = ELFkickers-3.1
+GO_VERSION = 1.18.6
 
 CFLAGS    = -Wall -O2
 LDFLAGS   =
 
 THISDIR = $(shell pwd)
-#N_PATH := $(THISDIR)/go/go/bin:$(PATH)
-#export PATH=$(N_PATH)
-include $(ROOTDIR)/coustom
 -include $(LINUX_CONFIG)
 
-all:go_build
+all: go_build
 	make -C mkimage
 	mkdir -p sstrip
 	make -C $(SSTRIP_NAME)
@@ -29,15 +27,13 @@ all:go_build
 	make -C mksquashfs_xz
 
 go_build:
-ifeq ($(GITHUB_ACTION),n)
 	mkdir -p $(THISDIR)/go
-	( if [ ! -f $(THISDIR)/go/go1.18.6.linux-amd64.tar.gz ]; then \
-	curl --create-dirs -L https://go.dev/dl/go1.18.6.linux-amd64.tar.gz -o $(THISDIR)/go/go1.18.6.linux-amd64.tar.gz ; \
+	( if [ ! -f $(THISDIR)/go/go$(GO_VERSION).linux-amd64.tar.gz ]; then \
+	curl --create-dirs -L https://go.dev/dl/go$(GO_VERSION).linux-amd64.tar.gz -o $(THISDIR)/go/go$(GO_VERSION).linux-amd64.tar.gz ; \
 	fi )
 	( if [ ! -d $(THISDIR)/go/go ]; then \
-	tar zxfv $(THISDIR)/go/go1.18.6.linux-amd64.tar.gz -C go ; \
+	tar zxfv $(THISDIR)/go/go$(GO_VERSION).linux-amd64.tar.gz -C go ; \
 	fi )
-endif
 clean:
 	if [ -f $(SSTRIP_NAME)/Makefile ] ; then \
 		make -C $(SSTRIP_NAME) clean ; \
