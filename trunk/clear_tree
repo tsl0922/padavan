@@ -14,7 +14,6 @@ make clean
 rm -rf $ROOTDIR/stage
 rm -rf $ROOTDIR/romfs
 rm -rf $ROOTDIR/images
-rm -rf $ROOTDIR/stage
 
 . $ROOTDIR/.config
 if [ -d $ROOTDIR/merge/$CONFIG_FIRMWARE_PRODUCT_ID ]; then

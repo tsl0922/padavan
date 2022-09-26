@@ -15,26 +15,19 @@ jobs:
         target: [K2P, K2P-USB]
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '^1.18.6'
+      - run: |
+          # https://github.com/actions/setup-go/issues/107
+          echo "${GOROOT}/bin" >> $GITHUB_PATH
       - name: Prepare environment
         run: |
           sudo apt update
           sudo apt install libtool-bin gperf python3-docutils autopoint gettext
-      - name: Prepare toolchain
-        run: |
-          cd toolchain-mipsel
-          sh dl_toolchain.sh
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
       - name: Start build
         run: |
-          cd trunk
-          fakeroot ./build_firmware_ci ${{ matrix.target }}
+          make ${{ matrix.target }}
           echo "TAG_ANME=$(date +%Y%m%d)" >> $GITHUB_ENV
       - name: Upload image
         uses: actions/upload-artifact@v3

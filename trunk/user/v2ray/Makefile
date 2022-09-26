@@ -15,7 +15,7 @@ build_extract:
 	mkdir -p $(THISDIR)/v2ray-core
 	mkdir -p $(THISDIR)/bin
 	( if [ ! -d $(THISDIR)/v2ray-core/core ]; then \
-	tar zxfv $(THISDIR)/v2ray-core-$(V2RAY_VERSION).tar.gz -C $(THISDIR)/v2ray-core ; \
+	tar zxf $(THISDIR)/v2ray-core-$(V2RAY_VERSION).tar.gz -C $(THISDIR)/v2ray-core ; \
 	mv $(THISDIR)/v2ray-core/v2ray-core-$(V2RAY_VERSION) $(THISDIR)/v2ray-core/core ; \
 	fi )
 

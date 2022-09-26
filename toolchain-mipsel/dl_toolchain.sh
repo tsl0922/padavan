@@ -1,19 +1,18 @@
 #!/bin/sh
 
 DIR="toolchain-4.4.x"
-DL_URL="https://github.com/tsl0922/padavan-4.4/releases/download/toolchain"
+DL_URL="https://github.com/tsl0922/padavan/releases/download/toolchain"
 
 dl() {
 	[ -z "$1" ] && return
 
 	echo "Download toolchain: $1"
-	curl -O -L "${DL_URL}/$1" && \
-	mkdir -p $DIR && \
-	tar -xf "${1}" -C $DIR
+	mkdir -p $DIR
+	(curl -fSsLo- "${DL_URL}/$1" | tar Jx -C $DIR) || rm -rf $DIR
 }
 
 if [ -d $DIR ]; then
-	echo "$DIR exists!"
+	echo "$DIR already exists!"
 	exit
 fi
 

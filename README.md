@@ -52,32 +52,21 @@ This project is based on original rt-n56u with latest mtk 4.4.198 kernel, which 
         automake gettext gettext-dev autoconf bison \
         flex coreutils cmake git libtool gawk sudo
     ```
+    **Optional:** install [golang](https://go.dev/doc/install) (and add it to PATH), if you are going to build go programs
   - Clone source code
     ```sh
-    git clone https://github.com/meisreallyba/padavan-4.4.git
-    ```
-  - Prepare toolchain
-    ```sh
-    cd padavan-4.4/toolchain-mipsel
-
-    # (Recommend) Download prebuilt toolchain for x86_64 or aarch64 host
-    ./dl_toolchain.sh
-
-    # or build toolchain with crosstool-ng
-    # ./build_toolchain
+    git clone https://github.com/tsl0922/padavan.git
     ```
   - Modify template file and start compiling
     ```sh
-    cd padavan-4.4/trunk
-
     # (Optional) Modify template file
-    # nano configs/templates/K2P.config
+    # vi trunk/configs/templates/K2P.config
 
-    # Start compiling
-    fakeroot ./build_firmware_modify K2P
+    # Start compiling with: make PRODUCT_NAME
+    make K2P
 
     # To build firmware for other devices, clean the tree after previous build
-    ./clear_tree
+    make clean
     ```
 
 - Manuals

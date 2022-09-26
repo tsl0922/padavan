@@ -16,7 +16,7 @@ build_extract:
 	mkdir -p $(THISDIR)/bin
 	( if [ ! -d $(THISDIR)/xray-core/Xray-core-$(XRAY_VERSION) ]; then \
 	rm -rf $(THISDIR)/xray-core/* ; \
-	tar zxfv $(THISDIR)/Xray-core-$(XRAY_VERSION).tar.gz -C $(THISDIR)/xray-core ; \
+	tar zxf $(THISDIR)/Xray-core-$(XRAY_VERSION).tar.gz -C $(THISDIR)/xray-core ; \
 	fi )
 
 build:

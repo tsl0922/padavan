@@ -16,18 +16,17 @@ jobs:
             fakeroot kmod cpio git python3-docutils gettext automake autopoint \
             texinfo build-essential help2man pkg-config zlib1g-dev libgmp3-dev \
             libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget libc-dev-bin
-      - name: Prepare toolchain
+      - name: Build toolchain
         run: |
-          cd toolchain-mipsel
-          ./build_toolchain
-          cd toolchain-4.4.x
+          make toolchain/build
+          cd toolchain-mipsel/toolchain-4.4.x
           tar cJf ../mipsel-linux-uclibc.tar.xz .
-      - name: Upload toolchain to artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: toolchain
           path: toolchain-mipsel/mipsel-linux-uclibc.tar.xz
-      - name: Upload toolchain to artifact
+      - name: Update release
         uses: svenstaro/upload-release-action@2.2.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
