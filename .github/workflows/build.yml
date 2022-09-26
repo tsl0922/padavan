@@ -23,6 +23,14 @@ jobs:
         run: |
           cd toolchain-mipsel
           sh dl_toolchain.sh
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
       - name: Start build
         run: |
           cd trunk
