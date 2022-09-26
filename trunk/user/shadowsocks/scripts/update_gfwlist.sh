@@ -12,7 +12,7 @@ log() {
 [ "$1" != "force" ] && [ "$(nvram get ss_update_gfwlist)" != "1" ] && exit 0
 #GFWLIST_URL="$(nvram get gfwlist_url)"
 log "开始更新 gfwlist..."
-curl -k -s -o /tmp/gfwlist_list_origin.conf --connect-timeout 15 --retry 5 https://cdn.jsdelivr.net/gh/YW5vbnltb3Vz/domain-list-community@release/gfwlist.txt
+curl -s -o /tmp/gfwlist_list_origin.conf --connect-timeout 15 --retry 5 https://cdn.jsdelivr.net/gh/YW5vbnltb3Vz/domain-list-community@release/gfwlist.txt
 lua /etc_ro/ss/gfwupdate.lua
 count=`awk '{print NR}' /tmp/gfwlist_list.conf|tail -n1`
 if [ $count -gt 1000 ]; then
