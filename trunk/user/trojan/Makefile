@@ -1,8 +1,9 @@
 SRC_NAME = trojan-1.16.0
 SRC_URL = https://github.com/trojan-gfw/trojan/archive/v1.16.0.tar.gz
+
 THISDIR = $(shell pwd)
 
-LDFLAGS += -Wl,--gc-sections
+LDFLAGS += -Wl,--gc-sections -static-libstdc++
 COPTS = -O3 $(filter-out -O%,$(CXXFLAGS))
 CFLAGS := $(COPTS)
 CXXFLAGS := $(COPTS)
