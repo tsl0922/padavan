@@ -14,6 +14,7 @@ configure_xz:
 	( cd $(SRC_NAME2) ; \
 	./autogen.sh ; \
 	./configure \
+		--disable-doc \
 		--disable-shared \
 		--disable-werror \
 		--disable-xz \
