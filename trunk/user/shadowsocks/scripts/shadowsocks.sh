@@ -47,18 +47,12 @@ find_bin() {
 	ssr) ret="/usr/bin/ssr-redir" ;;
 	ssr-local) ret="/usr/bin/ssr-local" ;;
 	ssr-server) ret="/usr/bin/ssr-server" ;;
-	v2ray) 
-		if [ -f "/usr/bin/v2ray" ]; then
-			ret="/usr/bin/v2ray" 
+	v2ray|xray)
+		if [ -f "/usr/bin/$1" ]; then
+			ret="/usr/bin/$1"
 		else
-			ret="/usr/bin/xray" 
-		fi
-		;;
-	xray)
-		if [ -f "/usr/bin/xray" ]; then
-			ret="/usr/bin/xray" 
-		else
-			ret="/usr/bin/v2ray"
+			bin=$(echo -e "v2ray\nxray" | grep -v $1)
+			ret="/usr/bin/$bin"
 		fi
 		;;
 	trojan) ret="/usr/bin/trojan" ;;

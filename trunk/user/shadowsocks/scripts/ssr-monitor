@@ -73,11 +73,8 @@ do
 	fi
 	#V2RAY
 	if [ $v2ray_process -gt 0 ] ;then
-		bin="v2ray"
-		if [ "$(nvram get d_type)" == "xray" ] && [ -f "/usr/bin/xray" ]
-		then
-			bin="xray"
-		fi
+		bin="$(nvram get d_type)"
+		[ ! -f "/usr/bin/$bin" ] && bin=$(echo -e "v2ray\nxray" | grep -v $bin)
 		icount=`ps -w | grep $bin | grep -v grep| wc -l`
 		if [ $icount -lt $v2ray_process ]  #如果进程挂掉就重启它
 		then
