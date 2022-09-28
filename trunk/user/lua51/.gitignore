@@ -1,0 +1,3 @@
+lua-*/src/liblua.so
+lua-*/src/lua
+lua-*/src/luac

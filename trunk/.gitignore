@@ -4,6 +4,7 @@
 *.rej
 *.pc
 *.lo
+*.d
 *.o
 *.o.cmd
 *.la
@@ -14,6 +15,7 @@
 .dirstamp
 .config
 autom4te.cache
+configure~
 config.h.in~
 config.log
 config.status

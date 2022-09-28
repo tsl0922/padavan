@@ -1,8 +1,9 @@
-﻿SRC_NAME = skipdbv2
-THISDIR = $(shell pwd)
+﻿THISDIR = $(shell pwd)
+SRC = $(THISDIR)/skipdbv2
+BUILD = $(THISDIR)/build
 
 all: config_test
-	$(MAKE) -C $(SRC_NAME)
+	$(MAKE) -j$(HOST_NCPU) -C $(BUILD)
 
 config_test:
 	( if [ -f ./config_done ]; then \
@@ -12,23 +13,18 @@ config_test:
 	fi )
 
 configure:
-	( cd $(SRC_NAME) ; \
+	( mkdir -p $(BUILD); cd $(BUILD) ; \
 	cmake -DCMAKE_INSTALL_PREFIX=/usr \
 	-DCMAKE_BUILD_TYPE=Release \
-	-DCMAKE_EXE_LINKER_FLAGS="-L$(STAGEDIR)/lib -lev"; \
+	-DCMAKE_EXE_LINKER_FLAGS="-L$(STAGEDIR)/lib -lev" \
+	$(SRC) \
 	)
 
 clean:
-	$(MAKE) -C skipdbv2 -f Makefile clean
-	rm -rf skipdbv2/bin
-	rm -rf skipdbv2/lib
-	rm -rf skipdbv2/CMakeFiles
-	rm -f skipdbv2/CMakeCache.txt
-	rm -f skipdbv2/cmake_install.cmake
-	rm -f skipdbv2/Makefile
+	rm -rf $(BUILD)
 	rm -f config_done
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/bin/skipd /usr/sbin/skipd
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/bin/dbus /usr/sbin/dbus
+	$(ROMFSINST) -p +x $(BUILD)/bin/skipd /usr/sbin/skipd
+	$(ROMFSINST) -p +x $(BUILD)/bin/dbus /usr/sbin/dbus
 	
