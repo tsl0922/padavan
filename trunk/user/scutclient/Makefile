@@ -4,7 +4,7 @@ SRC_FILE := scutclient-a58996875c61d0cdf8ec435057befc1c87bd6863
 THISDIR = $(shell pwd)
 
 all: extract_test config_test
-	$(MAKE) -C $(SRC_NAME)/build
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/build
 
 extract_test:
 	( if [ ! -d $(THISDIR)/$(SRC_NAME) ]; then \

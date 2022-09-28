@@ -7,7 +7,7 @@ LIBSODIUM_SRC_URL = https://github.com/jedisct1/libsodium/archive/1.0.16.tar.gz
 THISDIR = $(shell pwd)
 
 all: download_test extract_test
-	$(MAKE) -C $(SRC_NAME) HOST=$(HOST_TARGET)
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) HOST=$(HOST_TARGET)
 
 download_test:
 	( if [ ! -f $(SRC_NAME).tar.gz ]; then \

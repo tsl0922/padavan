@@ -5,7 +5,7 @@ ARCHIVE_NAME = dump1090-master-0041922
 THISDIR = $(shell pwd)
 
 all: extract_test
-	$(MAKE) -C $(SRC_NAME)
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 
 extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \

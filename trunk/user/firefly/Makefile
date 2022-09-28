@@ -3,7 +3,7 @@ SRC_NAME=mt-daapd-svn
 THISDIR = $(shell pwd)
 
 all: config_test
-	$(MAKE) -C $(SRC_NAME) && \
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) && \
 	$(MAKE) -C $(SRC_NAME) install-strip DESTDIR=$(THISDIR)/install
 
 config_test:

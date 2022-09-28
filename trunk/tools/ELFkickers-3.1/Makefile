@@ -7,7 +7,7 @@ PROGRAMS = sstrip
 all: $(PROGRAMS)
 
 bin/%:
-	$(MAKE) -C$* $*
+	$(MAKE) -j$(HOST_NCPU) -C$* $*
 	cp $*/$* ../$*/
 
 sstrip: bin/sstrip

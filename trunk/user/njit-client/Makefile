@@ -2,7 +2,7 @@ SRC_NAME = njit8021xclient-master
 THISDIR = $(shell pwd)
 
 all: extract_test config_test
-	$(MAKE) -C $(SRC_NAME)/src
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/src
 
 extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \

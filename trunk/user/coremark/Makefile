@@ -2,7 +2,7 @@ SRC_NAME = coremark-2e9d6165f362f7071d29b7f88c6d32655e5d4a3c
 THISDIR = $(shell pwd)
 
 all: extract_test
-	$(MAKE) -C $(SRC_NAME) XCFLAGS="-DMULTITHREAD=8 -DUSE_PTHREAD" PORT_DIR=linux LFLAGS_END="-lpthread -lrt" compile
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) XCFLAGS="-DMULTITHREAD=8 -DUSE_PTHREAD" PORT_DIR=linux LFLAGS_END="-lpthread -lrt" compile
 
 extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \

@@ -24,7 +24,7 @@ configure:
 	)
 
 build:
-	$(MAKE) -C $(SRC_NAME)
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 
 clean:
 	if [ -f $(SRC_NAME)/Makefile ] ; then \

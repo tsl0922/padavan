@@ -2,7 +2,7 @@ SRC_NAME=libogg-1.3.3
 SRC_URL=http://downloads.xiph.org/releases/ogg/$(SRC_NAME).tar.xz
 
 all: download_test extract_test config_test
-	$(MAKE) -C $(SRC_NAME)
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 
 download_test:
 	( if [ ! -f $(SRC_NAME).tar.xz ]; then \

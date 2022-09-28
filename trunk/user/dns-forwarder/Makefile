@@ -2,7 +2,7 @@ SRC_NAME = dns-forwarder-1.2.1
 THISDIR = $(shell pwd)
 
 all: config_test
-	$(MAKE) -C $(SRC_NAME)/build
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/build
 
 config_test:
 	( if [ -f ./config_done ]; then \

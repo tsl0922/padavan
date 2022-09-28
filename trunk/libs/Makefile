@@ -222,6 +222,7 @@ endif
 
 all:
 	for i in $(dir_y) ; do \
+		echo "\033[41;1m   $$i   \033[0m" ; \
 		[ -d $$i ] && \
 		$(MAKE) -j1 -C $$i || \
 		exit $$? ; \

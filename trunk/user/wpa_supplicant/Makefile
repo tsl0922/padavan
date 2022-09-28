@@ -13,7 +13,7 @@ else ifeq (,$(wildcard $(STAGEDIR)/lib/pkgconfig/openssl.pc))
 	echo CONFIG_INTERNAL_LIBTOMMATH=y >> $(SRC_NAME)/.config
 	echo CONFIG_INTERNAL_RC4=y >> $(SRC_NAME)/.config
 endif
-	$(MAKE) -C $(SRC_NAME)
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 
 clean:
 	$(MAKE) -C $(SRC_NAME) clean

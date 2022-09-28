@@ -3,7 +3,7 @@ SRC_URL = https://git.zx2c4.com/wireguard-tools/snapshot/wireguard-tools-1.0.202
 THISDIR = $(shell pwd)
 
 all: download_test extract_test
-	$(MAKE) -C $(SRC_NAME)/src WITH_BASHCOMPLETION=no WITH_WGQUICK=yes WITH_SYSTEMDUNITS=no wg
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/src WITH_BASHCOMPLETION=no WITH_WGQUICK=yes WITH_SYSTEMDUNITS=no wg
 
 download_test:
 	( if [ ! -f $(SRC_NAME).tar.xz ]; then \

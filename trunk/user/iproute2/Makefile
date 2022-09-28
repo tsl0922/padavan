@@ -3,7 +3,7 @@ SRC_NAME=iproute2-5.12.0
 THISDIR = $(shell pwd)
 
 all:
-	$(MAKE) -C $(SRC_NAME) V=1
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) V=1
 
 clean:
 	$(MAKE) -C $(SRC_NAME) clean

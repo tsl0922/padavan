@@ -5,7 +5,7 @@ THISDIR = $(shell pwd)
 LDFLAGS += -L$(STAGEDIR) -liconv
 
 all: extract_test config_test
-	$(MAKE) -C $(SRC_NAME)
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 
 
 extract_test:

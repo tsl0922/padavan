@@ -3,7 +3,7 @@ SRC_URL = https://github.com/hanwckf/minieap/archive/v0.92.1-pdv.zip
 THISDIR = $(shell pwd)
 
 all: download_test extract_test
-	$(MAKE) -C $(SRC_NAME) LIBICONV_STANDALONE=true
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) LIBICONV_STANDALONE=true
 
 download_test: 
 	( if [ ! -f $(THISDIR)/$(SRC_NAME).zip ]; then \

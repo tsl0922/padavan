@@ -126,6 +126,7 @@ endif
 
 .PHONY: romfs.subdirs
 romfs.subdirs:
+	@echo "\033[41;1m   romfs   \033[0m"
 	for dir in vendors $(DIRS) ; do [ ! -d $$dir ] || $(MAKEARCH) -C $$dir romfs || exit 1 ; done
 
 .PHONY: romfs.post
@@ -136,11 +137,13 @@ romfs.post:
 
 .PHONY: image
 image:
+	@echo "\033[41;1m   $@   \033[0m"
 	[ -d $(IMAGEDIR) ] || mkdir $(IMAGEDIR)
 	$(MAKEARCH) -C vendors image
 
 .PHONY: linux
 linux:
+	@echo "\033[41;1m   $@   \033[0m"
 	$(MAKEARCH_KERNEL) -j$(HOST_NCPU) -C $(LINUXDIR) $(LINUXTARGET) || exit 1
 	if [ -f $(LINUXDIR)/vmlinux ]; then \
 		ln -f $(LINUXDIR)/vmlinux $(LINUXDIR)/linux ; \
@@ -168,10 +171,12 @@ dep:
 
 .PHONY: tools
 tools:
+	@echo "\033[41;1m   $@   \033[0m"
 	make -C tools
 
 .PHONY: unpack_trx
 unpack_trx:
+	@echo "\033[41;1m   $@   \033[0m"
 	unpack-trx.sh
 
 clean:
