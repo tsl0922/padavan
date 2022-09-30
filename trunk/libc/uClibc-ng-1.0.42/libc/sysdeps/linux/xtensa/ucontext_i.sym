@@ -1,0 +1,15 @@
+#include <inttypes.h>
+#include <signal.h>
+#include <stddef.h>
+#include <sys/ucontext.h>
+
+SIG_BLOCK
+SIG_SETMASK
+
+-- Offsets of the fields in the ucontext_t structure.
+#define ucontext(member)	offsetof (ucontext_t, member)
+#define mcontext(member)	ucontext (uc_mcontext.member)
+
+UCONTEXT_SIGMASK		ucontext (uc_sigmask)
+MCONTEXT_SC_A_0			mcontext (sc_a[0])
+MCONTEXT_SC_PC			mcontext (sc_pc)
