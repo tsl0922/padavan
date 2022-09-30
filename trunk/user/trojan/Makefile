@@ -31,7 +31,7 @@ config_test:
 configure:
 	( mkdir -p $(SRC_NAME)/build && cd $(SRC_NAME)/build ; \
 		cmake \
-			-DCMAKE_TOOLCHAIN_FILE=../../cross-mipsel-linux.cmake \
+			-DCMAKE_TOOLCHAIN_FILE=$(ROOTDIR)/cmake/cross-mipsel-linux.cmake \
 			-DBoost_USE_STATIC_LIBS=ON \
 			-DENABLE_MYSQL=OFF \
 			-DENABLE_REUSE_PORT=ON \

@@ -25,7 +25,7 @@ configure:
 	( mkdir -p $(SRC_NAME)/build && cd $(SRC_NAME)/build ; \
 	cmake \
 	-DCMAKE_INSTALL_PREFIX=$(STAGEDIR) \
-	-DCMAKE_TOOLCHAIN_FILE=../../cross-mipsel-linux.cmake \
+	-DCMAKE_TOOLCHAIN_FILE=$(ROOTDIR)/cmake/cross-mipsel-linux.cmake \
 	-DUSE_SHARED_MBEDTLS_LIBRARY=On \
 	-DUSE_STATIC_MBEDTLS_LIBRARY=Off \
 	-DENABLE_TESTING=Off \

@@ -26,7 +26,7 @@ configure:
 	( mkdir -p $(SRC_NAME)/build && cd $(SRC_NAME)/build ; \
 	cmake \
 	-DCMAKE_INSTALL_PREFIX=$(STAGEDIR) \
-	-DCMAKE_TOOLCHAIN_FILE=../../cross-mipsel-linux.cmake \
+	-DCMAKE_TOOLCHAIN_FILE=$(ROOTDIR)/cmake/cross-mipsel-linux.cmake \
 	-DLWS_WITH_LIBUV=ON \
 	-DLWS_WITHOUT_BUILTIN_SHA1=ON \
 	-DLWS_WITHOUT_TESTAPPS=ON \
