@@ -143,7 +143,7 @@ struct hwnat_args {
 	struct hwnat_tuple entries[0];
 	unsigned int debug:3;
 	unsigned int entry_state:2;	/* invalid=0, unbind=1, bind=2, fin=3 */
-} __packed;
+} __attribute__((__packed__));
 
 /*hnat qos*/
 struct hwnat_qos_args {

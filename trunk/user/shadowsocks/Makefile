@@ -22,6 +22,8 @@ endif
 extract_ssr_test:
 	( if [ ! -d $(SRC_SSR_NAME) ]; then \
 		unzip -qq $(ARCHIVE_SSR_NAME).zip ; \
+		cd $(SRC_SSR_NAME); \
+		patch -p1 < ../shadowsocksr-libev-master-e2373d7.diff; \
 	fi )
 
 extract_ss_test:
@@ -51,6 +53,7 @@ config_ssr:
 
 configure_ssr:
 	( cd $(SRC_SSR_NAME) ; \
+	aclocal -I m4; autoreconf -fi; automake -a --copy; \
 	ac_cv_prog_PCRE_CONFIG="$(STAGEDIR)/bin/pcre-config" \
 	./configure \
 		--prefix=/usr \

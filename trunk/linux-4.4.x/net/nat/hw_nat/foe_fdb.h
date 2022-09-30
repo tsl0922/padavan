@@ -663,7 +663,7 @@ struct mib_entry {
 	u8 pkt_cnt_h;
 	u8 resv0;
 	u32 resv1;
-} __packed;
+} __attribute__((__packed__));
 #endif
 struct foe_pri_key {
 	/* TODO: add new primary key to support dslite, 6rd */

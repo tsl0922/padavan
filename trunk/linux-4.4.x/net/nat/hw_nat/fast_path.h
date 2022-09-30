@@ -30,7 +30,7 @@ struct pptp_gre_header {
     u32 seq;              /* sequence number.  Present if S==1 */
     u32 ack;              /* seq number of highest packet recieved by */
     /*  sender in this session */
-} __packed;
+} __attribute__((__packed__));
 
 
 struct hnat_pptp 

@@ -1,0 +1,49 @@
+diff --git a/configure.ac b/configure.ac
+index 6586f2b..2678cc1 100755
+--- a/configure.ac
++++ b/configure.ac
+@@ -9,7 +9,7 @@ AC_CONFIG_AUX_DIR(auto)
+ AC_CONFIG_MACRO_DIR([m4])
+ AC_USE_SYSTEM_EXTENSIONS
+
+-AM_INIT_AUTOMAKE([subdir-objects foreign -Wno-gnu -Werror])
++AM_INIT_AUTOMAKE([subdir-objects foreign -Wno-gnu])
+ m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
+ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+ AM_MAINTAINER_MODE
+diff --git a/src/Makefile.am b/src/Makefile.am
+index eea1300..135fb5a 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -1,6 +1,6 @@
+ VERSION_INFO = 2:0:0
+
+-AM_CFLAGS = -g -O2 -Wall -Werror -Wno-deprecated-declarations -fno-strict-aliasing -std=gnu99 -D_GNU_SOURCE
++AM_CFLAGS = -g -O2 -Wall -Wno-deprecated-declarations -fno-strict-aliasing -std=gnu99 -D_GNU_SOURCE
+ AM_CFLAGS += $(PTHREAD_CFLAGS)
+ if !USE_SYSTEM_SHARED_LIB
+ AM_CFLAGS += -I$(top_srcdir)/libev
+diff --git a/src/http.h b/src/http.h
+index 914815a..e312dd3 100644
+--- a/src/http.h
++++ b/src/http.h
+@@ -29,6 +29,6 @@
+ #include <stdio.h>
+ #include "protocol.h"
+
+-const protocol_t *const http_protocol;
++extern const protocol_t *const http_protocol;
+
+ #endif
+diff --git a/src/tls.h b/src/tls.h
+index 3998913..ddbee11 100644
+--- a/src/tls.h
++++ b/src/tls.h
+@@ -28,6 +28,6 @@
+
+ #include "protocol.h"
+
+-const protocol_t *const tls_protocol;
++extern const protocol_t *const tls_protocol;
+
+ #endif

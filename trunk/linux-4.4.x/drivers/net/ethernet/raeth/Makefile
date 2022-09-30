@@ -81,5 +81,3 @@ obj-m += dvt/pkt_gen.o
 obj-m += dvt/pkt_gen_udp_frag.o
 obj-m += dvt/pkt_gen_tcp_frag.o
 endif
-
-ccflags-y += -Werror

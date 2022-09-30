@@ -1,4 +1,4 @@
-CFLAGS  += -I. -Werror -Wmissing-declarations
+CFLAGS  += -I. -Wmissing-declarations
 CFLAGS  += -ffunction-sections -fdata-sections
 #CFLAGS += -DDEBUG_PACKET -DDEBUG -g3
 LDFLAGS += -Llibubox -lubox

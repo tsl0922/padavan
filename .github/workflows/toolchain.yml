@@ -20,16 +20,16 @@ jobs:
         run: |
           make toolchain/build
           cd toolchain-mipsel/toolchain-4.4.x
-          tar cJf ../mipsel-linux-uclibc.tar.xz .
+          tar cJf ../mipsel-linux-uclibc-gcc10.tar.xz *
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: toolchain
-          path: toolchain-mipsel/mipsel-linux-uclibc.tar.xz
+          path: toolchain-mipsel/mipsel-linux-uclibc-gcc10.tar.xz
       - name: Update release
         uses: svenstaro/upload-release-action@2.2.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: toolchain-mipsel/mipsel-linux-uclibc.tar.xz
+          file: toolchain-mipsel/mipsel-linux-uclibc-gcc10.tar.xz
           tag: toolchain
           overwrite: true
