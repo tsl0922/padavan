@@ -12,10 +12,20 @@ toolchain:
 	@(cd $(TOOLCHAIN_DIR); ./dl_toolchain.sh)
 
 toolchain/build:
-	@(cd $(TOOLCHAIN_DIR); ./build_toolchain)
+	@(cd $(TOOLCHAIN_DIR); \
+		./bootstrap && \
+		./configure --enable-local && \
+		make && \
+		./ct-ng mipsel-linux-uclibc && \
+		./ct-ng build \
+	)
 
 toolchain/clean:
-	@(cd $(TOOLCHAIN_DIR); ./clean_toolchain)
+	@(cd $(TOOLCHAIN_DIR); \
+		if [ -f ct-ng ]; then ./ct-ng distclean; fi; \
+		if [ -f Makefile ]; then make distclean; fi; \
+		if [ -d toolchain-4.4.x ]; then rm -rf toolchain-4.4.x; fi \
+	)
 
 build: toolchain
 	@if [ ! -f $(CONFIG) ]; then \

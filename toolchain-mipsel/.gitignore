@@ -1,5 +1,6 @@
 # Generated files
 configure
+configure~
 autom4te.cache
 aclocal.m4
 config.h*
@@ -41,8 +42,5 @@ testing/docker/*/xtools
 .build-all/
 
 toolchain-4.4.x/
-dl/
-
-mipsel-linux-uclibc.tar.xz
 
 docs/ct-ng.1

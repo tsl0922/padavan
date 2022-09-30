@@ -131,37 +131,36 @@ do_binutils_backend() {
 
     CT_DoLog EXTRA "Configuring binutils"
 
-    if [ "${CT_BINUTILS_HAS_GOLD}" = "y" ]; then
-        case "${CT_BINUTILS_LINKERS_LIST}" in
-            ld)
-                extra_config+=( --enable-ld=yes --enable-gold=no )
-                ;;
-            gold)
-                extra_config+=( --enable-ld=no --enable-gold=yes )
-                ;;
-            ld,gold)
-                extra_config+=( --enable-ld=default --enable-gold=yes )
-                ;;
-            gold,ld)
-                extra_config+=( --enable-ld=yes --enable-gold=default )
-                ;;
-        esac
-        if [ "${CT_BINUTILS_GOLD_THREADS}" = "y" ]; then
-            extra_config+=( --enable-threads )
-        fi
+    case "${CT_BINUTILS_LINKERS_LIST}" in
+        ld)
+            extra_config+=( --enable-ld=yes --enable-gold=no )
+            ;;
+        gold)
+            extra_config+=( --enable-ld=no --enable-gold=yes )
+            ;;
+        ld,gold)
+            extra_config+=( --enable-ld=default --enable-gold=yes )
+            ;;
+        gold,ld)
+            extra_config+=( --enable-ld=yes --enable-gold=default )
+            ;;
+    esac
+    if [ "${CT_BINUTILS_GOLD_THREADS}" = "y" ]; then
+        extra_config+=( --enable-threads )
     fi
     if [ "${CT_BINUTILS_PLUGINS}" = "y" ]; then
         extra_config+=( --enable-plugins )
     fi
-    if [ "${CT_BINUTILES_RELRO}" = "y" ]; then
+    if [ "${CT_BINUTILS_RELRO}" = "y" ]; then
         extra_config+=( --enable-relro )
     elif [ "${CT_BINUTILS_RELRO}" != "m" ]; then
         extra_config+=( --disable-relro )
     fi
-    if [ "${CT_BINUTILS_HAS_PKGVERSION_BUGURL}" = "y" ]; then
-        [ -n "${CT_PKGVERSION}" ] && extra_config+=("--with-pkgversion=${CT_PKGVERSION}")
-        [ -n "${CT_TOOLCHAIN_BUGURL}" ] && extra_config+=("--with-bugurl=${CT_TOOLCHAIN_BUGURL}")
+    if [ "${CT_BINUTILS_DETERMINISTIC_ARCHIVES}" = "y" ]; then
+        extra_config+=( --enable-deterministic-archives )
     fi
+    [ -n "${CT_PKGVERSION}" ] && extra_config+=("--with-pkgversion=${CT_PKGVERSION}")
+    [ -n "${CT_TOOLCHAIN_BUGURL}" ] && extra_config+=("--with-bugurl=${CT_TOOLCHAIN_BUGURL}")
     if [ "${CT_MULTILIB}" = "y" ]; then
         extra_config+=("--enable-multilib")
     else
@@ -172,17 +171,24 @@ do_binutils_backend() {
     extra_config+=("--disable-sim")
     extra_config+=("--disable-gdb")
 
+    # libdebuginfod in incompatible with static linking
+    [ "${CT_STATIC_TOOLCHAIN}" = "y" ] && extra_config+=("--without-debuginfod")
+
     [ "${CT_TOOLCHAIN_ENABLE_NLS}" != "y" ] && extra_config+=("--disable-nls")
+
+    # Disable usage of glob for higher compatibility.
+    # Not strictly needed for anything but GDB anyways.
+    export ac_cv_func_glob=no
 
     CT_DoLog DEBUG "Extra config passed: '${extra_config[*]}'"
 
     CT_DoExecLog CFG                                            \
     CC_FOR_BUILD="${CT_BUILD}-gcc"                              \
     CFLAGS_FOR_BUILD="${CT_CFLAGS_FOR_BUILD}"                   \
-    CXXFLAGS_FOR_BUILD="${CT_CFLAGS_FOR_BUILD}"                 \
+    CXXFLAGS_FOR_BUILD="${CT_CFLAGS_FOR_BUILD} ${CT_CXXFLAGS_FOR_BUILD}" \
     LDFLAGS_FOR_BUILD="${CT_LDFLAGS_FOR_BUILD}"                 \
     CFLAGS="${cflags}"                                          \
-    CXXFLAGS="${cflags}"                                        \
+    CXXFLAGS="${cflags} ${CT_CXXFLAGS_FOR_BUILD}"               \
     LDFLAGS="${ldflags}"                                        \
     ${CONFIG_SHELL}                                             \
     "${CT_SRC_DIR}/binutils/configure"                          \
@@ -318,10 +324,8 @@ do_binutils_for_target() {
 
         CT_DoLog EXTRA "Configuring binutils for target"
 
-        if [ "${CT_BINUTILS_HAS_PKGVERSION_BUGURL}" = "y" ]; then
-            [ -n "${CT_PKGVERSION}" ] && extra_config+=("--with-pkgversion=${CT_PKGVERSION}")
-            [ -n "${CT_TOOLCHAIN_BUGURL}" ] && extra_config+=("--with-bugurl=${CT_TOOLCHAIN_BUGURL}")
-        fi
+        [ -n "${CT_PKGVERSION}" ] && extra_config+=("--with-pkgversion=${CT_PKGVERSION}")
+        [ -n "${CT_TOOLCHAIN_BUGURL}" ] && extra_config+=("--with-bugurl=${CT_TOOLCHAIN_BUGURL}")
         if [ "${CT_MULTILIB}" = "y" ]; then
             extra_config+=("--enable-multilib")
         else

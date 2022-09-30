@@ -1,0 +1,16 @@
+---
+ sysdeps/ieee754/ldbl-128ibm/math_ldbl.h |    3 +++
+ 1 file changed, 3 insertions(+)
+
+--- a/sysdeps/ieee754/ldbl-128ibm/math_ldbl.h
++++ b/sysdeps/ieee754/ldbl-128ibm/math_ldbl.h
+@@ -149,6 +149,9 @@
+ # define ldbl_unpack default_ldbl_unpack
+ #endif
+ 
++/* Extract high double.  */
++#define ldbl_high(x) ((double) x)
++
+ /* Convert a finite long double to canonical form.
+    Does not handle +/-Inf properly.  */
+ static inline void

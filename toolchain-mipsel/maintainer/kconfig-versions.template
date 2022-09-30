@@ -53,7 +53,7 @@ config @@fork|@@_PKG_NAME
 choice
     bool "Source of @@pkg_label@@"
 
-#!if [ "@@#version@@" -gt 0 ]
+#!if [ "@@#version@@" -gt 0 ] && [ "@@src_release@@" != "n" ]
 config @@fork|@@_SRC_RELEASE
     bool "Released tarball"
     help
@@ -62,14 +62,19 @@ config @@fork|@@_SRC_RELEASE
 #!end-if
 config @@fork|@@_SRC_DEVEL
     bool "Vendor/custom repository"
-#!if [ "@@#version@@" -gt 0 ]
-    depends on EXPERIMENTAL
-#!end-if
     help
       Check out from a repository.
 #!if [ -n "@@repository@@" ]
       Default is the vendor repository at @@repository_url@@
 #!end-if
+
+config @@fork|@@_SRC_CUSTOM
+    bool "Custom location"
+    depends on EXPERIMENTAL
+    help
+      Custom directory or tarball.
+
+endchoice
 
 if @@fork|@@_SRC_DEVEL
 
@@ -116,6 +121,9 @@ config @@fork|@@_DEVEL_URL
 
 config @@fork|@@_DEVEL_BRANCH
     string "Branch/tag to check out"
+#!foreach version if-differs repository_branch
+    default "@@repository_branch@@" if @@fork|@@_V_@@ver_sel|@@
+#!end-foreach
     default "@@repository_branch@@"
     help
       Git/CVS: branch/tag to be checked out
@@ -126,6 +134,9 @@ config @@fork|@@_DEVEL_BRANCH
 
 config @@fork|@@_DEVEL_REVISION
     string "Revision/changeset"
+#!foreach version if-differs repository_cset
+    default "@@repository_cset@@" if @@fork|@@_V_@@ver_sel|@@
+#!end-foreach
     default "@@repository_cset@@"
     help
       Commit ID or revision ID to check out.
@@ -135,6 +146,9 @@ config @@fork|@@_DEVEL_REVISION
 
 config @@fork|@@_DEVEL_SUBDIR
     string "Subdirectory in the repository"
+#!foreach version if-differs repository_subdir
+    default "@@repository_subdir@@" if @@fork|@@_V_@@ver_sel|@@
+#!end-foreach
     default "@@repository_subdir@@"
     help
       Some projects produce releases not from the top-level directory in the
@@ -143,6 +157,9 @@ config @@fork|@@_DEVEL_SUBDIR
 
 config @@fork|@@_DEVEL_BOOTSTRAP
     string "Bootstrap command"
+#!foreach version if-differs bootstrap
+    default "@@bootstrap@@" if @@fork|@@_V_@@ver_sel|@@
+#!end-foreach
     default "@@bootstrap@@"
     help
       Command to run after checking out. Some projects don't store the generated
@@ -152,12 +169,6 @@ config @@fork|@@_DEVEL_BOOTSTRAP
 
 endif
 
-config @@fork|@@_SRC_CUSTOM
-    bool "Custom location"
-    depends on EXPERIMENTAL
-    help
-      Custom directory or tarball.
-
 if @@fork|@@_SRC_CUSTOM
 
 config @@fork|@@_CUSTOM_LOCATION
@@ -166,8 +177,6 @@ config @@fork|@@_CUSTOM_LOCATION
       Path to the directory or tarball with the sources.
 
 endif
-
-endchoice
 
 if EXPERIMENTAL
 choice
@@ -316,7 +325,7 @@ config @@fork|@@_VERSION
     default "old" if @@fork|@@_VERY_OLD
     default "unknown"
 
-#!if [ "@@#version@@" -gt 0 ]
+#!if [ "@@#version@@" -gt 0 ] && [ "@@src_release@@" != "n" ]
 config @@fork|@@_MIRRORS
     string
 #!foreach version if-differs mirrors

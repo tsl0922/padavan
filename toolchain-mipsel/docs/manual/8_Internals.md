@@ -373,9 +373,9 @@ When a new component, such as the Linux kernel, gcc or any other is
 released, adding the new version to crosstool-NG is quite easy. There is
 a script that will do all that for you:
 
-    scripts/addToolVersion.sh
+    maintainer/manager-packages.sh
 
-Run it with no option to get some help.
+Run it with `--help` to get some help.
 
 
 Build scripts

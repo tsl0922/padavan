@@ -18,6 +18,7 @@ AC_CONFIG_MACRO_DIR([m4])
 # - Object files are generated in a subdirectory (new default in automake)
 # - Request new tar format (old, tar-v7, breaks on long paths we have)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign no-dist-gzip dist-xz dist-bzip2 subdir-objects tar-pax])
+AM_SILENT_RULES([yes])
 
 # To avoid stubbing autotools with missing script
 AM_MAINTAINER_MODE([enable])
@@ -152,9 +153,27 @@ AC_CHECK_PROGS([curl], [curl])
 CTNG_SET_KCONFIG_OPTION([curl])
 AC_SUBST([curl])
 
+AC_CHECK_PROGS([meson], [meson])
+CTNG_SET_KCONFIG_OPTION([meson])
+AC_SUBST([meson])
+
+AC_CHECK_PROGS([ninja], [ninja])
+CTNG_SET_KCONFIG_OPTION([ninja])
+AC_SUBST([ninja])
+
+AC_CHECK_PROGS([rsync], [rsync])
+CTNG_SET_KCONFIG_OPTION([rsync])
+AC_SUBST([rsync])
+
 CTNG_CPU_COUNT
 
 CTNG_PATH_TOOL_REQ([PATCH], [gpatch patch], [patch])
+
+# Ensure the detected patch supports --no-backup-if-mismatch (BSD patch does not)
+AC_MSG_CHECKING([whether patch supports --no-backup-if-mismatch])
+AS_IF([$PATCH --no-backup-if-mismatch </dev/null >/dev/null 2>&1],
+      AC_MSG_RESULT([yes]),
+      AC_MSG_ERROR([$PATCH does not support --no-backup-if-mismatch]))
 
 # We need a bash that is >= 3.1
 CTNG_PROG_VERSION_REQ_STRICT([BASH_SHELL],
@@ -287,7 +306,7 @@ AC_FUNC_REALLOC
 AC_FUNC_ALLOCA
 
 AM_GNU_GETTEXT([external])
-AM_GNU_GETTEXT_VERSION([0.19.8])
+AM_GNU_GETTEXT_VERSION([0.19.7])
 
 # For now, curses are needed to build kconfig. We may support a command-line
 # only configuration without curses later. For now, fail in configure but

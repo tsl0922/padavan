@@ -5,11 +5,10 @@
 # Edited by Martin Lund <mgl@doredevelopment.dk>
 #
 
-newlib_start_files()
+newlib_headers()
 {
-    CT_DoStep INFO "Installing C library headers & start files"
-    CT_DoExecLog ALL cp -a "${CT_SRC_DIR}/newlib/newlib/libc/include/." \
-    "${CT_HEADERS_DIR}"
+    CT_DoStep INFO "Installing C library headers"
+    CT_DoExecLog ALL cp -a "${CT_SRC_DIR}/newlib/newlib/libc/include/." "${CT_HEADERS_DIR}"
     if [ "${CT_ARCH_XTENSA}" = "y" ]; then
         CT_DoLog EXTRA "Installing Xtensa headers"
         CT_DoExecLog ALL cp -r "${CT_SRC_DIR}/newlib/newlib/libc/sys/xtensa/include/."   \
@@ -55,7 +54,7 @@ newlib_main()
     yn_args="IO_POS_ARGS:newlib-io-pos-args
 IO_C99FMT:newlib-io-c99-formats
 IO_LL:newlib-io-long-long
-NEWLIB_REGISTER_FINI:newlib-register-fini
+REGISTER_FINI:newlib-register-fini
 NANO_MALLOC:newlib-nano-malloc
 NANO_FORMATTED_IO:newlib-nano-formatted-io
 ATEXIT_DYNAMIC_ALLOC:newlib-atexit-dynamic-alloc
@@ -63,7 +62,10 @@ GLOBAL_ATEXIT:newlib-global-atexit
 LITE_EXIT:lite-exit
 REENT_SMALL:newlib-reent-small
 MULTITHREAD:newlib-multithread
+RETARGETABLE_LOCKING:newlib-retargetable-locking
 WIDE_ORIENT:newlib-wide-orient
+FSEEK_OPTIMIZATION:newlib-fseek-optimization
+FVWRITE_IN_STREAMIO:newlib-fvwrite-in-streamio
 UNBUF_STREAM_OPT:newlib-unbuf-stream-opt
 ENABLE_TARGET_OPTSPACE:target-optspace
     "

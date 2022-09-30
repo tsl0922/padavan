@@ -143,11 +143,11 @@ completion. That shell fragment is currently not installed automatically.
 
 To install the shell script fragment, you have two options:
 
--   install system-wide, most probably by copying `ct-ng.comp` into
-    `/etc/bash_completion.d/`, or
+-   install system-wide, most probably by copying `./bash-completion/ct-ng`
+    into `/etc/bash_completion.d/`, or
 
--   install for a single user, by copying `ct-ng.comp` into `${HOME}/`
-    and sourcing this file from your `${HOME}/.bashrc`.
+-   install for a single user, by copying `./bash-completion/ct-ng` into
+    `${HOME}/` and sourcing this file from your `${HOME}/.bashrc`.
 
 Contributed code <a name="contributed-code"></a>
 ----------------

@@ -1,6 +1,6 @@
 # Linux kernel options
 
-## depends on !ARCH_AVR && !ARCH_MSP430 && !ARCH_MOXIE
+## depends on !ARCH_AVR && !ARCH_MSP430 && !ARCH_MOXIE && !ARCH_PRU
 ## select KERNEL_SUPPORTS_SHARED_LIBS
 
 ## help Build a toolchain targeting systems running Linux as a kernel.
@@ -11,6 +11,13 @@
 # are still using quite ancient versions. Please do not retire versions
 # (including versions in between) until the EOL dates indicated below.
 # Such pinned versions are indicated in version.desc files with a comment.
+
+config KERNEL_DEP_RSYNC
+    def_bool y
+    select LINUX_REQUIRE_older_than_5_3 if !CONFIGURE_has_rsync
+
+comment "Linux >=5.3 requires rsync"
+    depends on !CONFIGURE_has_rsync
 
 choice
     bool

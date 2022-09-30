@@ -9,7 +9,7 @@ Archive and subscription info can be found here:
 [https://sourceware.org/ml/crossgcc/](https://sourceware.org/ml/crossgcc/)
 
 Sometimes you may be able to contact a maintainer on IRC at the #crosstool-ng
-channel on the FreeNode net (irc.freenode.net).
+channel on the Libera.Chat (irc.libera.chat).
 
 Using a mailing list or IRC to triage an issue is okay. If it looks like a bug,
 you'll be asked to file an issue at Github. If it looks like a pilot error,

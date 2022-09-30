@@ -7,7 +7,7 @@ your `PATH`, such as:
 Depending on the project being compiled, there may be different ways
 to specify the toolchain.
 
-If the software uses GNU autotools or a similar configure script, you shoul
+If the software uses GNU autotools or a similar configure script, you should
 use the `--host` tuple to tell the build system to use your toolchain
 (if the software package uses the autotools system you should also
 pass `--build`, for completeness):

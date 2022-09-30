@@ -116,7 +116,7 @@ help menu. Those are the ones with `[.#]` after them (e.g., `build[.#]` or
 > 
 > The crosstool-NG script `ct-ng` is a Makefile-script. It does **not**
 > execute in parallel (there is not much to gain). When speaking of
-> jobs, we are refering to the number of jobs when making the
+> jobs, we are referring to the number of jobs when making the
 > **components**. That is, we speak of the number of jobs used to build
 > gcc, glibc, and so on.
 

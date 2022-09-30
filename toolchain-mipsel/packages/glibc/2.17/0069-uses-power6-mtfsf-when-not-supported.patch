@@ -1,0 +1,125 @@
+2015-03-11  Martin Sebor  <msebor@redhat.com>
+
+        * sysdeps/unix/sysv/linux/powerpc/powerpc64/setcontext.S
+        (__setcontext): Set machine to power6 regardless of whether
+        or not _ARCH_PWR6 is defined.
+        * sysdeps/unix/sysv/linux/powerpc/powerpc64/swapcontext.S
+        (__novec_swapcontext): Likewise.
+
+---
+ sysdeps/unix/sysv/linux/powerpc/powerpc64/setcontext.S  |   18 ++++++++++------
+ sysdeps/unix/sysv/linux/powerpc/powerpc64/swapcontext.S |   18 ++++++++++++----
+ 2 files changed, 26 insertions(+), 10 deletions(-)
+
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/setcontext.S
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/setcontext.S
+@@ -80,12 +80,13 @@
+   lfd  fp31,(SIGCONTEXT_FP_REGS+(PT_R31*8))(r31)
+   lfd  fp30,(SIGCONTEXT_FP_REGS+(PT_R30*8))(r31)
+ 
++  .machine push
++  .machine "power6"
++
+ # ifdef _ARCH_PWR6
+   /* Use the extended four-operand version of the mtfsf insn.  */
+   mtfsf  0xff,fp0,1,0
+ # else
+-  .machine push
+-  .machine "power6"
+   /* Availability of DFP indicates a 64-bit FPSCR.  */
+   andi.  r6,r5,PPC_FEATURE_HAS_DFP
+   beq    5f
+@@ -96,8 +97,10 @@
+ 5:
+   mtfsf  0xff,fp0
+ 6:
+-  .machine pop
+ # endif /* _ARCH_PWR6 */
++
++  .machine pop
++
+   lfd  fp29,(SIGCONTEXT_FP_REGS+(PT_R29*8))(r31)
+   lfd  fp28,(SIGCONTEXT_FP_REGS+(PT_R28*8))(r31)
+   lfd  fp27,(SIGCONTEXT_FP_REGS+(PT_R27*8))(r31)
+@@ -363,12 +366,13 @@
+   lfd  fp31,(SIGCONTEXT_FP_REGS+(PT_R31*8))(r31)
+   lfd  fp30,(SIGCONTEXT_FP_REGS+(PT_R30*8))(r31)
+ 
++  .machine push
++  .machine "power6"
++
+ # ifdef _ARCH_PWR6
+   /* Use the extended four-operand version of the mtfsf insn.  */
+   mtfsf  0xff,fp0,1,0
+ # else
+-  .machine push
+-  .machine "power6"
+   /* Availability of DFP indicates a 64-bit FPSCR.  */
+   andi.  r6,r5,PPC_FEATURE_HAS_DFP
+   beq    7f
+@@ -379,8 +383,10 @@
+ 7:
+   mtfsf  0xff,fp0
+ 8:
+-  .machine pop
+ # endif /* _ARCH_PWR6 */
++
++  .machine pop
++
+   lfd  fp29,(SIGCONTEXT_FP_REGS+(PT_R29*8))(r31)
+   lfd  fp28,(SIGCONTEXT_FP_REGS+(PT_R28*8))(r31)
+   lfd  fp27,(SIGCONTEXT_FP_REGS+(PT_R27*8))(r31)
+--- a/sysdeps/unix/sysv/linux/powerpc/powerpc64/swapcontext.S
++++ b/sysdeps/unix/sysv/linux/powerpc/powerpc64/swapcontext.S
+@@ -174,6 +174,10 @@
+   lfd  fp0,(SIGCONTEXT_FP_REGS+(32*8))(r31)
+   lfd  fp31,(SIGCONTEXT_FP_REGS+(PT_R31*8))(r31)
+   lfd  fp30,(SIGCONTEXT_FP_REGS+(PT_R30*8))(r31)
++
++  .machine push
++  .machine "power6"
++        
+ # ifdef _ARCH_PWR6
+   /* Use the extended four-operand version of the mtfsf insn.  */
+   mtfsf  0xff,fp0,1,0
+@@ -190,8 +194,10 @@
+ 5:
+   mtfsf  0xff,fp0
+ 6:
+-  .machine pop
+ #endif /* _ARCH_PWR6 */
++
++  .machine pop
++
+   lfd  fp29,(SIGCONTEXT_FP_REGS+(PT_R29*8))(r31)
+   lfd  fp28,(SIGCONTEXT_FP_REGS+(PT_R28*8))(r31)
+   lfd  fp27,(SIGCONTEXT_FP_REGS+(PT_R27*8))(r31)
+@@ -653,12 +659,14 @@
+   lfd  fp0,(SIGCONTEXT_FP_REGS+(32*8))(r31)
+   lfd  fp31,(SIGCONTEXT_FP_REGS+(PT_R31*8))(r31)
+   lfd  fp30,(SIGCONTEXT_FP_REGS+(PT_R30*8))(r31)
++
++  .machine push
++  .machine "power6"
++
+ # ifdef _ARCH_PWR6
+   /* Use the extended four-operand version of the mtfsf insn.  */
+   mtfsf  0xff,fp0,1,0
+ # else
+-  .machine push
+-  .machine "power6"
+   /* Availability of DFP indicates a 64-bit FPSCR.  */
+   andi.  r6,r8,PPC_FEATURE_HAS_DFP
+   beq    7f
+@@ -669,8 +677,10 @@
+ 7:
+   mtfsf  0xff,fp0
+ 8:
+-  .machine pop
+ #endif /* _ARCH_PWR6 */
++
++  .machine pop
++
+   lfd  fp29,(SIGCONTEXT_FP_REGS+(PT_R29*8))(r31)
+   lfd  fp28,(SIGCONTEXT_FP_REGS+(PT_R28*8))(r31)
+   lfd  fp27,(SIGCONTEXT_FP_REGS+(PT_R27*8))(r31)

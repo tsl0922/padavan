@@ -3,7 +3,7 @@
 
 ## depends on ! WINDOWS && ! BARE_METAL && ARCH_USE_MMU
 ## select LIBC_SUPPORT_THREADS_NATIVE
-## select CC_CORE_PASSES_NEEDED
+## select CC_CORE_NEEDED
 # TBD: select GETTEXT for build only, not for host
 ## select GETTEXT_NEEDED
 ## select BINUTILS_FORCE_LD_BFD_DEFAULT
@@ -35,12 +35,16 @@ config GLIBC_DEP_BINUTILS
     select BINUTILS_REQUIRE_2_25_or_later if GLIBC_2_26_or_later
     select BINUTILS_REQUIRE_older_than_2_30 if GLIBC_older_than_2_26 && ARCH_ARM && ARCH_64
 
+# Glibc 2.26 requires GCC4.9 or newer
 # Glibc 2.29 requires GCC5+ or, for ppc64le, GCC6.2+. We only support the latest
 # release on GCC6 branch, so just assume it is newer than 6.2
+# Glibc 2.30 uncondtionally requires GCC 6.2+
 config GLIBC_DEP_GCC
     def_bool y
+    select GCC_REQUIRE_4_9_or_later if GLIBC_2_26_or_later
     select GCC_REQUIRE_5_or_later if GLIBC_2_29_or_later
     select GCC_REQUIRE_6_or_later if GLIBC_2_29_or_later && ARCH_POWERPC && ARCH_64 && ARCH_LE
+    select GCC_REQUIRE_6_or_later if GLIBC_2_30_or_later
 
 # Glibc 2.29 requires bison 2.7 or later. All versions in ct-ng satisfy that
 # version requirement.
@@ -55,16 +59,20 @@ config GLIBC_DEP_PYTHON
     def_bool y
     select GLIBC_REQUIRE_older_than_2_29 if !CONFIGURE_has_python_3_4_or_newer
 
+comment "glibc >=2.29 requires python >3.4"
+    depends on !CONFIGURE_has_python_3_4_or_newer
+
 config GLIBC_DEP_MAKE_4_0
     def_bool y
-    depends on GLIBC_2_29_or_later && !CONFIGURE_has_make_4_0_or_newer
+    depends on GLIBC_2_28_or_later && !CONFIGURE_has_make_4_0_or_newer
     select COMP_TOOLS_MAKE
-    select MAKE_REQUIRE_4_0_or_later
     select MAKE_GNUMAKE_SYMLINK # Override old host make in .build/tools/bin
 
-config GLIBC_DEP_GCC
+# Glibc 2.31 removed support for pre-v8 SPARC in 32-bit mode (64-bit mode always
+# required UltraSPARC)
+config GLIBC_SPARC_ALLOW_V7
     def_bool y
-    select GCC_REQUIRE_4_9_or_later if GLIBC_2_26_or_later
+    depends on GLIBC_2_30_or_older
 
 config THREADS
     default "nptl"
@@ -99,6 +107,7 @@ config GLIBC_HAS_NPTL_ADDON
 config GLIBC_HAS_PORTS_ADDON
     def_bool y
     depends on !GLIBC_2_20_or_later
+    depends on !GLIBC_USE_ORACLE
 
 config GLIBC_HAS_PORTS_ADDON_EXTERNAL
     def_bool y
@@ -115,6 +124,7 @@ config GLIBC_USE_PORTS_ADDON
     def_bool y
     depends on ARCH_ALPHA || ARCH_ARM || ARCH_M68K || ARCH_MIPS || ARCH_POWERPC
     depends on GLIBC_HAS_PORTS_ADDON
+    depends on !GLIBC_USE_ORACLE
 
 config GLIBC_USE_PORTS_EXTERNAL
     def_bool y
@@ -139,9 +149,10 @@ config GLIBC_NO_SPARC_V8
 # in 2.16, adding an option to enable that code. Crosstool-NG backports that code
 # to 2.14/2.15, but there is no harm in throwing this option even if that patch
 # is not applied.
+# The option and the code has finally been removed in 2.32
 config GLIBC_HAS_OBSOLETE_RPC
     def_bool y
-    depends on GLIBC_2_14_or_later
+    depends on GLIBC_2_14_or_later && !GLIBC_2_32_or_later
 
 config GLIBC_EXTRA_CONFIG_ARRAY
     string
@@ -172,6 +183,7 @@ config GLIBC_CONFIGPARMS
 config GLIBC_EXTRA_CFLAGS
     string
     prompt "extra target CFLAGS"
+    default "-Wno-missing-attributes -Wno-array-bounds -Wno-array-parameter -Wno-stringop-overflow -Wno-maybe-uninitialized" if GLIBC_2_29_or_older && GCC_11_or_later
     default ""
     help
       Extra target CFLAGS to use when building.
@@ -391,11 +403,17 @@ config GLIBC_SSP
     default "strong" if GLIBC_SSP_STRONG
 
 # All supported versions of glibc build cleanly with GCC7 and earlier.
-# GCC8-related fixes were only available in glibc 2.27.
+# GCC8-related fixes were only available in glibc 2.27
+# GCC9-related fixes were available in glibc 2.29
+# GCC10-related fixes were available in glibc 2.31
+# GCC11-related fixes were available in glibc 2.34
 config GLIBC_ENABLE_WERROR
     bool "Enable -Werror during the build"
     default y if GCC_7_or_older
-    default y if GCC_8_or_later && GLIBC_2_27_or_later
+    default y if GCC_8_or_later && !GCC_9_or_later && GLIBC_2_27_or_later
+    default y if GCC_9_or_later && !GCC_10_or_later && GLIBC_2_29_or_later
+    default y if GCC_10_or_later && !GCC_11_or_later && GLIBC_2_31_or_later
+    default y if GCC_11_or_later && GLIBC_2_34_or_later
     help
       By default, glibc enables strict warning checks during the build.
       However, older version of glibc may not build with newer versions
@@ -403,5 +421,13 @@ config GLIBC_ENABLE_WERROR
       release (because newer compilers typically have better diagnostics).
 
 endif
+
+config GLIBC_ENABLE_COMMON_FLAG
+    bool "Enable -fcommon flag for older version of glibc when using GCC >=10"
+    default y if GLIBC_2_29_or_older && GCC_10_or_later
+    default n if GLIBC_2_30_or_later || GCC_9_or_older
+    help
+      Starting from GCC 10, the default behavior is changed to -fno-common.
+      That leads to linking errors in GLibc versions older than 2.30.
 
 endif # KERNEL_LINUX

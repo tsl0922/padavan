@@ -16,7 +16,7 @@ CT_DoArchTupleValues() {
     # The system part of the tuple:
     case "${CT_LIBC},${CT_ARCH_ARM_EABI}" in
         glibc,y)    CT_TARGET_SYS=gnueabi;;
-        uClibc,y)   CT_TARGET_SYS=uclibc${CT_LIBC_UCLIBC_USE_GNU_SUFFIX:+gnu}eabi;;
+        uClibc-ng,y)CT_TARGET_SYS=uclibc${CT_LIBC_UCLIBC_USE_GNU_SUFFIX:+gnu}eabi;;
         musl,y)     CT_TARGET_SYS=musleabi;;
         bionic,y)   CT_TARGET_SYS=androideabi;;
         *,y)        CT_TARGET_SYS=eabi;;
@@ -70,6 +70,7 @@ CT_DoArchUClibcConfig() {
                 ;;
             thumb)
                 CT_KconfigEnableOption "COMPILE_IN_THUMB_MODE" "${cfg}"
+                CT_KconfigDisableOption "UCLIBC_HAS_CONTEXT_FUNCS" "${cfg}"
                 ;;
         esac
         # FIXME: CONFIG_ARM_OABI does not exist in neither uClibc/uClibc-ng

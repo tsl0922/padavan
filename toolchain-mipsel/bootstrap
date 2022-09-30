@@ -6,6 +6,9 @@ if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
     exit 1
 fi
 
+# see #849
+unset CDPATH
+
 ########################################
 # Common meta-language implementation. Syntax:
 #
@@ -399,7 +402,7 @@ cmp_versions()
 {
     local v1="${1}"
     local v2="${2}"
-    local e1=0 e2=0 u1 u2 d1=0 d2=0
+    local e1=0 e2=0 d1=0 d2=0
 
     # Case-insensitive comparison
     v1="${v1^^}"
@@ -571,6 +574,9 @@ enter_fork()
     info[pkg_name]=${fork}
     info[pkg_label]=${fork}
     info[mirrors]=
+    info[src_release]=
+    info[src_devel]=
+    info[src_custom]=
     info[archive_filename]='@{pkg_name}-@{version}'
     info[archive_dirname]='@{pkg_name}-@{version}'
     info[versionlocked]=
@@ -589,6 +595,8 @@ enter_fork()
         info[vcs]=${info[repository]%% *}
         info[repository_url]=${info[repository]#* }
     fi
+
+    info[mirrors]=${info[mirrors]//$\(/\\$\(}
 
     versions=`cd packages/${fork} && \
         for f in */version.desc; do [ -r "${f}" ] && echo "${f%/version.desc}"; done`
@@ -640,11 +648,14 @@ enter_version()
 enter_milestone()
 {
     local ms="${1}"
-    local cmp
 
     info[ms]=${ms}
     if [ -n "${info[ver]}" ]; then
-        info[version_cmp_milestone]=`cmp_versions ${info[ver]} ${info[ms]}`
+        if [ -n "${info[version_number]}" ]; then
+            info[version_cmp_milestone]=`cmp_versions ${info[version_number]} ${info[ms]}`
+        else
+            info[version_cmp_milestone]=`cmp_versions ${info[ver]} ${info[ms]}`
+        fi
     fi
 }
 
@@ -801,7 +812,7 @@ msg "*** Gathering the list of data files to install"
             scripts/compile | scripts/missing | scripts/depcomp | scripts/ltmain.sh | scripts/install-sh)
                 continue
                 ;;
-            # 
+            #
             # will produce. FIXME: create this file at the time of 'ct-ng build'.
             config/configure.in.in | config/configure.in)
                 continue
@@ -818,6 +829,6 @@ msg "*** Gathering the list of data files to install"
 } > verbatim-data.mk
 
 msg "*** Running autoreconf"
-autoreconf -Wall --force
+autoreconf -Wall --force -I m4
 
 msg "*** Done!"

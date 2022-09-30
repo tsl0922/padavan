@@ -134,7 +134,7 @@ evaluate_multilib_cflags()
 # 1. On MIPS target, gcc (or rather, ld, which it invokes under the hood) chokes
 # if supplied with two -mabi=* options. I.e., 'gcc -mabi=n32' and 'gcc -mabi=32' both
 # work, but 'gcc -mabi=32 -mabi=n32' produces an internal error in ld. Thus we do
-# not supply target's CFLAGS in multilib builds - and after compiling pass-1 gcc,
+# not supply target's CFLAGS in multilib builds - and after compiling core gcc,
 # attempt to determine which CFLAGS need to be filtered out.
 #
 # 2. If "demultilibing" is in effect, create top-level directories for any
@@ -186,11 +186,10 @@ cc_gcc_multilib_housekeeping() {
 }
 
 #------------------------------------------------------------------------------
-# Core gcc pass 1
-do_cc_core_pass_1() {
+do_cc_core() {
     local -a core_opts
 
-    if [ "${CT_CC_CORE_PASS_1_NEEDED}" != "y" ]; then
+    if [ "${CT_CC_CORE_NEEDED}" != "y" ]; then
         return 0
     fi
 
@@ -201,60 +200,12 @@ do_cc_core_pass_1() {
     core_opts+=( "cflags=${CT_CFLAGS_FOR_BUILD}" )
     core_opts+=( "ldflags=${CT_LDFLAGS_FOR_BUILD}" )
     core_opts+=( "lang_list=c" )
-    core_opts+=( "build_step=core1" )
+    core_opts+=( "build_step=core" )
+    core_opts+=( "mode=static" )
+    core_opts+=( "build_libgcc=yes" )
 
-    CT_DoStep INFO "Installing pass-1 core C gcc compiler"
-    CT_mkdir_pushd "${CT_BUILD_DIR}/build-cc-gcc-core-pass-1"
-
-    do_gcc_core_backend "${core_opts[@]}"
-
-    CT_Popd
-    CT_EndStep
-}
-
-# Core gcc pass 2
-do_cc_core_pass_2() {
-    local -a core_opts
-
-    if [ "${CT_CC_CORE_PASS_2_NEEDED}" != "y" ]; then
-        return 0
-    fi
-
-    # Common options:
-    core_opts+=( "host=${CT_BUILD}" )
-    core_opts+=( "prefix=${CT_BUILDTOOLS_PREFIX_DIR}" )
-    core_opts+=( "complibs=${CT_BUILDTOOLS_PREFIX_DIR}" )
-    core_opts+=( "cflags=${CT_CFLAGS_FOR_BUILD}" )
-    core_opts+=( "ldflags=${CT_LDFLAGS_FOR_BUILD}" )
-    core_opts+=( "lang_list=c" )
-    core_opts+=( "build_step=core2" )
-
-    # Different conditions are at stake here:
-    #   - In case the threading model is NPTL, we need a shared-capable core
-    #     gcc; in all other cases, we need a static-only core gcc.
-    #   - In case the threading model is NPTL or win32, or gcc is 4.3 or
-    #     later, we need to build libgcc
-    case "${CT_THREADS}" in
-        nptl)
-            if [ "${CT_SHARED_LIBS}" = "y" ]; then
-                core_opts+=( "mode=shared" )
-            else
-                core_opts+=( "mode=static" )
-            fi
-            core_opts+=( "build_libgcc=yes" )
-            ;;
-        win32)
-            core_opts+=( "mode=static" )
-            core_opts+=( "build_libgcc=yes" )
-            ;;
-        *)
-            core_opts+=( "mode=static" )
-            core_opts+=( "build_libgcc=yes" )
-            ;;
-    esac
-
-    CT_DoStep INFO "Installing pass-2 core C gcc compiler"
-    CT_mkdir_pushd "${CT_BUILD_DIR}/build-cc-gcc-core-pass-2"
+    CT_DoStep INFO "Installing core C gcc compiler"
+    CT_mkdir_pushd "${CT_BUILD_DIR}/build-cc-gcc-core"
 
     do_gcc_core_backend "${core_opts[@]}"
 
@@ -279,8 +230,8 @@ do_cc_core_pass_2() {
 #   build_manuals       : whether to build manuals or not           : bool      : no
 #   cflags              : cflags to use                             : string    : (empty)
 #   ldflags             : ldflags to use                            : string    : (empty)
-#   build_step          : build step 'core1', 'core2', 'gcc_build'
-#                         or 'gcc_host'                             : string    : (none)
+#   build_step          : build step 'core', 'gcc_build',
+#                         'libstdcxx' or 'gcc_host'                 : string    : (none)
 # Usage: do_gcc_core_backend mode=[static|shared|baremetal] build_libgcc=[yes|no] build_staticlinked=[yes|no]
 do_gcc_core_backend() {
     local mode
@@ -291,13 +242,18 @@ do_gcc_core_backend() {
     local build_manuals=no
     local host
     local prefix
+    local enable_optspace
     local complibs
     local lang_list
-    local cflags cflags_for_build cflags_for_target
+    local cflags cflags_for_build cxxflags_for_build cflags_for_target cxxflags_for_target
+    local extra_cxxflags_for_target
     local ldflags
     local build_step
     local log_txt
     local tmp
+    local exec_prefix
+    local header_dir
+    local libstdcxx_name
     local -a host_libstdcxx_flags
     local -a extra_config
     local -a core_LDFLAGS
@@ -313,7 +269,7 @@ do_gcc_core_backend() {
 
     # This function gets called in case of a bare metal compiler for the final gcc, too.
     case "${build_step}" in
-        core1|core2)
+        core)
             CT_DoLog EXTRA "Configuring core C gcc compiler"
             log_txt="gcc"
             extra_config+=( "${CT_CC_CORE_SYSROOT_ARG[@]}" )
@@ -327,10 +283,29 @@ do_gcc_core_backend() {
             # to inhibit the libiberty and libgcc tricks later on
             build_libgcc=no
             ;;
+        libstdcxx)
+            CT_DoLog EXTRA "Configuring libstdc++ for ${libstdcxx_name}"
+            if [ "${header_dir}" = "" ]; then
+                header_dir="${CT_PREFIX_DIR}/${libstdcxx_name}/include"
+            fi
+            if [ "${exec_prefix}" = "" ]; then
+                exec_prefix="${CT_PREFIX_DIR}/${libstdcxx_name}"
+            fi
+            extra_config+=( "${CT_CC_SYSROOT_ARG[@]}" )
+            extra_config+=( "--with-headers=${header_dir}" )
+            extra_user_config=( "${CT_CC_GCC_EXTRA_CONFIG_ARRAY[@]}" )
+            log_txt="libstdc++ ${libstdcxx_name} library"
+            # to inhibit the libiberty and libgcc tricks later on
+            build_libgcc=no
+            ;;
         *)
-            CT_Abort "Internal Error: 'build_step' must be one of: 'core1', 'core2', 'gcc_build' or 'gcc_host', not '${build_step:-(empty)}'"
+            CT_Abort "Internal Error: 'build_step' must be one of: 'core', 'gcc_build', 'gcc_host' or 'libstdcxx', not '${build_step:-(empty)}'"
             ;;
     esac
+
+    if [ "${exec_prefix}" = "" ]; then
+        exec_prefix="${prefix}"
+    fi
 
     case "${mode}" in
         static)
@@ -351,7 +326,7 @@ do_gcc_core_backend() {
             ;;
     esac
 
-    for tmp in ARCH ABI CPU TUNE FPU FLOAT ENDIAN; do
+    for tmp in ARCH ABI CPU CPU_32 CPU_64 TUNE FPU FLOAT ENDIAN; do
         eval tmp="\${CT_ARCH_WITH_${tmp}}"
         if [ -n "${tmp}" ]; then
             extra_config+=("${tmp}")
@@ -361,11 +336,22 @@ do_gcc_core_backend() {
     [ -n "${CT_PKGVERSION}" ] && extra_config+=("--with-pkgversion=${CT_PKGVERSION}")
     [ -n "${CT_TOOLCHAIN_BUGURL}" ] && extra_config+=("--with-bugurl=${CT_TOOLCHAIN_BUGURL}")
 
+    # Hint GCC we'll use a bit special version of Newlib
+    if [ "${CT_LIBC_NEWLIB_NANO_FORMATTED_IO}" = "y" ]; then
+        extra_config+=("--enable-newlib-nano-formatted-io")
+    fi
+
     if [ "${CT_CC_CXA_ATEXIT}" = "y" ]; then
         extra_config+=("--enable-__cxa_atexit")
     else
         extra_config+=("--disable-__cxa_atexit")
     fi
+
+    case "${CT_CC_GCC_TM_CLONE_REGISTRY}" in
+        y) extra_config+=("--enable-tm-clone-registry");;
+        m) ;;
+        "") extra_config+=("--disable-tm-clone-registry");;
+    esac
 
     if [ -n "${CT_CC_GCC_ENABLE_CXX_FLAGS}" \
             -a "${mode}" = "baremetal" ]; then
@@ -376,17 +362,26 @@ do_gcc_core_backend() {
     extra_config+=(--disable-libmudflap)
     extra_config+=(--disable-libmpx)
 
-    if [ "${CT_CC_GCC_LIBSSP}" = "y" ]; then
-        extra_config+=(--enable-libssp)
-    else
-        extra_config+=(--disable-libssp)
-    fi
+    case "${CT_CC_GCC_LIBSSP}" in
+        y)  extra_config+=(--enable-libssp);;
+        m)  ;;
+        "") extra_config+=(--disable-libssp);;
+    esac
     if [ "${CT_CC_GCC_LIBQUADMATH}" = "y" ]; then
         extra_config+=(--enable-libquadmath)
         extra_config+=(--enable-libquadmath-support)
     else
         extra_config+=(--disable-libquadmath)
         extra_config+=(--disable-libquadmath-support)
+    fi
+
+    case "${CT_CC_GCC_LIBSTDCXX_VERBOSE}" in
+        y)  extra_config+=("--enable-libstdcxx-verbose");;
+        "") extra_config+=("--disable-libstdcxx-verbose");;
+    esac
+
+    if [ "${build_libstdcxx}" = "no" ]; then
+        extra_config+=(--disable-libstdcxx)
     fi
 
     core_LDFLAGS+=("${ldflags}")
@@ -396,9 +391,11 @@ do_gcc_core_backend() {
     # with the same block in do_gcc_backend, below.
     if [ "${build_staticlinked}" = "yes" ]; then
         core_LDFLAGS+=("-static")
-        host_libstdcxx_flags+=("-static-libgcc")
-        host_libstdcxx_flags+=("-Wl,-Bstatic,-lstdc++")
-        host_libstdcxx_flags+=("-lm")
+        if [ "${CT_GCC_older_than_6}" = "y" ]; then
+            host_libstdcxx_flags+=("-static-libgcc")
+            host_libstdcxx_flags+=("-Wl,-Bstatic,-lstdc++")
+            host_libstdcxx_flags+=("-lm")
+        fi
         # Companion libraries are build static (eg !shared), so
         # the libstdc++ is not pulled automatically, although it
         # is needed. Shoe-horn it in our LDFLAGS
@@ -406,7 +403,7 @@ do_gcc_core_backend() {
         core_LDFLAGS+=("-lstdc++")
         core_LDFLAGS+=("-lm")
     else
-        if [ "${CT_CC_GCC_STATIC_LIBSTDCXX}" = "y" ]; then
+        if [ "${CT_CC_GCC_STATIC_LIBSTDCXX}" = "y" -a "${CT_GCC_older_than_6}" = "y" ]; then
             # this is from CodeSourcery arm-2010q1-202-arm-none-linux-gnueabi.src.tar.bz2
             # build script
             # INFO: if the host gcc is gcc-4.5 then presumably we could use -static-libstdc++,
@@ -447,7 +444,8 @@ do_gcc_core_backend() {
         extra_config+=("--with-host-libstdcxx=${host_libstdcxx_flags[*]}")
     fi
 
-    if [ "${CT_CC_GCC_ENABLE_TARGET_OPTSPACE}" = "y" ]; then
+    if [ "${CT_CC_GCC_ENABLE_TARGET_OPTSPACE}" = "y" ] || \
+       [ "${enable_optspace}" = "yes" ]; then
         extra_config+=("--enable-target-optspace")
     fi
     if [ "${CT_CC_GCC_DISABLE_PCH}" = "y" ]; then
@@ -456,8 +454,6 @@ do_gcc_core_backend() {
 
     if [ "${CT_LIBC_GLIBC}" = "y" ]; then
         # Report GLIBC's version to GCC, it affects the defaults on other options.
-        # Pass-2 should be able to get it from the headers, but for some options
-        # (such as --with-long-double-128) we need to get it right even in pass-1.
         # GCC expects just two numbers separated by a dot.
         local glibc_version
 
@@ -526,11 +522,10 @@ do_gcc_core_backend() {
 
     # Some versions of gcc have a defective --enable-multilib.
     # Since that's the default, only pass --disable-multilib. For multilib,
-    # also enable multiarch. Without explicit --enable-multiarch, pass-1
-    # compiler is configured as multilib/no-multiarch and pass-2/final
-    # are multilib/multiarch (because gcc autodetects multiarch based on
-    # multiple instances of crt*.o in the install directory - which do
-    # not exist in pass-1).
+    # also enable multiarch. Without explicit --enable-multiarch, core
+    # compiler is configured as multilib/no-multiarch (because gcc autodetects
+    # multiarch based on multiple instances of crt*.o in the install directory
+    # which do not exist in the core pass).
     if [ "${CT_MULTILIB}" != "y" ]; then
         extra_config+=("--disable-multilib")
     else
@@ -546,6 +541,7 @@ do_gcc_core_backend() {
     # that ${cflags} may refer either to build or host CFLAGS; they are provided
     # by the caller.
     cflags_for_build="${CT_CFLAGS_FOR_BUILD}"
+    cxxflags_for_build="${CT_CXXFLAGS_FOR_BUILD}"
     cflags_for_target="${CT_TARGET_CFLAGS}"
 
     # Clang's default bracket-depth is 256, and building GCC
@@ -563,7 +559,7 @@ do_gcc_core_backend() {
     fi
 
     # For non-sysrooted toolchain, GCC doesn't search except at the installation
-    # prefix; in core-1/2 stage we use a temporary installation prefix - but
+    # prefix; in core stage we use a temporary installation prefix - but
     # we may have installed something into the final prefix. This is less than ideal:
     # in the installation prefix GCC also handles subdirectories for multilibs
     # (e.g. first trying ${prefix}/include/${arch-triplet}) but
@@ -572,6 +568,19 @@ do_gcc_core_backend() {
     # work. Better suggestions welcome.
     if [ "${CT_USE_SYSROOT}" != "y" ]; then
         cflags_for_target="${cflags_for_target} -idirafter ${CT_HEADERS_DIR}"
+    fi
+
+    # Assume '-O2' by default for building target libraries.
+    cflags_for_target="-g -O2 ${cflags_for_target}"
+
+    # Set target CXXFLAGS to CFLAGS if none is provided.
+    if [ -z "${cxxflags_for_target}" ]; then
+        cxxflags_for_target="${cflags_for_target}"
+    fi
+
+    # Append extra CXXFLAGS if provided.
+    if [ -n "${extra_cxxflags_for_target}" ]; then
+        cxxflags_for_target="${cxxflags_for_target} ${extra_cxxflags_for_target}"
     fi
 
     # Use --with-local-prefix so older gccs don't look in /usr/local (http://gcc.gnu.org/PR10532).
@@ -583,11 +592,11 @@ do_gcc_core_backend() {
     CC_FOR_BUILD="${CT_BUILD}-gcc"                     \
     CFLAGS="${cflags}"                                 \
     CFLAGS_FOR_BUILD="${cflags_for_build}"             \
-    CXXFLAGS="${cflags}"                               \
-    CXXFLAGS_FOR_BUILD="${cflags_for_build}"           \
+    CXXFLAGS="${cflags} ${cxxflags_for_build}"         \
+    CXXFLAGS_FOR_BUILD="${cflags_for_build} ${cxxflags_for_build}" \
     LDFLAGS="${core_LDFLAGS[*]}"                       \
     CFLAGS_FOR_TARGET="${cflags_for_target}"           \
-    CXXFLAGS_FOR_TARGET="${cflags_for_target}"         \
+    CXXFLAGS_FOR_TARGET="${cxxflags_for_target}"       \
     LDFLAGS_FOR_TARGET="${CT_TARGET_LDFLAGS}"          \
     ${CONFIG_SHELL}                                    \
     "${CT_SRC_DIR}/gcc/configure"                      \
@@ -595,6 +604,7 @@ do_gcc_core_backend() {
         --host=${host}                                 \
         --target=${CT_TARGET}                          \
         --prefix="${prefix}"                           \
+        --exec_prefix="${exec_prefix}"                 \
         --with-local-prefix="${CT_SYSROOT_DIR}"        \
         "${extra_config[@]}"                           \
         --enable-languages="${lang_list}"              \
@@ -640,20 +650,8 @@ do_gcc_core_backend() {
         libgcc_rule="libgcc.mvars"
         core_targets=( gcc target-libgcc )
 
-        # On bare metal and canadian build the host-compiler is used when
-        # actually the build-system compiler is required. Choose the correct
-        # compilers for canadian build and use the defaults on other
-        # configurations.
-        if [ "${CT_BARE_METAL},${CT_CANADIAN}" = "y,y" ]; then
-            repair_cc="CC_FOR_BUILD=${CT_BUILD}-gcc \
-                       CXX_FOR_BUILD=${CT_BUILD}-g++ \
-                       GCC_FOR_TARGET=${CT_TARGET}-${CT_CC}"
-        else
-            repair_cc=""
-        fi
+        CT_DoExecLog ALL make ${CT_JOBSFLAGS} -C gcc ${libgcc_rule}
 
-        CT_DoExecLog ALL make ${CT_JOBSFLAGS} -C gcc ${libgcc_rule} \
-                              ${repair_cc}
         sed -r -i -e 's@-lc@@g' gcc/${libgcc_rule}
     else # build_libgcc
         core_targets=( gcc )
@@ -677,6 +675,11 @@ do_gcc_core_backend() {
         gcc_build|gcc_host)
             core_targets_all=all
             core_targets_install=install
+            ;;
+        libstdcxx)
+            core_targets=( target-libstdc++-v3 )
+            core_targets_all="${core_targets[@]/#/all-}"
+            core_targets_install="${core_targets[@]/#/install-}"
             ;;
     esac
 
@@ -754,7 +757,9 @@ do_cc_for_build() {
         # lack of such a compiler, but better safe than sorry...
         build_final_opts+=( "mode=baremetal" )
         build_final_opts+=( "build_libgcc=yes" )
-        build_final_opts+=( "build_libstdcxx=yes" )
+        if [ "${CT_LIBC_NONE}" != "y" ]; then
+            build_final_opts+=( "build_libstdcxx=yes" )
+        fi
         build_final_opts+=( "build_libgfortran=yes" )
         if [ "${CT_STATIC_TOOLCHAIN}" = "y" ]; then
             build_final_opts+=( "build_staticlinked=yes" )
@@ -843,7 +848,9 @@ do_cc_for_host() {
     if [ "${CT_BARE_METAL}" = "y" ]; then
         final_opts+=( "mode=baremetal" )
         final_opts+=( "build_libgcc=yes" )
-        final_opts+=( "build_libstdcxx=yes" )
+        if [ "${CT_LIBC_NONE}" != "y" ]; then
+            final_opts+=( "build_libstdcxx=yes" )
+        fi
         final_opts+=( "build_libgfortran=yes" )
         if [ "${CT_STATIC_TOOLCHAIN}" = "y" ]; then
             final_opts+=( "build_staticlinked=yes" )
@@ -876,20 +883,31 @@ do_cc_for_host() {
 #   Parameter     : Definition                          : Type      : Default
 #   host          : the host we run onto                : tuple     : (none)
 #   prefix        : the runtime prefix                  : dir       : (none)
+#   exec_prefix   : prefix for executables              : dir       : (none)
 #   complibs      : the companion libraries prefix      : dir       : (none)
 #   cflags        : cflags to use                       : string    : (empty)
 #   ldflags       : ldflags to use                      : string    : (empty)
 #   lang_list     : the list of languages to build      : string    : (empty)
 #   build_manuals : whether to build manuals or not     : bool      : no
+#   build_step    : build step 'gcc_build', 'gcc_host'
+#                   or 'libstdcxx'                      : string    : (none)
 do_gcc_backend() {
     local host
     local prefix
+    local exec_prefix
     local complibs
     local lang_list
     local cflags
     local cflags_for_build
+    local cxxflags_for_build
+    local cflags_for_target
+    local cxxflags_for_target
+    local extra_cxxflags_for_target
     local ldflags
     local build_manuals
+    local exec_prefix
+    local header_dir
+    local libstdcxx_name
     local -a host_libstdcxx_flags
     local -a extra_config
     local -a final_LDFLAGS
@@ -900,12 +918,29 @@ do_gcc_backend() {
         eval "${arg// /\\ }"
     done
 
-    CT_DoLog EXTRA "Configuring final gcc compiler"
+    if [ "${exec_prefix}" = "" ]; then
+        exec_prefix="${prefix}"
+    fi
+
+    # This function gets called for final gcc and libstdcxx.
+    case "${build_step}" in
+        gcc_build|gcc_host)
+            log_txt="final gcc compiler"
+            ;;
+        libstdcxx)
+            log_txt="libstdc++ library for ${libstdcxx_name}"
+            ;;
+        *)
+            CT_Abort "Internal Error: 'build_step' must be one of: 'gcc_build', 'gcc_host' or 'libstdcxx', not '${build_step:-(empty)}'"
+            ;;
+    esac
+
+    CT_DoLog EXTRA "Configuring ${log_txt}"
 
     # Enable selected languages
     extra_config+=("--enable-languages=${lang_list}")
 
-    for tmp in ARCH ABI CPU TUNE FPU FLOAT; do
+    for tmp in ARCH ARCH_32 ARCH_64 ABI CPU CPU_32 CPU_64 TUNE TUNE_32 TUNE_64 FPU FLOAT; do
         eval tmp="\${CT_ARCH_WITH_${tmp}}"
         if [ -n "${tmp}" ]; then
             extra_config+=("${tmp}")
@@ -930,6 +965,12 @@ do_gcc_backend() {
         extra_config+=("--disable-__cxa_atexit")
     fi
 
+    case "${CT_CC_GCC_TM_CLONE_REGISTRY}" in
+        y) extra_config+=("--enable-tm-clone-registry");;
+        m) ;;
+        "") extra_config+=("--disable-tm-clone-registry");;
+    esac
+
     if [ -n "${CT_CC_GCC_ENABLE_CXX_FLAGS}" ]; then
         extra_config+=("--enable-cxx-flags=${CT_CC_GCC_ENABLE_CXX_FLAGS}")
     fi
@@ -947,11 +988,11 @@ do_gcc_backend() {
     else
         extra_config+=(--disable-libgomp)
     fi
-    if [ "${CT_CC_GCC_LIBSSP}" = "y" ]; then
-        extra_config+=(--enable-libssp)
-    else
-        extra_config+=(--disable-libssp)
-    fi
+    case "${CT_CC_GCC_LIBSSP}" in
+        y)  extra_config+=(--enable-libssp);;
+        m)  ;;
+        "") extra_config+=(--disable-libssp);;
+    esac
     if [ "${CT_CC_GCC_LIBQUADMATH}" = "y" ]; then
         extra_config+=(--enable-libquadmath)
         extra_config+=(--enable-libquadmath-support)
@@ -974,6 +1015,15 @@ do_gcc_backend() {
         fi
     fi
 
+    case "${CT_CC_GCC_LIBSTDCXX_VERBOSE}" in
+        y)  extra_config+=("--enable-libstdcxx-verbose");;
+        "") extra_config+=("--disable-libstdcxx-verbose");;
+    esac
+    
+    if [ "${build_libstdcxx}" = "no" ]; then
+        extra_config+=(--disable-libstdcxx)
+    fi
+
     final_LDFLAGS+=("${ldflags}")
 
     # *** WARNING ! ***
@@ -981,9 +1031,11 @@ do_gcc_backend() {
     # with the same block in do_gcc_core_backend, above.
     if [ "${CT_STATIC_TOOLCHAIN}" = "y" ]; then
         final_LDFLAGS+=("-static")
-        host_libstdcxx_flags+=("-static-libgcc")
-        host_libstdcxx_flags+=("-Wl,-Bstatic,-lstdc++")
-        host_libstdcxx_flags+=("-lm")
+        if [ "${CT_GCC_older_than_6}" = "y" ]; then
+            host_libstdcxx_flags+=("-static-libgcc")
+            host_libstdcxx_flags+=("-Wl,-Bstatic,-lstdc++")
+            host_libstdcxx_flags+=("-lm")
+        fi
         # Companion libraries are build static (eg !shared), so
         # the libstdc++ is not pulled automatically, although it
         # is needed. Shoe-horn it in our LDFLAGS
@@ -991,7 +1043,7 @@ do_gcc_backend() {
         final_LDFLAGS+=("-lstdc++")
         final_LDFLAGS+=("-lm")
     else
-        if [ "${CT_CC_GCC_STATIC_LIBSTDCXX}" = "y" ]; then
+        if [ "${CT_CC_GCC_STATIC_LIBSTDCXX}" = "y" -a "${CT_GCC_older_than_6}" = "y" ]; then
             # this is from CodeSourcery arm-2010q1-202-arm-none-linux-gnueabi.src.tar.bz2
             # build script
             # INFO: if the host gcc is gcc-4.5 then presumably we could use -static-libstdc++,
@@ -1027,6 +1079,11 @@ do_gcc_backend() {
     else
         extra_config+=("--disable-lto")
     fi
+    case "${CT_CC_GCC_LTO_ZSTD}" in
+        y) extra_config+=("--with-zstd");;
+        m) ;;
+        *) extra_config+=("--without-zstd");;
+    esac
 
     if [ ${#host_libstdcxx_flags[@]} -ne 0 ]; then
         extra_config+=("--with-host-libstdcxx=${host_libstdcxx_flags[*]}")
@@ -1043,9 +1100,11 @@ do_gcc_backend() {
         fi
     fi
 
-    if [ "${CT_CC_GCC_ENABLE_TARGET_OPTSPACE}" = "y" ]; then
+    if [ "${CT_CC_GCC_ENABLE_TARGET_OPTSPACE}" = "y" ] || \
+       [ "${enable_optspace}" = "yes" ]; then
         extra_config+=("--enable-target-optspace")
     fi
+
     if [ "${CT_CC_GCC_DISABLE_PCH}" = "y" ]; then
         extra_config+=("--disable-libstdcxx-pch")
     fi
@@ -1126,8 +1185,10 @@ do_gcc_backend() {
 
     CT_DoLog DEBUG "Extra config passed: '${extra_config[*]}'"
 
-    # We may need to modify host/build CFLAGS separately below
+    # We may need to modify host/build/target CFLAGS separately below
     cflags_for_build="${cflags}"
+    cxxflags_for_build="${CT_CXXFLAGS_FOR_BUILD}"
+    cflags_for_target="${CT_TARGET_CFLAGS}"
 
     # Clang's default bracket-depth is 256, and building GCC
     # requires somewhere between 257 and 512.
@@ -1143,17 +1204,30 @@ do_gcc_backend() {
         fi
     fi
 
+    # Assume '-O2' by default for building target libraries.
+    cflags_for_target="-g -O2 ${cflags_for_target}"
+
+    # Set target CXXFLAGS to CFLAGS if none is provided.
+    if [ -z "${cxxflags_for_target}" ]; then
+        cxxflags_for_target="${cflags_for_target}"
+    fi
+
+    # Append extra CXXFLAGS if provided.
+    if [ -n "${extra_cxxflags_for_target}" ]; then
+        cxxflags_for_target="${cxxflags_for_target} ${extra_cxxflags_for_target}"
+    fi
+
     # NB: not using CT_ALL_TARGET_CFLAGS/CT_ALL_TARGET_LDFLAGS here!
     # See do_gcc_core_backend for explanation.
     CT_DoExecLog CFG                                   \
     CC_FOR_BUILD="${CT_BUILD}-gcc"                     \
     CFLAGS="${cflags}"                                 \
     CFLAGS_FOR_BUILD="${cflags_for_build}"             \
-    CXXFLAGS="${cflags}"                               \
-    CXXFLAGS_FOR_BUILD="${cflags_for_build}"           \
+    CXXFLAGS="${cflags} ${cxxflags_for_build}"         \
+    CXXFLAGS_FOR_BUILD="${cflags_for_build} ${cxxflags_for_build}" \
     LDFLAGS="${final_LDFLAGS[*]}"                      \
-    CFLAGS_FOR_TARGET="${CT_TARGET_CFLAGS}"            \
-    CXXFLAGS_FOR_TARGET="${CT_TARGET_CFLAGS}"          \
+    CFLAGS_FOR_TARGET="${cflags_for_target}"           \
+    CXXFLAGS_FOR_TARGET="${cxxflags_for_target}"       \
     LDFLAGS_FOR_TARGET="${CT_TARGET_LDFLAGS}"          \
     ${CONFIG_SHELL}                                    \
     "${CT_SRC_DIR}/gcc/configure"                      \
@@ -1161,6 +1235,7 @@ do_gcc_backend() {
         --host=${host}                                 \
         --target=${CT_TARGET}                          \
         --prefix="${prefix}"                           \
+        --exec_prefix="${exec_prefix}"                 \
         ${CT_CC_SYSROOT_ARG}                           \
         "${extra_config[@]}"                           \
         --with-local-prefix="${CT_SYSROOT_DIR}"        \
