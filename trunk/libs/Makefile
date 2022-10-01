@@ -220,38 +220,30 @@ ifneq (,$(filter y,$(CONFIG_FIRMWARE_INCLUDE_NFSD) $(CONFIG_FIRMWARE_INCLUDE_NFS
 dir_y						+= libtirpc
 endif
 
+dir_all = $(dir_y) $(dir_n) $(dir_)
+
 all:
-	for i in $(dir_y) ; do \
-		echo "\033[41;1m   $$i   \033[0m" ; \
-		[ -d $$i ] && \
-		$(MAKE) -j1 -C $$i || \
-		exit $$? ; \
-		if [ ! -f $(DESTDIR)/.installed_$$i ] ; then \
-			$(MAKE) -C $$i install && \
-			touch $(DESTDIR)/.installed_$$i ; \
-		fi ; \
-	done
+	$(foreach dir,$(dir_y),$(MAKE) $(dir)_only || exit 1;)
 
 %_only:
+	@echo "\033[37;43m BUILD \033[0m\033[37;44m   $(@:_only=)   \033[0m"
 	$(MAKE) -C $(@:_only=)
+	@if [ ! -f $(DESTDIR)/.installed_$(@:_only=) ] ; then \
+		$(MAKE) -C $(@:_only=) install && \
+		touch $(DESTDIR)/.installed_$(@:_only=); \
+	fi
 
 %_romfs:
+	echo "\033[37;42m ROMFS \033[0m\033[37;44m   $(@:_romfs=)   \033[0m"
 	$(MAKE) -C $(@:_romfs=) romfs
 
 %_clean:
+	echo "\033[37;41m CLEAN \033[0m\033[37;44m   $(@:_clean=)   \033[0m"
 	$(MAKE) -C $(@:_clean=) clean
+	rm -f $(DESTDIR)/.installed_$(dir)
 
 romfs:
-	for i in $(dir_y) ; do \
-		[ -d $$i ] && \
-		$(MAKE) -C $$i romfs ; \
-	done
+	$(foreach dir,$(dir_y),$(MAKE) $(dir)_romfs || exit 1;)
 
 clean:
-	for i in `ls -d *` ; do \
-		if [ -d $$i ] ; then \
-			$(MAKE) -C $$i clean ; \
-			rm -f $(DESTDIR)/.installed_$$i ; \
-		fi ; \
-	done
-
+	$(foreach dir,$(dir_all),$(MAKE) $(dir)_clean;)

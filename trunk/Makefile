@@ -58,6 +58,7 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 FIRMWARE_KERNEL_VER="4.4"
 CONFIG_CROSS_COMPILER_ROOT = $(CONFIG_TOOLCHAIN_DIR)/toolchain-4.4.x
 CONFIG_CROSS_COMPILER_PATH = $(CONFIG_CROSS_COMPILER_ROOT)/bin
+CONFIG_CMAKE_TOOLCHAIN_FILE = $(ROOTDIR)/vendors/cmake/cross-mipsel-linux.cmake
 KERNEL_HEADERS_PATH = $(CONFIG_CROSS_COMPILER_ROOT)/mipsel-linux-uclibc/sysroot/usr/include
 
 ifeq (config.arch,$(wildcard config.arch))
@@ -85,7 +86,7 @@ export PROJECT_CONFIG LINUX_CONFIG ROOTDIR LINUXDIR ROMFSDIR SCRIPTSDIR
 export FIRMWARE_KERNEL_VER FIRMWARE_ROOTFS_VER FIRMWARE_BUILDS_VER FIRMWARE_BUILDS_REV
 export VERSIONPKG VERSIONSTR ROMFSINST PATH IMAGEDIR RELFILES TFTPDIR
 export KERNEL_HEADERS_PATH CONFIG_CROSS_COMPILER_ROOT CONFIG_CROSS_COMPILER_PATH
-export UNSQSHFS_TOOL CONFIG_WITHOUT_KERNEL
+export CONFIG_CMAKE_TOOLCHAIN_FILE UNSQSHFS_TOOL CONFIG_WITHOUT_KERNEL
 
 ############################################################################
 
@@ -126,8 +127,8 @@ endif
 
 .PHONY: romfs.subdirs
 romfs.subdirs:
-	@echo "\033[41;1m   romfs   \033[0m"
-	for dir in vendors $(DIRS) ; do [ ! -d $$dir ] || $(MAKEARCH) -C $$dir romfs || exit 1 ; done
+	@echo "\033[37;44m   romfs   \033[0m"
+	$(foreach dir,vendors $(DIRS),$(MAKEARCH) -C $(dir) romfs || exit 1;)
 
 .PHONY: romfs.post
 romfs.post:
@@ -137,13 +138,13 @@ romfs.post:
 
 .PHONY: image
 image:
-	@echo "\033[41;1m   $@   \033[0m"
+	@echo "\033[37;44m   $@   \033[0m"
 	[ -d $(IMAGEDIR) ] || mkdir $(IMAGEDIR)
 	$(MAKEARCH) -C vendors image
 
 .PHONY: linux
 linux:
-	@echo "\033[41;1m   $@   \033[0m"
+	@echo "\033[37;43m BUILD \033[0m\033[37;44m   $(@)   \033[0m"
 	$(MAKEARCH_KERNEL) -j$(HOST_NCPU) -C $(LINUXDIR) $(LINUXTARGET) || exit 1
 	if [ -f $(LINUXDIR)/vmlinux ]; then \
 		ln -f $(LINUXDIR)/vmlinux $(LINUXDIR)/linux ; \
@@ -159,7 +160,7 @@ sparseall:
 
 .PHONY: subdirs
 subdirs: libs
-	for dir in $(DIRS) ; do [ ! -d $$dir ] || $(MAKEARCH) -C $$dir || exit 1 ; done
+	$(foreach dir,$(DIRS),$(MAKEARCH) -C $(dir) || exit 1;)
 
 dep:
 	@if [ ! -f $(LINUXDIR)/.config ] ; then \
@@ -171,17 +172,18 @@ dep:
 
 .PHONY: tools
 tools:
-	@echo "\033[41;1m   $@   \033[0m"
+	@echo "\033[37;44m   $@   \033[0m"
 	make -C tools
 
 .PHONY: unpack_trx
 unpack_trx:
-	@echo "\033[41;1m   $@   \033[0m"
+	@echo "\033[37;44m   $@   \033[0m"
 	unpack-trx.sh
 
 clean:
+	@echo "\033[37;41m CLEAN \033[0m"
 	make clean -C tools
-	for dir in  $(DIRS); do [ ! -d $$dir ] || $(MAKEARCH) -C $$dir clean ; done
+	$(foreach dir,$(DIRS),$(MAKEARCH) -C $(dir) clean;)
 	$(MAKEARCH_KERNEL) -C $(LINUXDIR) distclean
 	rm -rf $(STAGEDIR)
 	rm -rf $(ROMFSDIR)

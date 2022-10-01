@@ -31,7 +31,7 @@ config_test:
 
 configure:
 	( mkdir -p $(SRC_NAME)/build && cd $(SRC_NAME)/build ; \
-	cmake -DCMAKE_TOOLCHAIN_FILE=$(ROOTDIR)/cmake/cross-mipsel-linux.cmake \
+	cmake -DCMAKE_TOOLCHAIN_FILE=$(CONFIG_CMAKE_TOOLCHAIN_FILE) \
 		  -DCMAKE_INSTALL_PREFIX=/usr \
 		  -DCMAKE_BUILD_TYPE=Release \
 		  -DENABLE_CLI=OFF \
