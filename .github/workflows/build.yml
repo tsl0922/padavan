@@ -18,24 +18,25 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: '^1.18.6'
-      - run: |
-          # https://github.com/actions/setup-go/issues/107
-          echo "${GOROOT}/bin" >> $GITHUB_PATH
-      - name: Prepare environment
+      - name: Prepare
         run: |
           sudo apt update
           sudo apt install libtool-bin gperf python3-docutils autopoint gettext
-      - name: Start build
+          # https://github.com/actions/setup-go/issues/107
+          echo "${GOROOT}/bin" >> $GITHUB_PATH
+      - name: Build
         run: |
           make ${{ matrix.target }}
           echo "TAG_ANME=$(date +%Y%m%d)" >> $GITHUB_ENV
-      - name: Upload image
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v3
         with:
           name: images
           path: trunk/images/*.trx
-      - name: Update Release
-        uses: ncipollo/release-action@v1
+      - uses: rickstaa/action-create-tag@v1
+        with:
+          tag: ${{ env.TAG_ANME }}
+          force_push_tag: true
+      - uses: ncipollo/release-action@v1
         with:
           commit: ${{ github.sha }}
           tag: ${{ env.TAG_ANME }}
