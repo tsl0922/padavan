@@ -17,9 +17,9 @@ include .config
 include versions.inc
 
 ifeq ($(CONFIG_WITHOUT_KERNEL),y)
-all: tools unpack_trx libc_only libs_only user_only romfs image
+all: dep tools unpack_trx libc_only libs_only user_only romfs image
 else
-all: tools linux libc_only libs_only user_only romfs image
+all: dep tools linux libc_only libs_only user_only romfs image
 endif
 ############################################################################
 #
@@ -126,9 +126,7 @@ romfs: romfs.subdirs modules_install romfs.post
 endif
 
 .PHONY: romfs.subdirs
-romfs.subdirs:
-	@echo "\033[37;44m   romfs   \033[0m"
-	$(foreach dir,vendors $(DIRS),$(MAKEARCH) -C $(dir) romfs || exit 1;)
+romfs.subdirs: $(patsubst %,%_romfs,vendors $(DIRS))
 
 .PHONY: romfs.post
 romfs.post:
@@ -159,14 +157,14 @@ sparseall:
 	$(MAKEARCH_KERNEL) -C $(LINUXDIR) C=2 $(LINUXTARGET) || exit 1
 
 .PHONY: subdirs
-subdirs: libs
-	$(foreach dir,$(DIRS),$(MAKEARCH) -C $(dir) || exit 1;)
+subdirs: $(patsubst %,%_only,$(DIRS))
 
-dep:
-	@if [ ! -f $(LINUXDIR)/.config ] ; then \
-		echo "ERROR: you need to do a 'make config' first" ; \
-		exit 1 ; \
-	fi
+.PHONY: config dep
+config:
+	@echo "\033[37;44m   $@   \033[0m"
+	@./configure
+
+dep: config
 	$(MAKEARCH_KERNEL) -C $(LINUXDIR) olddefconfig
 	$(MAKEARCH_KERNEL) -C $(LINUXDIR) modules_prepare
 
@@ -180,16 +178,20 @@ unpack_trx:
 	@echo "\033[37;44m   $@   \033[0m"
 	unpack-trx.sh
 
-clean:
-	@echo "\033[37;41m CLEAN \033[0m"
-	make clean -C tools
-	$(foreach dir,$(DIRS),$(MAKEARCH) -C $(dir) clean;)
-	$(MAKEARCH_KERNEL) -C $(LINUXDIR) distclean
-	rm -rf $(STAGEDIR)
-	rm -rf $(ROMFSDIR)
-	rm -rf $(IMAGEDIR)
+clean: $(patsubst %,%_clean,tools kernel $(DIRS))
+	rm -rf $(STAGEDIR) $(ROMFSDIR) $(IMAGEDIR) $(MERGE_DIR)
 	rm -rf $(LINUXDIR)/net/ipsec/alg/libaes $(LINUXDIR)/net/ipsec/alg/perlasm
 	rm -f $(LINUXDIR)/arch/mips/ramdisk/*.gz
+
+.PHONY: tools_clean
+tools_clean:
+	@echo "\033[37;42m CLEAN \033[0m\033[37;44m   $(@:_clean=)   \033[0m"
+	$(MAKE) -C tools clean
+
+.PHONY: kernel_clean
+kernel_clean:
+	@echo "\033[37;42m CLEAN \033[0m\033[37;44m   $(@:_clean=)   \033[0m"
+	$(MAKEARCH_KERNEL) -C $(LINUXDIR) distclean
 
 %_romfs:
 	@case "$(@)" in \

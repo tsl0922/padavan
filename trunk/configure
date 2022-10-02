@@ -103,7 +103,6 @@ mkdir -p $ROOTDIR/images
 # load source kernel config
 . "$kernel_cf"
 
-echo --------------------------COPY-CONFIG-----------------------------
 ######################### FOR-ALL-DEVICES #############################
 ln -sf vendors/Ralink/config.arch config.arch
 cp -fL "$kernel_cf" "$kernel_tf"
@@ -185,7 +184,3 @@ fi
 #if [ "$CONFIG_FIRMWARE_INCLUDE_SSWAN" = "y" ] ; then
 #	CONFIG_FIRMWARE_INCLUDE_XFRM=y
 #fi
-echo --------------------------MAKE-DEP--------------------------------
-make dep
-echo --------------------------MAKE-ALL--------------------------------
-make

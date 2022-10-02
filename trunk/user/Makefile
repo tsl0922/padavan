@@ -236,10 +236,11 @@ endif
 dir_y						+= mtd-utils
 endif
 
-dir_all = $(dir_y) $(dir_n) $(dir_)
+all: $(patsubst %,%_only,$(dir_y))
 
-all:
-	$(foreach dir,$(dir_y),$(MAKE) $(dir)_only || exit 1;)
+romfs: $(patsubst %,%_romfs,$(dir_y))
+
+clean: $(patsubst %,%_clean,$(dir_y) $(dir_n) $(dir_))
 
 %_only:
 	@echo "\033[37;43m BUILD \033[0m\033[37;44m   $(@:_only=)   \033[0m"
@@ -251,10 +252,5 @@ all:
 
 %_clean:
 	@echo "\033[37;42m CLEAN \033[0m\033[37;44m   $(@:_clean=)   \033[0m"
-	$(MAKE) -C $(@:_clean=) clean
+	$(MAKE) -C $(@:_clean=) clean || true
 
-romfs:
-	$(foreach dir,$(dir_y),$(MAKE) $(dir)_romfs || exit 1;)
-
-clean:
-	$(foreach dir,$(dir_all),$(MAKE) $(dir)_clean;)
