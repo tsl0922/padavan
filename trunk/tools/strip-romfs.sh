@@ -11,12 +11,12 @@ if [ -z "$ROOTDIR" ]; then
 	exit 1
 fi
 
-if [ ! -x "$STRIPTOOL" ] ; then
+if [ ! -x "$(command -v $STRIPTOOL)" ] ; then
 	echo "STRIPTOOL is not set" >&2
 	exit 1
 fi
 
-if [ ! -x "$OBJCOPY" ] ; then
+if [ ! -x "$(command -v $OBJCOPY)" ] ; then
 	echo "OBJCOPY is not set" >&2
 	exit 1
 fi

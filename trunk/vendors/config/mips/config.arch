@@ -47,9 +47,9 @@ HOST_TARGET   ?= mipsel-linux
 
 MACHINE        = mips
 ARCH           = mips
-CROSS_COMPILE  = $(CONFIG_CROSS_COMPILER_PATH)/mipsel-linux-uclibc-
+CROSS_COMPILE  = mipsel-linux-uclibc-
 CROSS          = $(CROSS_COMPILE)
-CONFIGURE_HOST = $(CONFIG_CROSS_COMPILER_PATH)/mipsel-linux-uclibc-
+CONFIGURE_HOST = mipsel-linux-uclibc-
 
 CC             = $(CROSS_COMPILE)gcc $(CPUFLAGS)
 GCC            = $(CROSS_COMPILE)gcc $(CPUFLAGS)
@@ -64,8 +64,8 @@ ELF2FLT        = elf2flt
 STRIPTOOL      = $(CROSS_COMPILE)strip
 STRIP          = $(STRIPTOOL)
 
-GCC_DIR        = $(shell $(CC) -v 2>&1|grep specs|sed -e 's/.* \(.*\)specs/\1\./')
-MACH_DIR       = $(shell $(CC) -print-multi-directory)
+#GCC_DIR        = $(shell $(CC) -v 2>&1|grep specs|sed -e 's/.* \(.*\)specs/\1\./')
+#MACH_DIR       = $(shell $(CC) -print-multi-directory)
 
 # have we set a special config below
 UCLINUX_BUILD_SET = 0
