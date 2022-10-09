@@ -28,12 +28,6 @@ mkdir -p "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/kernel/net/netfilter/
 cp -f "$ipset_dir/xt_set.ko" "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/kernel/net/netfilter"
 cp -f "$ipset_dir/ipset/"*.ko "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/kernel/net/netfilter/ipset"
 
-if [ "$CONFIG_FIRMWARE_INCLUDE_SFE" = "y" ] ; then
-	sfe_dir="${ROOTDIR}/user/shortcut-fe/shortcut-fe"
-	mkdir -p "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/kernel/sfe"
-	cp -f "$sfe_dir/"*.ko "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/kernel/sfe"
-fi
-
 if [ "$CONFIG_FIRMWARE_INCLUDE_ANTFS" = "y" ] ; then
 	antfs_dir="${ROOTDIR}/user/antfs"
 	mkdir -p "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/kernel/antfs"
