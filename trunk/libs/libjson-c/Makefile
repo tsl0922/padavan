@@ -1,9 +1,9 @@
-SRC_NAME=json-c-json-c-0.13.1-20180305
-SRC_URL=https://github.com/json-c/json-c/archive/json-c-0.13.1-20180305.tar.gz
-ARCHIVE_NAME=json-c-0.13.1-20180305
+SRC_NAME=json-c-0.16
+SRC_URL=https://s3.amazonaws.com/json-c_releases/releases/json-c-0.16.tar.gz
+ARCHIVE_NAME=json-c-0.16
 
 all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/build
 
 download_test:
 	( if [ ! -f $(ARCHIVE_NAME).tar.gz ]; then \
@@ -13,6 +13,7 @@ download_test:
 extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \
 		tar zxf $(ARCHIVE_NAME).tar.gz; \
+		patch -p1 -d $(SRC_NAME) < json-c-0.16.patch; \
 	fi )
 
 config_test:
@@ -23,25 +24,20 @@ config_test:
 	fi )
 
 configure:
-	( cd $(SRC_NAME) ; \
-	sh autogen.sh; \
-	sed -e 's/#undef malloc.*//g' -e 's/#undef realloc.*//g' -i config.h.in; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-static \
-		--enable-shared \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
+	( mkdir -p $(SRC_NAME)/build && cd $(SRC_NAME)/build ; \
+	cmake -DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=$(STAGEDIR) \
+	-DCMAKE_TOOLCHAIN_FILE=$(CONFIG_CMAKE_TOOLCHAIN_FILE) \
+	-DDISABLE_EXTRA_LIBS=TRUE \
+	.. \
 	)
 
 clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
+	rm -rf $(SRC_NAME)/build
 	rm -f config_done
 
 install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+	$(MAKE) -C $(SRC_NAME)/build install DESTDIR=""
 
 romfs:
 	cp -fP $(DESTDIR)/lib/libjson-c.so* $(ROMFSDIR)/lib
