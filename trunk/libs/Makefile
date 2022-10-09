@@ -213,7 +213,7 @@ dir_$(LIBS_INCLUDE_LIBEVENT)	+= libevent
 # aria2 shared libs
 dir_$(LIBS_INCLUDE_LIBXML2)		+= libxml2
 
-dir_$(LIBS_INCLUDE_C_ARES)		+= c-ares
+dir_$(LIBS_INCLUDE_C_ARES)		+= libcares
 dir_$(LIBS_INCLUDE_READLINE)		+= readline
 
 ifneq (,$(filter y,$(CONFIG_FIRMWARE_INCLUDE_NFSD) $(CONFIG_FIRMWARE_INCLUDE_NFSC)))
