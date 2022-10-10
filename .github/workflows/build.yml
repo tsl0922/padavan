@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        target: [K2P, K2P-USB]
+        target: [K2P, K2P-NANO, K2P-USB]
     steps:
       - uses: actions/checkout@v3
       - uses: hendrikmuhs/ccache-action@v1.2
@@ -36,6 +36,10 @@ jobs:
       - name: Build
         run: |
           make ${{ matrix.target }}
+          if [ "${{ matrix.target }}" = "K2P-NANO" ]; then
+            image=$(ls trunk/images/*.trx)
+            mv $image $(echo $image | sed 's/K2P/K2P-NANO/')
+          fi
           echo "TAG_ANME=$(date +%Y%m%d)" >> $GITHUB_ENV
       - uses: actions/upload-artifact@v3
         with:
