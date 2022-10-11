@@ -19,8 +19,11 @@ choice
 	config FIRST_IF_NONE
 	bool "None"
 	
+	config RT_FIRST_IF_MT7602E
+	bool "MT7602E"
+	
 	config FIRST_IF_MT7603E
-	bool "MT7603"
+	bool "MT7603E"
 
 	config FIRST_IF_MT7615E
 	bool "MT7615E"
@@ -75,6 +78,7 @@ endchoice
 config RT_FIRST_CARD
 	int
 	depends on !FIRST_IF_NONE
+	default 7602 if RT_FIRST_IF_MT7602E
 	default 7603 if FIRST_IF_MT7603E	
 	default 7615 if FIRST_IF_MT7615E
 	default 7622 if FIRST_IF_MT7622
@@ -179,7 +183,7 @@ source "drivers/net/wireless/mediatek/mt7615/embedded/Kconfig"
 endmenu
 endif
 
-if (RT_SECOND_IF_MT7612E)
+if (RT_FIRST_IF_MT7602E || RT_SECOND_IF_MT7612E)
 menu "MediaTek MT7612E PCIe Wireless driver"
 source "drivers/net/wireless/mediatek/mt76x2_ap/Kconfig"
 endmenu
