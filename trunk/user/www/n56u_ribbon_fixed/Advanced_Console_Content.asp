@@ -123,7 +123,7 @@ function checkEnter(e){
                             <div class="round_bottom">
                                 <div class="row-fluid">
                                     <div id="tabMenu" class="submenuBlock"></div>
-                                    <iframe id="term-iframe" style="width: 100%; height: 600px; border: none; display: none;"></iframe>
+                                    <iframe id="term-iframe" style="width: 100%; height: 500px; border: none; display: none;"></iframe>
                                     <div id="console-alert" class="alert alert-danger" style="margin: 10px;"><#Console_warn#></div>
 
                                     <table id="console-table" width="100%" cellpadding="4" cellspacing="0" class="table">
