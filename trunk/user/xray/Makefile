@@ -1,4 +1,4 @@
-XRAY_VERSION := 1.5.5
+XRAY_VERSION := 1.6.0
 XRAY_URL := https://codeload.github.com/XTLS/Xray-core/tar.gz/v$(XRAY_VERSION)
 XRAY_DIR = xray-core/Xray-core-$(XRAY_VERSION)/main
 
