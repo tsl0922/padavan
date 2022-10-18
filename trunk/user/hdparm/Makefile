@@ -16,13 +16,14 @@ oldmandir = $(manprefix)/man
 CC ?= gcc
 STRIP ?= strip
 
-CFLAGS := -Os -W -Wall -Wbad-function-cast -Wcast-align -Wpointer-arith -Wcast-qual -Wshadow -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -fkeep-inline-functions -Wwrite-strings -Waggregate-return -Wnested-externs -Wtrigraphs $(CFLAGS)
+CFLAGS := -O2 -W -Wall -Wbad-function-cast -Wcast-align -Wpointer-arith -Wcast-qual -Wshadow -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -fkeep-inline-functions -Wwrite-strings -Waggregate-return -Wnested-externs -Wtrigraphs $(CFLAGS)
+
 ifdef HDPARM_MINI
 CFLAGS += -DHDPARM_MINI
 endif
 LDFLAGS = -s
 
-CFLAGS += -ffunction-sections -fdata-sections
+CFLAGS += -ffunction-sections -fdata-sections -fvisibility=hidden
 LDFLAGS += -Wl,--gc-sections
 
 INSTALL = install
@@ -30,16 +31,21 @@ INSTALL_DATA = $(INSTALL) -m 644
 INSTALL_DIR = $(INSTALL) -m 755 -d
 INSTALL_PROGRAM = $(INSTALL)
 
-OBJS = hdparm.o identify.o sgio.o sysfs.o geom.o wdidle3.o apt.o
+OBJS = hdparm.o identify.o sgio.o sysfs.o geom.o fallocate.o fibmap.o fwdownload.o dvdspeed.o wdidle3.o apt.o
+
 ifndef HDPARM_MINI
 OBJS += fallocate.o fibmap.o fwdownload.o dvdspeed.o
 endif
 
 all:
-	$(MAKE) hdparm
+	$(MAKE) -j4 hdparm
+
+static:
+	LDFLAGS=-static $(MAKE)
 
 hdparm: hdparm.h sgio.h $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o hdparm $(OBJS)
+	$(CC) $(LDFLAGS) -o hdparm $(OBJS)
+	$(STRIP) hdparm
 
 hdparm.o:	hdparm.h sgio.h
 
@@ -70,4 +76,5 @@ romfs:
 
 clean:
 	-rm -f hdparm $(OBJS) core 2>/dev/null
+
 
