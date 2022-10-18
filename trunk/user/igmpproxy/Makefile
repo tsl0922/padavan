@@ -1,4 +1,7 @@
-SRC_NAME="igmpproxy-0.1"
+SRC_NAME=igmpproxy-0.3
+
+CFLAGS += -ffunction-sections -fdata-sections -fvisibility=hidden
+LDFLAGS += -Wl,--gc-sections
 
 all: config_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
@@ -12,6 +15,7 @@ config_test:
 
 configure:
 	( cd $(SRC_NAME) ; \
+	./autogen.sh ; \
 	./configure \
 		--prefix=/ \
 		--host=$(HOST_TARGET) \
