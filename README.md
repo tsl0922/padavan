@@ -50,6 +50,7 @@ This project is based on original rt-n56u with latest mtk 4.4.198 kernel, which 
 - XY-C1
 - GHL(from https://github.com/fangenhui520/padavan-4.4, 没有机器测试，自行判断)
 - EA7500(from https://github.com/MNM28/padavan-4.4, 没有机器测试，自行判断)
+- R6800(from https://github.com/MNM28/padavan-4.4, 没有机器测试，自行判断)
 - MI-R4A(from https://github.com/vipshmily/padavan-4.4, 没有机器测试，自行判断)
 
 # Compilation steps
