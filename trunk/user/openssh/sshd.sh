@@ -20,7 +20,7 @@ func_create_config()
 #ListenAddress ::
 
 # The default requires explicit activation of protocol 1
-#Protocol 2
+Protocol 2
 
 # HostKey for protocol version 1
 #HostKey ${dir_storage}/ssh_host_key
