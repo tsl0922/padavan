@@ -1,4 +1,5 @@
 # Novatel Wireless MC545 HSPA, U679 LTE
 TargetVendor=0x1410
 TargetProductList="7031,7042"
-StandardEject=1
+MessageContent="5553424312345678000000000000061b000000020000000000000000000000"
+NeedResponse=1
