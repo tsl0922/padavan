@@ -48,6 +48,7 @@ This project is based on original rt-n56u with latest mtk 4.4.198 kernel, which 
 - MI-R3P
 - R2100
 - XY-C1
+- GHL(from https://github.com/fangenhui520/padavan-4.4, 没有机器测试，自行判断)
 
 # Compilation steps
 
