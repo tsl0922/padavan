@@ -2,6 +2,15 @@
 History of USB_ModeSwitch
 =========================
 
+Version 2.6.0, 2019/11/28
+    Removed included libjim source alltogether; rewrote parts of the
+    dispatcher script to make location of global config file into a
+    parameter: --config-file, so it can be customised now;
+    replaced tcl helper file for jim embedding with a sh script, dropping
+    the install dependency on a tcl interpreter (Attention maintainers!);
+    changed Makefile to prevent parallel build issues as reported here:
+    http://www.draisberghof.de/usb_modeswitch/bb/viewtopic.php?f=2&t=2829,
+    make targets have changed names (Attention maintainers!)
 Version 2.5.2, 2017/12/31
     Bugfix release: fixed additional MessageContent parameters not working,
     reported by Frank Schmirler (see
