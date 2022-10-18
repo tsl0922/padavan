@@ -1,0 +1,127 @@
+/dts-v1/;
+
+#include "mt7621.dtsi"
+#include <dt-bindings/input/input.h>
+#include "mt7621-raeth-gmac2.dtsi"
+#include "mt7621-pinctrl-default-gpio.dtsi"
+
+/ {
+	compatible = "mediatek,mt7621-soc";
+	model = "QM B1";
+
+   chosen {
+        bootargs = "console=ttyS0,115200";
+          };
+   
+    gpio-export {
+		compatible = "gpio-export";
+		#size-cells = <0>;
+
+		modem_reset {
+			gpio-export,name = "modem_reset";
+			gpio-export,output = <1>;
+			gpios = <&gpio0 16 GPIO_ACTIVE_HIGH>;
+		};
+	};
+  
+ leds {
+        compatible = "gpio-leds";
+
+      status {
+			label = "status";
+			gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
+		};
+		
+      wifi2g {
+			label = "wifi2g";
+			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
+					};
+
+	   wifi5g {
+			label = "wifi5g";
+			gpios = <&gpio0 17 GPIO_ACTIVE_LOW>;
+				 	};
+		
+	   wwan0 {
+			label = "wwan0";
+			gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
+					};
+  
+	};   
+    
+	gpio-keys-polled {
+		compatible = "gpio-keys-polled";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		poll-interval = <20>;
+
+		reset {
+			label = "reset";
+			gpios = <&gpio0 18 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_RESTART>;
+		};
+	};
+};
+  
+&spi0 {
+	status = "okay";
+
+	m25p80@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <32000000>;
+		m25p,fast-read;
+
+		partition@0 {
+			label = "Bootloader";
+			reg = <0x00000 0x30000>; /* 192K */
+		};
+
+		partition@30000 {
+			label = "Config";
+			reg = <0x30000 0x10000>; /* 64K */
+		};
+
+		partition@40000 {
+			label = "Factory";
+			reg = <0x40000 0x10000>; /* 64K */
+		};
+
+		partition@50000 {
+			label = "firmware";
+			reg = <0x50000 0xf70000>;
+		};
+
+		partition@f80000 {
+			label = "Storage";
+			reg = <0xfc0000 0x40000>; /* 256K */
+		};
+
+		partition@all {
+			label = "ALL";
+			reg = <0x0 0x1000000>;
+		};
+	};
+};
+
+&pcie {
+	status = "okay";
+};
+
+&xhci {
+	status = "okay";
+};
+
+&u3phy1 {
+	status = "okay";
+};
+
+&i2c {
+	status = "okay";
+};
+
+&sdhci {
+	status = "okay";
+};
