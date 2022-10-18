@@ -4,3 +4,5 @@ TargetProduct= 0x1004
 MessageEndpoint=0x01
 ResponseEndpoint=0x01
 MessageContent="1b5a01"
+
+
