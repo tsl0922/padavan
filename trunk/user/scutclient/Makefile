@@ -1,14 +1,19 @@
-# https://github.com/hanwckf/scutclient.git
-SRC_NAME := scutclient-upstream
-SRC_FILE := scutclient-a58996875c61d0cdf8ec435057befc1c87bd6863
+# https://github.com/scutclient/scutclient.git
+SRC_NAME = scutclient-3.1.3
+SRC_URL = https://github.com/scutclient/scutclient/archive/refs/tags/v3.1.3.tar.gz
 THISDIR = $(shell pwd)
 
-all: extract_test config_test
+all: download_test extract_test config_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/build
 
+download_test: 
+	( if [ ! -f $(THISDIR)/$(SRC_NAME).zip ]; then \
+		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).zip $(SRC_URL); \
+	fi )
+	
 extract_test:
 	( if [ ! -d $(THISDIR)/$(SRC_NAME) ]; then \
-		tar -xf $(SRC_FILE).tar.gz; \
+		tar -xf $(SRC_NAME).tar.gz; \
 	fi )
 
 config_test:
