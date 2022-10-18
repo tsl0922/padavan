@@ -4,10 +4,10 @@ TOP	 = $(ROOTDIR)/user
 
 IFLAGS	 = -idirafter dummyinc
 
-CFLAGS	+= -O2 -Wall -W -Wshadow -Wformat-security -D_FORTIFY_SOURCE=2
+CFLAGS	+= -Os -Wall -W -Werror -Wshadow -Wformat-security -D_FORTIFY_SOURCE=2
 CFLAGS	+= -I$(TOP)/shared
 CFLAGS	+= -I$(TOP)/libdisk
-CFLAGS	+= -ffunction-sections -fdata-sections
+CFLAGS	+= -ffunction-sections -fdata-sections -fvisibility=hidden
 
 LIBS	= #-lcrypt
 LINK	= -Wl,-s
