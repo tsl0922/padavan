@@ -1,8 +1,8 @@
 /*
  * hdparm.c - Command line interface to get/set hard disk parameters.
- *          - by Mark Lord (C) 1994-2018 -- freely distributable.
+ *          - by Mark Lord (C) 1994-2022 -- freely distributable.
  */
-#define HDPARM_VERSION "v9.58"
+#define HDPARM_VERSION "v9.63"
 
 #define _LARGEFILE64_SOURCE /*for lseek64*/
 #define _BSD_SOURCE	/* for strtoll() */
@@ -73,10 +73,8 @@ static int set_io32bit  = 0, get_io32bit  = 0, io32bit  = 0;
 static int set_piomode  = 0, get_piomode= 0, piomode = 0;
 static int set_dkeep    = 0, get_dkeep    = 0, dkeep    = 0;
 static int set_standby  = 0, get_standby  = 0, standby= 0;
-#if !defined (HDPARM_MINI)
 static int set_xfermode = 0, get_xfermode = 0;
 static int xfermode_requested= 0;
-#endif
 static int set_lookahead= 0, get_lookahead= 0, lookahead= 0;
 static int set_prefetch = 0, get_prefetch = 0, prefetch = 0;
 static int set_defects  = 0, get_defects  = 0, defects  = 0;
@@ -89,22 +87,19 @@ static int set_standbynow = 0, get_standbynow = 0;
 static int set_sleepnow   = 0, get_sleepnow   = 0;
 static int set_powerup_in_standby = 0, get_powerup_in_standby = 0, powerup_in_standby = 0;
 static int get_hitachi_temp = 0, set_hitachi_temp = 0;
-#if !defined (HDPARM_MINI)
 static int security_prompt_for_password = 0;
-#endif
 static int security_freeze   = 0;
 static int security_master = 0, security_mode = 0;
 static int enhanced_erase = 0;
 static int set_security   = 0;
-#if !defined (HDPARM_MINI)
 static int do_dco_freeze = 0, do_dco_restore = 0, do_dco_identify = 0, do_dco_setmax = 0;
-#endif
 static unsigned int security_command = ATA_OP_SECURITY_UNLOCK;
 
 static char security_password[33], *fwpath, *raw_identify_path;
 
 static int do_sanitize = 0;
 static __u16 sanitize_feature = 0;
+static __u64 sanitize_overwrite_passes = 0;
 static __u32 ow_pattern = 0;
 static const char *sanitize_states_str[SANITIZE_STATE_NUMBER] = {
 	"SD0 Sanitize Idle",
@@ -123,12 +118,9 @@ static const char *sanitize_err_reason_str[SANITIZE_ERR_NUMBER] = {
 
 static int get_powermode  = 0, set_powermode = 0;
 static int set_apmmode = 0, get_apmmode= 0, apmmode = 0;
-#if !defined (HDPARM_MINI)
 static int get_cdromspeed = 0, set_cdromspeed = 0, cdromspeed = 0;
+static int do_IDentity = 0, drq_hsm_error = 0;
 static int do_fwdownload = 0, xfer_mode = 0;
-static int drq_hsm_error = 0;
-#endif
-static int do_IDentity = 0;
 static int	set_busstate = 0, get_busstate = 0, busstate = 0;
 static int	set_reread_partn = 0, get_reread_partn;
 static int	set_acoustic = 0, get_acoustic = 0, acoustic = 0;
@@ -158,10 +150,8 @@ static __u64 write_sector_addr = ~0ULL;
 static int   read_sector = 0;
 static __u64 read_sector_addr = ~0ULL;
 
-#if !defined (HDPARM_MINI)
 static int   set_max_sectors = 0, set_max_permanent, get_native_max_sectors = 0;
 static __u64 set_max_addr = 0;
-#endif
 
 static int	get_doreset = 0, set_doreset = 0;
 static int	i_know_what_i_am_doing = 0;
@@ -381,6 +371,7 @@ static int time_device (int fd)
 		err = get_dev_geometry(fd, NULL, NULL, NULL, NULL, &nsectors);
 		if (!err)
 			max_iterations = nsectors / (2 * 1024) / TIMING_BUF_MB;
+		err = 0;
 	}
 	buf = prepare_timing_buf(TIMING_BUF_BYTES);
 	if (!buf)
@@ -517,7 +508,7 @@ static void dump_identity (__u16 *idw)
 	printf(" CurCHS=%u/%u/%u, CurSects=%u", idw[54], idw[55], idw[56], idw[57] | (idw[58] << 16));
 	printf(", LBA=%s", YN(idw[49] & 0x200));
 	if (idw[49] & 0x200)
- 		printf(", LBAsects=%llu", get_lba_capacity(idw));
+		printf(", LBAsects=%llu", get_lba_capacity(idw));
 
 	if (idw[49] & 0x100) {
 		if (idw[62] | idw[63]) {
@@ -635,14 +626,16 @@ static void interpret_standby (void)
 				unsigned int secs = standby * 5;
 				unsigned int mins = secs / 60;
 				secs %= 60;
-				if (mins)	  printf("%u minutes", mins);
+				if (mins)	  printf("%u minute%s", mins,
+							 mins==1 ? "" : "s");
 				if (mins && secs) printf(" + ");
 				if (secs)	  printf("%u seconds", secs);
 			} else if (standby <= 251) {
 				unsigned int mins = (standby - 240) * 30;
 				unsigned int hrs  = mins / 60;
 				mins %= 60;
-				if (hrs)	  printf("%u hours", hrs);
+				if (hrs)	  printf("%u hour%s", hrs,
+							 hrs==1 ? "" : "s");
 				if (hrs && mins)  printf(" + ");
 				if (mins)	  printf("%u minutes", mins);
 			} else {
@@ -653,7 +646,6 @@ static void interpret_standby (void)
 	printf(")\n");
 }
 
-#if !defined (HDPARM_MINI)
 struct xfermode_entry {
 	int val;
 	const char *name;
@@ -761,7 +753,6 @@ static void interpret_xfermode (unsigned int xfermode)
 	}
 	printf(")\n");
 }
-#endif
 
 static unsigned int get_erase_timeout_secs (int fd, int enhanced)
 {
@@ -907,6 +898,11 @@ do_sanitize_cmd (int fd)
 		r.iflags.bits.lob.lbal    = 1;
 		r.iflags.bits.lob.lbam    = 1;
 		r.iflags.bits.hob.nsect   = 1;
+
+		if (sanitize_feature == SANITIZE_OVERWRITE_EXT) {
+			r.oflags.bits.lob.nsect = 1;
+			r.lob.nsect = sanitize_overwrite_passes;
+		}
 
 		printf("Issuing %s command\n", description);
 		if (do_taskfile_cmd(fd, &r, 10)) {
@@ -1087,7 +1083,8 @@ static void get_identify_data (int fd)
 		args[0] = last_identify_op;
 		args[3] = 1;	/* sector count */
 		if (do_drive_cmd(fd, args, 0)) {
-			perror(" HDIO_DRIVE_CMD(identify) failed");
+			if (verbose)
+				perror(" HDIO_DRIVE_CMD(identify) failed");
 			return;
 		}
 	}
@@ -1131,21 +1128,21 @@ int get_log_page_data (int fd, __u8 log_address, __u8 pagenr, __u8 *buf)
 	if (!id)
 		exit(EIO);
 	if ((id[84] && (1<<5)) == 0)
-		return -ENOENT;  /* READ_LOG_EXT not supported */
+		return ENOENT;  /* READ_LOG_EXT not supported */
 	if (!page0) {
 		err = do_read_log(fd, 0, 0, page0_buf);
 		if (err) {
 			fprintf(stderr, "READ_LOG_EXT(0,0) failed: %s\n", strerror(err));
-			return -ENOENT;
+			return ENOENT;
 		}
 		page0 = page0_buf;
 	}
 	if (page0[log_address] <= pagenr)
-		return -ENOENT;
+		return ENOENT;
 	err = do_read_log(fd, log_address, pagenr, buf);
 	if (err) {
 		fprintf(stderr, "READ_LOG_EXT(0x%02x, %u) failed: %s\n", log_address, pagenr, strerror(err));
-		return -ENOENT;
+		return ENOENT;
 	}
 	return 0;
 }
@@ -1207,12 +1204,12 @@ static void dump_sectors (__u16 *w, unsigned int count, int raw, unsigned int se
 
 static int abort_if_not_full_device (int fd, __u64 lba, const char *devname, const char *msg)
 {
-	struct stat stat;
+	struct stat st;
 	__u64 start_lba;
 	int i, err, shortened = 0;
 	char *fdevname = strdup(devname);
 
-	if (0 == fstat(fd, &stat) && S_ISCHR(stat.st_mode))
+	if (0 == fstat(fd, &st) && S_ISCHR(st.st_mode))
 		return 0; /* skip geometry test for character (non-block) devices; eg. /dev/sg* */
 	err = get_dev_geometry(fd, NULL, NULL, NULL, &start_lba, NULL);
 	if (err)
@@ -1241,7 +1238,6 @@ static int abort_if_not_full_device (int fd, __u64 lba, const char *devname, con
 	exit(EINVAL);
 }
 
-#if !defined (HDPARM_MINI)
 static __u16 *get_dco_identify_data (int fd, int quietly)
 {
 	static __u8 args[4+512];
@@ -1329,6 +1325,7 @@ do_dco_setmax_cmd (int fd)
 		exit(err);
 }
 
+
 static __u64 do_get_native_max_sectors (int fd)
 {
 	int err = 0;
@@ -1363,8 +1360,8 @@ static __u64 do_get_native_max_sectors (int fd)
 			if (verbose)
 				printf("GET_NATIVE_MAX_ADDRESS_EXT response: hob={%02x %02x %02x} lob={%02x %02x %02x}\n",
 					   r.hob.lbah, r.hob.lbam, r.hob.lbal, r.lob.lbah, r.lob.lbam, r.lob.lbal);
-			max = (((__u64)((r.hob.lbah << 16) | (r.hob.lbam << 8) | r.hob.lbal) << 24)
-				   | ((r.lob.lbah << 16) | (r.lob.lbam << 8) | r.lob.lbal)) + 1;
+			max = (((__u64)((r.hob.lbah << 16) | ((__u64)(r.hob.lbam << 8) | r.hob.lbal)) << 24)
+				   | (__u64)((r.lob.lbah << 16) | (r.lob.lbam << 8) | r.lob.lbal)) + 1;
 		}
 	} else { // ACS2 or below, or optional AMAX not present
 		if (SUPPORTS_48BIT_ADDR(id)) {
@@ -1382,7 +1379,7 @@ static __u64 do_get_native_max_sectors (int fd)
 					printf("READ_NATIVE_MAX_ADDRESS_EXT response: hob={%02x %02x %02x} lob={%02x %02x %02x}\n",
 						r.hob.lbah, r.hob.lbam, r.hob.lbal, r.lob.lbah, r.lob.lbam, r.lob.lbal);
 				max = (((__u64)((r.hob.lbah << 16) | (r.hob.lbam << 8) | r.hob.lbal) << 24)
-				     	| ((r.lob.lbah << 16) | (r.lob.lbam << 8) | r.lob.lbal)) + 1;
+				     	| ((__u64)(r.lob.lbah << 16) | (r.lob.lbam << 8) | r.lob.lbal)) + 1;
 			}
 		} else {
 			/* DEVICE (3:0) / LBA (27:24) "remap" does NOT apply in ATA Status Return */
@@ -1402,7 +1399,6 @@ static __u64 do_get_native_max_sectors (int fd)
 	return max;
 	
 }
-#endif
 
 static int do_make_bad_sector (int fd, __u64 lba, const char *devname)
 {
@@ -1568,7 +1564,7 @@ static void do_trim_sector_ranges (int fd, const char *devname, int nranges, str
 	for (i = 0; i < nranges; ++i) {
 		nsectors += sr->nsectors;
 		range = sr->nsectors;
-		range = (range << 48) | sr->lba;
+		range = (__u64)(range << 48) | sr->lba;
 		data[i] = __cpu_to_le64(range);
 		++sr;
 	}
@@ -1625,18 +1621,40 @@ get_set_sector_index (int fd, unsigned int wanted_sector_size, int *checkword)
 {
 	__u8 d[512] = {0,};
 	const int SECTOR_CONFIG = 0x2f;
-	int i, rc;
+	int i, rc, found_byte_lss = 0, found_word_lss = 0, lss_is_bytes = 0;
+	unsigned int current_lss;
 
 	rc = get_log_page_data(fd, SECTOR_CONFIG, 0, d);
 	if (rc) {
 		fprintf(stderr, "READ_LOG_EXT(SECTOR_CONFIGURATION) failed: %s\n", strerror(rc));
 		exit(1);
 	}
+	/*
+	 * Some devices incorrectly return logical sector size (lss) as bytes.
+	 * Scan log entries and if the current lss is in the log, and there isn't an equivalent
+	 * entry in words, assume the device is returning the logical sector size in bytes.
+	 * Doing this takes two passes through the log data.
+	 */
+	current_lss = (unsigned int)get_current_sector_size(fd);
 	for (i = 0; i < 128; i += 16) {
 		unsigned int lss;
 		if ((d[i] & 0x80) == 0)  /* Is this descriptor valid? */
 			continue;  /* not valid */
 		lss = d[i + 4] | (d[i + 5] << 8) | (d[i + 6] << 16) | (d[i + 7] << 24);  /* logical sector size */
+		if (lss == current_lss) {
+			found_byte_lss = 1;  /* found lss in bytes */
+		} else if ((lss * 2) == current_lss) {
+			found_word_lss = 1;  /* found lss in words */
+			break;
+		}
+	}
+	lss_is_bytes = !found_word_lss && found_byte_lss;
+	for (i = 0; i < 128; i += 16) {
+		unsigned int lss;
+		if ((d[i] & 0x80) == 0)  /* Is this descriptor valid? */
+			continue;  /* not valid */
+		lss = d[i + 4] | (d[i + 5] << 8) | (d[i + 6] << 16) | (d[i + 7] << 24);  /* logical sector size */
+		lss = lss_is_bytes ? lss : lss * 2;
 		if (lss == wanted_sector_size) {
 			*checkword = d[i + 2] | (d[i + 3] << 8);
 			return i / 16;  /* descriptor index */
@@ -1648,7 +1666,7 @@ get_set_sector_index (int fd, unsigned int wanted_sector_size, int *checkword)
 
 static int do_set_sector_size_cmd (int fd, const char *devname)
 {
-	int index, err = 0;
+	int idx, err = 0;
 	__u8 ata_op;
 	struct hdio_taskfile *r;
 	int checkword = 0;
@@ -1663,11 +1681,11 @@ static int do_set_sector_size_cmd (int fd, const char *devname)
 	ata_op = ATA_OP_SET_SECTOR_CONFIGURATION;
 	init_hdio_taskfile(r, ata_op, RW_WRITE, LBA48_FORCE, 0, 0, 0);
 
-	index = get_set_sector_index(fd, new_sector_size, &checkword);
+	idx = get_set_sector_index(fd, new_sector_size, &checkword);
 	r->hob.feat  = checkword >> 8;
 	r->lob.feat  = checkword;
 	r->hob.nsect = 0;
-	r->lob.nsect = index;
+	r->lob.nsect = idx;
 	r->oflags.bits.hob.feat = 1;
 
 	printf("changing sector size configuration to %llu: ", new_sector_size);
@@ -1732,7 +1750,7 @@ do_trim_from_stdin (int fd, const char *devname)
 			err = errno;
 			fprintf(stderr, "stdin: error at lba:count pair #%d: %s\n", (total_ranges + 1), strerror(err));
 		} else {
-			range = (nsect << 48) | lba;
+			range = (__u64)(nsect << 48) | lba;
 			nsectors += nsect;
 			data[nranges++] = __cpu_to_le64(range);
 			if (nranges == max_ranges) {
@@ -1832,7 +1850,6 @@ static int do_idleunload (int fd, const char *devname)
 	return err;
 }
 
-#if !defined (HDPARM_MINI)
 static int do_set_max_sectors (int fd, __u64 max_lba, int permanent)
 {
 	int err = 0;
@@ -1878,7 +1895,6 @@ static int do_set_max_sectors (int fd, __u64 max_lba, int permanent)
 
 	return err;
 }
-#endif
 
 static void usage_help (int clue, int rc)
 {
@@ -1896,9 +1912,7 @@ static void usage_help (int clue, int rc)
 	" -C   Check drive power mode status\n"
 	" -d   Get/set using_dma flag\n"
 	" -D   Enable/disable drive defect management\n"
-#if !defined (HDPARM_MINI)
 	" -E   Set cd/dvd drive speed\n"
-#endif
 	" -f   Flush buffer cache for device on exit\n"
 	" -F   Flush drive write cache\n"
 	" -g   Display drive geometry\n"
@@ -1913,10 +1927,8 @@ static void usage_help (int clue, int rc)
 	" -m   Get/set multiple sector count\n"
 	" -M   Get/set acoustic management (0-254, 128: quiet, 254: fast)\n"
 	" -n   Get/set ignore-write-errors flag (0/1)\n"
-#if !defined (HDPARM_MINI)
 	" -N   Get/set max visible number of sectors (HPA) (VERY DANGEROUS)\n"
 	" -p   Set PIO mode on IDE interface chipset (0,1,2,3,4,...)\n"
-#endif
 	" -P   Set drive prefetch count\n"
 	" -q   Change next setting quietly\n"
 	" -Q   Get/set DMA queue_depth (if supported)\n"
@@ -1933,14 +1945,11 @@ static void usage_help (int clue, int rc)
 	" -w   Perform device reset (DANGEROUS)\n"
 	" -W   Get/set drive write-caching flag (0/1)\n"
 	" -x   Obsolete\n"
-#if !defined (HDPARM_MINI)
 	" -X   Set IDE xfer mode (DANGEROUS)\n"
-#endif
 	" -y   Put drive in standby mode\n"
 	" -Y   Put drive to sleep\n"
 	" -z   Re-read partition table\n"
 	" -Z   Disable Seagate auto-powersaving mode\n"
-#if !defined (HDPARM_MINI)
 	" --dco-freeze      Freeze/lock current device configuration until next power cycle\n"
 	" --dco-identify    Read/dump device configuration identify data\n"
 	" --dco-restore     Reset device configuration back to factory defaults\n"
@@ -1957,7 +1966,7 @@ static void usage_help (int clue, int rc)
 	" --fwdownload-modee-max  Download firmware using mode E (max-size segments) (EXTREMELY DANGEROUS)\n"
 	" --idle-immediate  Idle drive immediately\n"
 	" --idle-unload     Idle immediately and unload heads\n"
-  " --Iraw filename   Write raw binary identify data to the specfied file\n"
+	" --Iraw filename   Write raw binary identify data to the specfied file\n"
 	" --Istdin          Read identify data from stdin as ASCII hex\n"
 	" --Istdout         Write identify data to stdout as ASCII hex\n"
 	" --make-bad-sector Deliberately corrupt a sector directly on the media (VERY DANGEROUS)\n"
@@ -1970,6 +1979,7 @@ static void usage_help (int clue, int rc)
 	" --sanitize-crypto-scramble  Change the internal encryption keys that used for used data\n"
 	" --sanitize-freeze-lock      Lock drive's sanitize features until next power cycle\n"
 	" --sanitize-overwrite  PATTERN  Overwrite the internal media with constant PATTERN\n"
+	" --sanitize-overwrite-passes COUNT  Number of overwrite passes from 0 to 7, default 0 means 16 passes\n"
 	" --sanitize-status           Show sanitize status information\n"
 	" --security-help             Display help for ATA security commands\n"
 	" --set-sector-size           Change logical sector size of drive\n"
@@ -1977,12 +1987,10 @@ static void usage_help (int clue, int rc)
 	" --trim-sector-ranges-stdin  Same as above, but reads lba:count pairs from stdin\n"
 	" --verbose                   Display extra diagnostics from some commands\n"
 	" --write-sector              Repair/overwrite a (possibly bad) sector directly on the media (VERY DANGEROUS)\n"
-#endif
 	"\n");
 	exit(rc);
 }
 
-#if !defined (HDPARM_MINI)
 static void security_help (int rc)
 {
 	FILE *desc = rc ? stderr : stdout;
@@ -2015,7 +2023,6 @@ static void security_help (int rc)
 	);
 	exit(rc);
 }
-#endif
 
 void process_dev (char *devname)
 {
@@ -2217,7 +2224,6 @@ void process_dev (char *devname)
 			perror(" HDIO_DRIVE_CMD(setprefetch) failed");
 		}
 	}
-#if !defined (HDPARM_MINI)
 	if (set_xfermode) {
 		__u8 args[4] = {ATA_OP_SETFEATURES,0,3,0};
 		args[1] = xfermode_requested;
@@ -2230,7 +2236,6 @@ void process_dev (char *devname)
 			perror(" HDIO_DRIVE_CMD(setxfermode) failed");
 		}
 	}
-#endif
 	if (set_lookahead) {
 		__u8 args[4] = {ATA_OP_SETFEATURES,0,0,0};
 		args[2] = lookahead ? 0xaa : 0x55;
@@ -2286,7 +2291,6 @@ void process_dev (char *devname)
 			perror(" HDIO_DRIVE_CMD failed");
 		}
 	}
-#if !defined (HDPARM_MINI)
 	if (set_cdromspeed) {
 		int err1, err2;
 		/* The CDROM_SELECT_SPEED ioctl
@@ -2303,7 +2307,6 @@ void process_dev (char *devname)
 			perror(" SET_STREAMING/CDROM_SELECT_SPEED both failed");
 		}
 	}
-#endif
 	if (set_acoustic) {
 		__u8 args[4];
 		if (get_acoustic)
@@ -2368,7 +2371,6 @@ void process_dev (char *devname)
 		}
 		do_sanitize_cmd(fd);
 	}
-#if !defined (HDPARM_MINI)
 	if (do_dco_identify) {
 		__u16 *dco = get_dco_identify_data(fd, 0);
 		if (dco) {
@@ -2413,7 +2415,6 @@ void process_dev (char *devname)
 			id = NULL; 
 		}
 	}
-#endif
 	if (security_freeze) {
 		__u8 args[4] = {ATA_OP_SECURITY_FREEZE_LOCK,0,0,0};
 		if (!quiet)
@@ -2440,7 +2441,6 @@ void process_dev (char *devname)
 			perror(" HDIO_SET_BUSSTATE failed");
 		}
 	}
-#if !defined (HDPARM_MINI)
 	if (set_max_sectors) {
 		if (!quiet && get_native_max_sectors)
 			printf(" setting max visible sectors to %llu (%s)\n", set_max_addr, set_max_permanent ? "permanent" : "temporary");
@@ -2452,7 +2452,6 @@ void process_dev (char *devname)
 			id = NULL; /* invalidate existing identify data */
 		}
 	}
-#endif
 	if (make_bad_sector) {
 		get_identify_data(fd);
 		if (id) {
@@ -2484,7 +2483,6 @@ void process_dev (char *devname)
 		confirm_i_know_what_i_am_doing("--write-sector", "You are trying to deliberately overwrite a low-level sector on the media.\nThis is a BAD idea, and can easily result in total data loss.");
 		err = do_write_sector(fd, write_sector_addr, devname);
 	}
-#if !defined (HDPARM_MINI)
 	if (do_fwdownload) {
 		if (num_flags_processed > 1 || argc)
 			usage_help(15,EINVAL);
@@ -2498,10 +2496,8 @@ void process_dev (char *devname)
 				exit(err);
 		}
 	}
-#endif
 	if (read_sector)
 		err = do_read_sector(fd, read_sector_addr, devname);
-#if !defined (HDPARM_MINI)
 	if (drq_hsm_error) {
 		get_identify_data(fd);
 		if (id) {
@@ -2516,7 +2512,6 @@ void process_dev (char *devname)
 			fprintf(stderr, "ata status=0x%02x ata error=0x%02x\n", args[0], args[1]);
 		}
 	}
-#endif
 	id = NULL; /* force re-IDENTIFY in case something above modified settings */
 	if (get_hitachi_temp) {
 		__u8 args[4] = {0xf0,0,0x01,0}; /* "Sense Condition", vendor-specific */
@@ -2573,18 +2568,18 @@ void process_dev (char *devname)
 					break;
 				default:printf("\?\?\?)\n");
 			}
-               } else if (get_io32bit) {
-                       err = errno;
-                       perror(" HDIO_GET_32BIT failed");
+		} else if (get_io32bit) {
+			err = errno;
+			perror(" HDIO_GET_32BIT failed");
 		}
 	}
 	if (do_defaults || get_unmask) {
 		if (0 == ioctl(fd, HDIO_GET_UNMASKINTR, &parm)) {
 			printf(" unmaskirq     = %2ld", parm);
 			on_off(parm);
-               } else if (get_unmask) {
-                       err = errno;
-                       perror(" HDIO_GET_UNMASKINTR failed");
+		} else if (get_unmask) {
+			err = errno;
+			perror(" HDIO_GET_UNMASKINTR failed");
 		}
 	}
 
@@ -2595,9 +2590,9 @@ void process_dev (char *devname)
 				printf(" (DMA-Assisted-PIO)\n");
 			else
 				on_off(parm);
-                } else if (get_dma) {
-                       err = errno;
-                       perror(" HDIO_GET_DMA failed");
+		} else if (get_dma) {
+			err = errno;
+			perror(" HDIO_GET_DMA failed");
 		}
 	}
 	if (get_dma_q) {
@@ -2611,7 +2606,7 @@ void process_dev (char *devname)
 			on_off(parm);
 		} else if (get_keep) {
 			err = errno;
-                        perror(" HDIO_GET_KEEPSETTINGS failed");
+			perror(" HDIO_GET_KEEPSETTINGS failed");
 		}
 	}
 	if (get_nowerr) {
@@ -2722,7 +2717,7 @@ void process_dev (char *devname)
 					fprintf(stderr, "Wrote IDENTIFY DEVICE data to \"%s\"\n", raw_identify_path);
 					close(rfd);
 				}
-      			} else {
+			} else {
 				identify(fd, (void *)id);
 			}
 		}
@@ -2794,7 +2789,6 @@ void process_dev (char *devname)
 			printf(" busstate      = %2ld (%s)\n", parm, busstate_str(parm));
 		}
 	}
-#if !defined (HDPARM_MINI)
 	if (get_native_max_sectors) {
 		get_identify_data(fd);
 		if (id) {
@@ -2822,7 +2816,7 @@ void process_dev (char *devname)
 					__u16 *dco = get_dco_identify_data(fd, 1);
 					if (dco) {
 						__u64 dco_max = dco[5];
-						dco_max = ((((__u64)dco[5]) << 32) | (dco[4] << 16) | dco[3]) + 1;
+						dco_max = ((((__u64)dco[5]) << 32) | ((__u64)dco[4] << 16) | (__u64)dco[3]) + 1;
 						printf("(%llu?)", dco_max);
 					}
 					printf(", HPA setting seems invalid");
@@ -2833,9 +2827,8 @@ void process_dev (char *devname)
 				}
 			}
 		
-	}	
-#endif
 
+	}	
 	if (do_ctimings)
 		time_cache(fd);
 	if (do_flush_wcache)
@@ -2899,7 +2892,6 @@ void process_dev (char *devname)
 		exit (err);
 }
 
-#if !defined (HDPARM_MINI)
 #define GET_XFERMODE(flag, num)					\
 	do {							\
 		char *tmpstr = name;				\
@@ -2970,7 +2962,6 @@ eof:
 	fprintf(stderr, "read only %u/256 IDENTIFY words from stdin: %s\n", wc, strerror(err));
 	exit(err);
 }
-#endif
 
 static void
 numeric_parm (char c, const char *name, int *val, int *setparm, int *getparm, int min, int max, int set_only)
@@ -3001,7 +2992,6 @@ numeric_parm (char c, const char *name, int *val, int *setparm, int *getparm, in
 #define      DO_FLAG(CH,VAR)              CH:VAR=1;noisy=1;break
 #define    INCR_FLAG(CH,VAR)              CH:VAR++;noisy=1;break
 
-#if !defined (HDPARM_MINI)
 static void get_security_password (int handle_NULL)
 {
 	unsigned int maxlen = sizeof(security_password) - 1;
@@ -3286,6 +3276,9 @@ get_longarg (void)
 	} else if (0 == strcasecmp(name, "direct")) {
 		open_flags |= O_DIRECT;
 		--num_flags_processed;	/* doesn't count as an action flag */
+	} else if (0 == strcasecmp(name, "sanitize-overwrite-passes")) {
+		get_u64_parm(0, 0, NULL, &sanitize_overwrite_passes, 0, 7, name, "Number of passes must be in range 0..7");
+		--num_flags_processed;	/* doesn't count as an action flag */
 	} else if (0 == strcasecmp(name, "drq-hsm-error")) {
 		drq_hsm_error = 1;
 	} else if (0 == strcasecmp(name, "dco-freeze")) {
@@ -3408,12 +3401,12 @@ get_longarg (void)
 	}
 	return 0; /* additional flags allowed */
 }
-#endif
 
 int main (int _argc, char **_argv)
 {
 	int no_more_flags = 0, disallow_flags = 0;
 	char c;
+	char name[32];
 
 	argc = _argc;
 	argv = _argv;
@@ -3455,9 +3448,7 @@ int main (int _argc, char **_argv)
 				case     SET_FLAG('C',powermode);
 				case GET_SET_PARM('d',"dma-enable",dma,0,1);
 				case     SET_PARM('D',"defects-management",defects,0,1);
-#if !defined (HDPARM_MINI)
 				case     SET_PARM('E',"CDROM/DVD-speed",cdromspeed,0,255);
-#endif
 				case      DO_FLAG('f',do_flush);
 				case      DO_FLAG('F',do_flush_wcache);
 				case      DO_FLAG('g',get_geom);
@@ -3472,9 +3463,7 @@ int main (int _argc, char **_argv)
 				case GET_SET_PARM('m',"multmode-count",mult,0,64);
 				case GET_SET_PARM('M',"acoustic-management",acoustic,0,255);
 				case GET_SET_PARM('n',"ignore-write-errors",nowerr,0,1);
-#if !defined (HDPARM_MINI)
 				case              'N': get_set_max_sectors_parms(); break;
-#endif
 				case     SET_PARM('P',"prefetch",prefetch,0,255);
 				case              'q': quiet = 1; noisy = 0; break;
 				case GET_SET_PARM('Q',"queue-depth",dma_q,0,1024);
@@ -3495,7 +3484,6 @@ int main (int _argc, char **_argv)
 				case     SET_FLAG('z',reread_partn);
 				case     SET_FLAG('Z',seagate);
 
-#if !defined (HDPARM_MINI)
 				case '-':
 					if (get_longarg())
 						disallow_flags = 1;
@@ -3514,7 +3502,7 @@ int main (int _argc, char **_argv)
 					if (!set_xfermode)
 						fprintf(stderr, "-X: missing value\n");
 					break;
-#endif
+
 
 				default:
 					usage_help(10,EINVAL);
