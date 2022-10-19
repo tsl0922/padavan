@@ -63,7 +63,7 @@ int main(int argc,char** argv)
         {
             lua_pushinteger(L,i+1);
             lua_pushstring(L,argv[i]);
-            lua_rawset(L,-3);        
+            lua_rawset(L,-3);
         }
         lua_setglobal(L,"arg");
 
@@ -88,7 +88,7 @@ int main(int argc,char** argv)
         }
 
         lua_close(L);
-    }                                    
-    
+    }
+
     return 0;
 }

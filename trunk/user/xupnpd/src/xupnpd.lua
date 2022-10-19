@@ -1,5 +1,9 @@
 cfg={}
 
+cfg.ui_auth_file='auth.txt'
+
+cfg.ui_session_file='/tmp/xupnpd.session'
+
 -- multicast interface for SSDP exchange, 'eth0', 'br0', 'br-lan' for example
 cfg.ssdp_interface='br0'
 
@@ -86,21 +90,21 @@ playlist=
 -- feeds list (plugin, feed name, feed type)
 feeds=
 {
-    { 'vimeo',          'channel/hd',           'Vimeo HD Channel' },
-    { 'vimeo',          'channel/hdxs',         'Vimeo Xtreme sports' },
-    { 'vimeo',          'channel/mtb',          'Vimeo MTB Channel' },
-    { 'youtube',        'channel/top_rated',    'YouTube Top Rated' },
-    { 'youtube',        'Drift0r',              'Drift0r' },
-    { 'youtube',        'XboxAhoy',             'XboxAhoy' },
-    { 'ag',             'videos',               'AG - New' },
-    { 'ivi',            'new',                  'IVI - New' },
-    { 'gametrailers',   'ps3',                  'GT - PS3' },
-    { 'giantbomb',      'all',                  'GiantBomb - All' },
+--    { 'vimeo',          'channel/hd',           'Vimeo HD Channel' },
+--    { 'vimeo',          'channel/hdxs',         'Vimeo Xtreme sports' },
+--    { 'vimeo',          'channel/mtb',          'Vimeo MTB Channel' },
+--    { 'youtube',        'channel/top_rated',    'YouTube Top Rated' },
+--    { 'youtube',        'Drift0r',              'Drift0r' },
+--    { 'youtube',        'XboxAhoy',             'XboxAhoy' },
+--    { 'ag',             'videos',               'AG - New' },
+--    { 'ivi',            'new',                  'IVI - New' },
+--    { 'gametrailers',   'ps3',                  'GT - PS3' },
+--    { 'giantbomb',      'all',                  'GiantBomb - All' },
 --    { 'dreambox',       'http://192.168.0.1:8001/','Dreambox1' },
 }
 
 -- log ident, pid file end www root
-cfg.version='1.033'
+cfg.version='1.034'
 cfg.log_ident='xupnpd'
 cfg.pid_file='/var/run/'..cfg.log_ident..'.pid'
 cfg.www_root='/usr/share/xupnpd/www/'

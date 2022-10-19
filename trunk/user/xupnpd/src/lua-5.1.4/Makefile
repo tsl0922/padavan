@@ -7,7 +7,8 @@
 # Your platform. See PLATS for possible values.
 PLAT= none
 
-CFLAGS += -O2 -Wall $(MYCFLAGS)
+#CC= gcc
+CFLAGS= -O2 -Wall $(MYCFLAGS)
 AR= ar rcu
 RANLIB= ranlib
 RM= rm -f
