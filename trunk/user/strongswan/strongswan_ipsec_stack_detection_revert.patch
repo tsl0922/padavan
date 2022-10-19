@@ -1,0 +1,159 @@
+diff -uNr strongswan_b/src/starter/Android.mk strongswan_a/src/starter/Android.mk
+--- strongswan_b/src/starter/Android.mk	2019-05-20 13:31:08.000000000 +0300
++++ strongswan_a/src/starter/Android.mk	2019-05-06 16:51:05.000000000 +0300
+@@ -6,7 +6,8 @@
+ starter.c files.h \
+ parser/parser.c parser/lexer.c parser/conf_parser.c parser/conf_parser.h \
+ args.c args.h confread.c confread.h keywords.c keywords.h cmp.c cmp.h \
+-invokecharon.c invokecharon.h starterstroke.c starterstroke.h
++invokecharon.c invokecharon.h starterstroke.c starterstroke.h \
++netkey.c netkey.h
+ 
+ LOCAL_SRC_FILES := $(filter %.c,$(starter_SOURCES))
+ 
+diff -uNr strongswan_b/src/starter/files.h strongswan_a/src/starter/files.h
+--- strongswan_b/src/starter/files.h	2019-05-20 13:31:08.000000000 +0300
++++ strongswan_a/src/starter/files.h	2019-05-06 16:51:05.000000000 +0300
+@@ -15,6 +15,9 @@
+ #ifndef _STARTER_FILES_H_
+ #define _STARTER_FILES_H_
+ 
++#define PROC_NETKEY             "/proc/net/pfkey"
++#define PROC_MODULES            "/proc/modules"
++
+ #define CONFIG_FILE     IPSEC_CONFDIR "/ipsec.conf"
+ #define SECRETS_FILE    IPSEC_CONFDIR "/ipsec.secrets"
+ 
+@@ -24,4 +27,7 @@
+ extern char *cmd;
+ extern char *pid_file;
+ 
++#define DYNIP_DIR       IPSEC_PIDDIR "/dynip"
++
+ #endif /* _STARTER_FILES_H_ */
++
+diff -uNr strongswan_b/src/starter/Makefile.am strongswan_a/src/starter/Makefile.am
+--- strongswan_b/src/starter/Makefile.am	2019-05-20 13:31:08.000000000 +0300
++++ strongswan_a/src/starter/Makefile.am	2019-05-06 16:51:05.000000000 +0300
+@@ -4,7 +4,8 @@
+ starter_SOURCES = \
+ starter.c files.h \
+ args.c args.h confread.c confread.h keywords.c keywords.h cmp.c cmp.h \
+-invokecharon.c invokecharon.h starterstroke.c starterstroke.h
++invokecharon.c invokecharon.h starterstroke.c starterstroke.h \
++netkey.c netkey.h
+ 
+ # parser is also used by tests
+ noinst_LTLIBRARIES = libstarter.la
+diff -uNr strongswan_b/src/starter/netkey.c strongswan_a/src/starter/netkey.c
+--- strongswan_b/src/starter/netkey.c	1970-01-01 03:00:00.000000000 +0300
++++ strongswan_a/src/starter/netkey.c	2019-05-06 16:51:05.000000000 +0300
+@@ -0,0 +1,56 @@
++/* strongSwan netkey starter
++ * Copyright (C) 2001-2002 Mathieu Lafon - Arkoon Network Security
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the
++ * Free Software Foundation; either version 2 of the License, or (at your
++ * option) any later version.  See <http://www.fsf.org/copyleft/gpl.txt>.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * for more details.
++ */
++
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <stdlib.h>
++
++#include <library.h>
++#include <utils/debug.h>
++
++#include "files.h"
++
++bool starter_netkey_init(void)
++{
++	struct stat stb;
++
++	if (stat(PROC_NETKEY, &stb) != 0)
++	{
++		/* af_key module makes the netkey proc interface visible */
++		if (stat(PROC_MODULES, &stb) == 0)
++		{
++			ignore_result(system("modprobe -qv af_key"));
++		}
++
++		/* now test again */
++		if (stat(PROC_NETKEY, &stb) != 0)
++		{
++			DBG2(DBG_APP, "kernel appears to lack the native netkey IPsec stack");
++			return FALSE;
++		}
++	}
++
++	/* make sure that all required IPsec modules are loaded */
++	if (stat(PROC_MODULES, &stb) == 0)
++	{
++		ignore_result(system("modprobe -qv ah4"));
++		ignore_result(system("modprobe -qv esp4"));
++		ignore_result(system("modprobe -qv ipcomp"));
++		ignore_result(system("modprobe -qv xfrm4_tunnel"));
++		ignore_result(system("modprobe -qv xfrm_user"));
++	}
++
++	DBG2(DBG_APP, "found netkey IPsec stack");
++	return TRUE;
++}
+diff -uNr strongswan_b/src/starter/netkey.h strongswan_a/src/starter/netkey.h
+--- strongswan_b/src/starter/netkey.h	1970-01-01 03:00:00.000000000 +0300
++++ strongswan_a/src/starter/netkey.h	2019-05-06 16:51:05.000000000 +0300
+@@ -0,0 +1,21 @@
++/* strongSwan netkey initialization and cleanup
++ * Copyright (C) 2001-2002 Mathieu Lafon - Arkoon Network Security
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License as published by the
++ * Free Software Foundation; either version 2 of the License, or (at your
++ * option) any later version.  See <http://www.fsf.org/copyleft/gpl.txt>.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * for more details.
++ */
++
++#ifndef _STARTER_NETKEY_H_
++#define _STARTER_NETKEY_H_
++
++extern bool starter_netkey_init (void);
++
++#endif /* _STARTER_NETKEY_H_ */
++
+diff -uNr strongswan_b/src/starter/starter.c strongswan_a/src/starter/starter.c
+--- strongswan_b/src/starter/starter.c	2019-05-20 13:31:08.000000000 +0300
++++ strongswan_a/src/starter/starter.c	2019-05-06 16:51:05.000000000 +0300
+@@ -41,6 +41,7 @@
+ #include "files.h"
+ #include "starterstroke.h"
+ #include "invokecharon.h"
++#include "netkey.h"
+ #include "cmp.h"
+ 
+ #ifndef LOG_AUTHPRIV
+@@ -520,6 +521,15 @@
+ 		exit(LSB_RC_INVALID_ARGUMENT);
+ 	}
+ 
++#ifndef SKIP_KERNEL_IPSEC_MODPROBES
++	/* determine if we have a native netkey IPsec stack */
++	if (!starter_netkey_init())
++	{
++		DBG1(DBG_APP, "no netkey IPsec stack detected");
++		DBG1(DBG_APP, "no known IPsec stack detected, ignoring!");
++	}
++#endif
++
+ 	last_reload = time_monotonic(NULL);
+ 
+ 	if (check_pid(starter_pid_file))
