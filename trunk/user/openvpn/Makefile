@@ -1,15 +1,20 @@
-SRC_NAME=openvpn-2.5.2
+SRC_NAME=openvpn-2.5.7
+SRC_URL=https://github.com/OpenVPN/openvpn/archive/v2.5.7.tar.gz
 
-CFLAGS += -ffunction-sections -fdata-sections -fvisibility=hidden
+CFLAGS += -ffunction-sections -fdata-sections
 LDFLAGS += -Wl,--gc-sections
 
-all: extract_test config_test
+all: download_test extract_test config_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+
+download_test:
+	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
+		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
+	fi )
 
 extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \
-		tar -xf $(SRC_NAME).tar.xz; \
-		patch -d $(SRC_NAME) -p1 < $(SRC_NAME).patch ; \
+		tar xzf $(SRC_NAME).tar.gz; \
 	fi )
 
 config_test:
@@ -21,7 +26,7 @@ config_test:
 
 configure:
 	( cd $(SRC_NAME) ; \
-	autoreconf -fi ; \
+	autoreconf -vi ; \
 	IFCONFIG=/sbin/ifconfig \
 	ROUTE=/sbin/route \
 	NETSTAT=/bin/netstat \
