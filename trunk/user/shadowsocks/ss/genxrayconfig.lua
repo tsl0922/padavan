@@ -6,7 +6,7 @@ local socks_port = arg[4] or "0"
 local ssrindext = io.popen("dbus get ssconf_basic_json_" .. server_section)
 local servertmp = ssrindext:read("*all")
 local server = cjson.decode(servertmp)
-local v2ray = {
+local xray = {
 	log = {
 		-- error = "/var/ssrplus.log",
 		loglevel = "warning"
@@ -129,5 +129,5 @@ local v2ray = {
 	}
 }
 
-print(cjson.encode(v2ray))
+print(cjson.encode(xray))
 
