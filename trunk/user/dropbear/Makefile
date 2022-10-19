@@ -1,4 +1,5 @@
-SRC_NAME=dropbear-202X.XX
+SRC_NAME=dropbear-2022.82
+SRC_URL=https://matt.ucc.asn.au/dropbear/releases/$(SRC_NAME).tar.bz2
 
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_SFTP),y)
 COPT=-DSFTPSERVER_PATH=\"/usr/libexec/sftp-server\"
@@ -6,13 +7,25 @@ else
 COPT=-DSFTPSERVER_PATH=\"/opt/libexec/sftp-server\"
 endif
 ifneq ($(CONFIG_FIRMWARE_INCLUDE_DROPBEAR_FAST_CODE),y)
-COPT+=-DDROPBEAR_SMALL_CODE
+COPT+=-DDROPBEAR_SMALL_CODE=1
+else
+COPT+=-DDROPBEAR_SMALL_CODE=0
 endif
 CFLAGS+=$(COPT) -ffunction-sections -fdata-sections
 LDFLAGS += -Wl,--gc-sections
 
-all: config_test
+all: download_test extract_test config_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" MULTI=1
+
+download_test:
+	( if [ ! -f $(SRC_NAME).tar.bz2 ]; then \
+		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.bz2 $(SRC_URL); \
+	fi )
+
+extract_test:
+	( if [ ! -d $(SRC_NAME) ]; then \
+		tar xjf $(SRC_NAME).tar.bz2; \
+	fi )
 
 config_test:
 	( if [ -f ./config_done ]; then \
@@ -26,6 +39,7 @@ configure:
 	autoreconf -v; \
 	./configure \
 		--prefix=/usr \
+		--disable-harden \
 		--disable-lastlog \
 		--disable-utmp \
 		--disable-utmpx \
@@ -34,7 +48,6 @@ configure:
 		--disable-loginfunc \
 		--disable-pututline \
 		--disable-pututxline \
-		--disable-harden \
 		--enable-zlib \
 		--enable-bundled-libtom \
 		--host=$(HOST_TARGET) \
