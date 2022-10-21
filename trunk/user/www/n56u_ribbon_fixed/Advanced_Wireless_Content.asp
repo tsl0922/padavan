@@ -403,8 +403,8 @@ function validate_wlphrase(s, v, obj){
                                             <td>
                                                 <select name="wl_gmode" class="input" onChange="return change_common_wl(this, 'WLANConfig11a', 'wl_gmode')">
                                                     <option value="5" <% nvram_match_x("","wl_gmode", "5","selected"); %>>a/n/ac/ax Mixed</option>
-                                                    <option value="4" <% nvram_match_x("","wl_gmode", "4","selected"); %>>a/n/ac Mixed (*)</option>
-                                                    <option value="3" <% nvram_match_x("","wl_gmode", "3","selected"); %>>n/ac Mixed</option>
+                                                    <option value="4" <% nvram_match_x("","wl_gmode", "4","selected"); %>>a/n/ac Mixed</option>
+                                                    <option value="3" <% nvram_match_x("","wl_gmode", "3","selected"); %>>n/ac Mixed (*)</option>
                                                     <option value="2" <% nvram_match_x("","wl_gmode", "2","selected"); %>>a/n Mixed</option>
                                                     <option value="1" <% nvram_match_x("","wl_gmode", "1","selected"); %>>n Only</option>
                                                     <option value="0" <% nvram_match_x("","wl_gmode", "0","selected"); %>>a Only</option>

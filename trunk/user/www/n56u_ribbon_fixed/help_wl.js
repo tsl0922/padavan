@@ -55,7 +55,12 @@ helpcontent[3] = new Array("",
 				"<#WLANConfig11b_x_PktAggregate_itemdesc#>",
 				"<#WLANConfig11b_x_APSD_itemdesc#>",
 				"<#WLANConfig11b_x_DLS_itemdesc#>",
-				"[n Only]: <#WLANConfig11b_x_HT_OpMode_itemdesc#>");
+				"[n Only]: <#WLANConfig11b_x_HT_OpMode_itemdesc#>",
+				"<#WLANConfig11n_band_steering_itemdesc#>",
+				"<#WLANConfig11n_mumimo_itemdesc#>",
+				"<#WLANConfig11n_txbf_itemdesc#>",
+				"<#WLANConfig11n_amsdu_itemdesc#>",
+				"<#WIFILDPC_itemdesc#>");
 // MAC filter
 helpcontent[4] = new Array("",
 				"<#FirewallConfig_MFMethod_itemdesc#>");

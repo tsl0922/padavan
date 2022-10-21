@@ -234,25 +234,25 @@ do_upload_file(FILE *stream, int clen, char *bndr, const char *fn, const char *o
 		count = fread(ptr + offset, 1, MIN(clen, UPLOAD_BUF_SIZE-offset), stream);
 		if (count <= 0)
 			goto err;
-		
+
 		clen -= count;
-		
+
 		if (cnt == 0) {
 			if (count + offset < hdr_size) {
 				offset += count;
 				continue;
 			}
-			
+
 			count += offset;
 			offset = 0;
 			cnt++;
-			
+
 			if (func_hdr(ptr, &filelen) != 0)
 				goto err;
-			
+
 			valid_header = 1;
 		}
-		
+
 		/* check boundary marker (after \r\n or \n) */
 		if (bndr) {
 			char *pb = memmem(buf, 64 + count, bndr, strlen(bndr));
@@ -269,13 +269,13 @@ do_upload_file(FILE *stream, int clen, char *bndr, const char *fn, const char *o
 				}
 			}
 		}
-		
+
 		if (count > filelen)
 			count = filelen;
-		
+
 		filelen -= count;
 		fwrite(ptr, 1, count, fp);
-		
+
 		if (bndr && count >= 64)
 			memcpy(buf, ptr + count - 64, 64);
 	}
@@ -287,7 +287,7 @@ do_upload_file(FILE *stream, int clen, char *bndr, const char *fn, const char *o
 	while (clen-- > 0) {
 		if((ch = fgetc(stream)) == EOF)
 			break;
-		
+
 		if (filelen > 0) {
 			fwrite(&ch, 1, 1, fp);
 			filelen--;

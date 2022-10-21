@@ -387,12 +387,12 @@ function networkmap_update(s){
             <th colspan="5" style="text-align: center;"><#ConnectedClient#></th>
         </tr>
         <tr>
-            <th width="8%"><a href="javascript:sort(0)"><#Type#></a></th>
-            <th><a href="javascript:sort(1)"><#Computer_Name#></a></th>
-            <th width="20%"><a href="javascript:sort(2)">IP</a></th>
-            <th width="24%"><a href="javascript:sort(3)">MAC</a></th>
-            <th width="8%" id="col_rssi"><a href="javascript:sort(4)">RSSI</a></th>
-            <th width="0%" id="col_block"></th>
+            <th width="10%"><a href="javascript:sort(0)"><#Type#></a></th>
+            <th id="col_hname" width="35%"><a href="javascript:sort(1)"><#Computer_Name#></a></th>
+            <th width="20%"><a href="javascript:sort(2)"><#LAN_IP#></a></th>
+            <th width="24%"><a href="javascript:sort(3)"><#MAC_Address#></a></th>
+            <th id="col_rssi"><a href="javascript:sort(4)"><#Rssi#></a></th>
+            <th id="col_block"></th>
         </tr>
     </thead>
     <tbody>
@@ -406,12 +406,12 @@ function networkmap_update(s){
             <th colspan="5" style="text-align: center;"><#BlockedClient#></th>
         </tr>
         <tr>
-            <th width="8%"><#Type#></th>
-            <th><#Computer_Name#></th>
-            <th width="20%">IP</th>
-            <th width="24%">MAC</th>
-            <th width="8%" id="col_unrssi">RSSI</th>
-            <th width="0%" id="col_unblock"></th>
+            <th width="10%"><#Type#></th>
+            <th id="col_unhname" width="35%"><#Computer_Name#></th>
+            <th width="20%"><#LAN_IP#></th>
+            <th width="24%"><#MAC_Address#></th>
+            <th id="col_unrssi"><#Rssi#></th>
+            <th id="col_unblock"></th>
         </tr>
     </thead>
     <tbody>
@@ -439,16 +439,18 @@ function networkmap_update(s){
 
 <script>
 	if (!support_2g_radio() && !support_5g_radio()) {
-		$("col_rssi").width = "0%";
-		$("col_rssi").innerHTML = "";
-		$("col_unrssi").width = "0%";
-		$("col_unrssi").innerText = "";
+		$("col_rssi").width = "10%";
+		$("col_rssi").innerHTML = "<#Rssi#>";
+		$("col_unrssi").width = "10%";
+		$("col_unrssi").innerText = "<#unRssi#>";
 	}
 	if (sw_mode != "3") {
 		if (list_type != "1") {
-			$("col_block").width = "12%";
-			$("col_unblock").width = "12%";
+			$("col_hname").width = "35%";
+			$("col_unhname").width = "35%";
+			$("col_block").width = "10%";
 			$("col_block").innerHTML = "<#Block#>";
+			$("col_unblock").width = "10%";
 			$("col_unblock").innerHTML = "<#unBlock#>";
 		}
 	} else {

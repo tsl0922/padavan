@@ -41,7 +41,7 @@ LIBS_INCLUDE_LIBXML2=n
 LIBS_INCLUDE_MBEDTLS=n
 LIBS_INCLUDE_READLINE=n
 LIBS_INCLUDE_LIBRTLSDR=n
-LIBS_INCLUDE_C_ARES=n
+LIBS_INCLUDE_LIBCARES=n
 LIBS_INCLUDE_LIBEVENT=n
 LIBS_INCLUDE_BOOST=n
 STORAGE_ENABLED=n
@@ -66,7 +66,7 @@ LIBS_INCLUDE_LIBEV=y
 LIBS_INCLUDE_LIBSODIUM=y
 LIBS_INCLUDE_LIBUDNS=y
 LIBS_INCLUDE_MBEDTLS=y
-LIBS_INCLUDE_C_ARES=y
+LIBS_INCLUDE_LIBCARES=y
 LIBS_INCLUDE_CURL=y
 endif
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_SSSERVER),y)
@@ -74,7 +74,7 @@ LIBS_INCLUDE_LIBPCRE=y
 LIBS_INCLUDE_LIBEV=y
 LIBS_INCLUDE_LIBSODIUM=y
 LIBS_INCLUDE_MBEDTLS=y
-LIBS_INCLUDE_C_ARES=y
+LIBS_INCLUDE_LIBCARES=y
 endif
 ifeq ($(STORAGE_ENABLED),y)
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_TRANSMISSION),y)
@@ -185,7 +185,7 @@ dir_$(LIBS_INCLUDE_LIBUSB_0)			+= libusb
 dir_$(LIBS_INCLUDE_LIBUSB_1)			+= libusb-1.0
 dir_$(LIBS_INCLUDE_LIBRTLSDR)			+= librtlsdr
 dir_$(LIBS_INCLUDE_LIBJSON_C)			+= libjson-c
-dir_$(LIBS_INCLUDE_LIBUV)				+= libuv
+dir_$(LIBS_INCLUDE_LIBUV)			+= libuv
 dir_$(LIBS_INCLUDE_LIBWEBSOCKETS)		+= libwebsockets
 dir_$(LIBS_INCLUDE_LIBPCRE)			+= libpcre
 dir_$(LIBS_INCLUDE_LIBEV)			+= libev
@@ -197,7 +197,7 @@ dir_$(LIBS_INCLUDE_BOOST)			+= boost
 dir_y						+= libnfnetlink
 dir_y						+= libconfuse
 dir_y						+= libmnl
-dir_$(LIBS_INCLUDE_LIBPCAP)		+= libpcap
+dir_$(LIBS_INCLUDE_LIBPCAP)			+= libpcap
 
 # minidlna and firefly shared libs
 dir_$(LIBS_INCLUDE_MEDIA)			+= libid3tag
@@ -208,13 +208,13 @@ dir_$(CONFIG_FIRMWARE_INCLUDE_MINIDLNA)		+= libogg
 dir_$(CONFIG_FIRMWARE_INCLUDE_MINIDLNA)		+= libvorbis
 dir_$(LIBS_INCLUDE_MEDIA)			+= libflac
 dir_$(LIBS_INCLUDE_MEDIA)			+= libsqlite
-dir_$(LIBS_INCLUDE_LIBEVENT)	+= libevent
+dir_$(LIBS_INCLUDE_LIBEVENT)			+= libevent
 
 # aria2 shared libs
-dir_$(LIBS_INCLUDE_LIBXML2)		+= libxml2
+dir_$(LIBS_INCLUDE_LIBXML2)			+= libxml2
 
-dir_$(LIBS_INCLUDE_C_ARES)		+= libcares
-dir_$(LIBS_INCLUDE_READLINE)		+= readline
+dir_$(LIBS_INCLUDE_LIBCARES)			+= libcares
+dir_$(LIBS_INCLUDE_READLINE)			+= readline
 
 ifneq (,$(filter y,$(CONFIG_FIRMWARE_INCLUDE_NFSD) $(CONFIG_FIRMWARE_INCLUDE_NFSC)))
 dir_y						+= libtirpc

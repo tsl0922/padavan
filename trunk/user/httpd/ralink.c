@@ -53,7 +53,7 @@ int
 ej_lan_leases(int eid, webs_t wp, int argc, char **argv)
 {
 	/* dnsmasq ex: 43200 00:26:18:57:08:bc 192.168.1.105 mypc-3eaf6880a0 01:00:26:18:57:08:bc */
-	
+
 	FILE *fp = NULL;
 	int ret = 0;
 	int i;
@@ -73,10 +73,10 @@ ej_lan_leases(int eid, webs_t wp, int argc, char **argv)
 	while (fgets(buff, sizeof(buff), fp)) {
 		if (sscanf(buff, "%31s %63s %63s %63s %*s", dh_lease, dh_mac, dh_ip, dh_host) != 4)
 			continue;
-		
+
 		if (strcmp(dh_lease, "duid") == 0)
 			continue;
-		
+
 #if defined (USE_IPV6)
 		if (inet_pton(AF_INET6, dh_ip, &addr6) != 0) {
 			ip6_count++;
@@ -84,14 +84,14 @@ ej_lan_leases(int eid, webs_t wp, int argc, char **argv)
 		}
 #endif
 		strcat(dh_lease, " secs");
-		
+
 		if (!dh_host[0])
 			strcpy(dh_host, "*");
-		
+
 		// convert MAC to upper case
 		for (i=0; i<strlen(dh_mac); i++)
 			dh_mac[i] = toupper(dh_mac[i]);
-		
+
 		ret += websWrite(wp, "%-19s", (dh_ip[0]!=0) ? dh_ip : " ");
 		ret += websWrite(wp, "%-21s", (dh_mac[0]!=0) ? dh_mac : " " );
 		ret += websWrite(wp, "%s\n",  dh_host);
@@ -110,18 +110,18 @@ ej_lan_leases(int eid, webs_t wp, int argc, char **argv)
 		while (fgets(buff, sizeof(buff), fp)) {
 			if (sscanf(buff, "%31s %63s %63s %63s %*s", dh_lease, dh_mac, dh_ip, dh_host) != 4)
 				continue;
-			
+
 			if (strcmp(dh_lease, "duid") == 0)
 				continue;
-			
+
 			if (inet_pton(AF_INET6, dh_ip, &addr6) == 0)
 				continue;
-			
+
 			strcat(dh_lease, " secs");
-			
+
 			if (!dh_host[0])
 				strcpy(dh_host, "*");
-			
+
 			ret += websWrite(wp, "%-40s", (dh_ip[0]!=0) ? dh_ip : " ");
 			ret += websWrite(wp, "%s\n",  dh_host);
 		}
@@ -138,13 +138,13 @@ ej_vpns_leases(int eid, webs_t wp, int argc, char **argv)
 	FILE *fp;
 	int ret = 0, i_clients = 0;
 	char ifname[16], addr_l[64], addr_r[64], peer_name[64];
-	
+
 	ret += websWrite(wp, "#  IP Local         IP Remote        Login          NetIf\n");
-	
+
 	if (!(fp = fopen("/tmp/vpns.leases", "r"))) {
 		return ret;
 	}
-	
+
 	while (fscanf(fp, "%15s %63s %63s %63[^\n]\n", ifname, addr_l, addr_r, peer_name) == 4) 
 	{
 		i_clients++;
@@ -155,7 +155,7 @@ ej_vpns_leases(int eid, webs_t wp, int argc, char **argv)
 		ret += websWrite(wp, "%s\n",  ifname);
 	}
 	fclose(fp);
-	
+
 	return ret;
 }
 
@@ -165,7 +165,7 @@ int is_hwnat_loaded()
 	DIR *dir_to_open = NULL;
 	FILE *fp;
 	char offload_val[32];
-	
+
 	dir_to_open = opendir("/sys/module/hw_nat");
 	if (dir_to_open)
 	{
@@ -177,11 +177,11 @@ int is_hwnat_loaded()
 			fclose(fp);
 			if (strlen(offload_val) > 0)
 				offload_val[strlen(offload_val) - 1] = 0; /* get rid of '\n' */
-			
+
 			if (offload_val[0] == 'Y' || offload_val[0] == '1')
 				return 2;
 		}
-		
+
 		return 1;
 	}
 #endif
@@ -205,7 +205,7 @@ ej_nat_table(int eid, webs_t wp, int argc, char **argv)
 	if (sw_mode == 1 || sw_mode == 4) {
 		const char *hwnat_status = "Disabled";
 		int i_loaded = is_hwnat_loaded();
-		
+
 		if (i_loaded == 2)
 #if defined(USE_WWAN_HW_NAT)
 			hwnat_status = "Enabled, IPoE/PPPoE offload [WAN/WWAN]<->[LAN/WLAN]";
@@ -214,7 +214,7 @@ ej_nat_table(int eid, webs_t wp, int argc, char **argv)
 #endif
 		else if (i_loaded == 1)
 			hwnat_status = "Enabled, IPoE/PPPoE offload [WAN]<->[LAN]";
-		
+
 		ret += websWrite(wp, "Hardware NAT/Routing: %s\n", hwnat_status);
 	}
 #endif
@@ -222,7 +222,7 @@ ej_nat_table(int eid, webs_t wp, int argc, char **argv)
 	if (sw_mode == 1) {
 //		ret += websWrite(wp, "Software QoS: %s\n", nvram_match("qos_enable", "1") ? "Enabled": "Disabled");
 		ret += websWrite(wp, "\n");
-		
+
 		ret += websWrite(wp, "Port Forwards List\n");
 		ret += websWrite(wp, "----------------------------------------\n");
 		ret += websWrite(wp, "Source             Proto  Port Range  Redirect to     Local port\n");
@@ -248,19 +248,19 @@ ej_nat_table(int eid, webs_t wp, int argc, char **argv)
 			    "%255[^\n]",		// options
 			    target, proto, src, dst, tmp) < 4)
 				continue;
-			
+
 			if (strcmp(target, "DNAT"))
 				continue;
-			
+
 			for (ptr = proto; *ptr; ptr++)
 				*ptr = toupper(*ptr);
-			
+
 			if (!strcmp(src, "0.0.0.0/0"))
 				strcpy(src, "ALL");
-			
+
 			if (!strcmp(dst, "0.0.0.0/0"))
 				strcpy(dst, "ALL");
-			
+
 			port = host = range = "";
 			ptr = tmp;
 			while ((val = strsep(&ptr, " ")) != NULL) {
@@ -273,7 +273,7 @@ ej_nat_table(int eid, webs_t wp, int argc, char **argv)
 					strsep(&port, ":");
 				}
 			}
-			
+
 			ret += websWrite(wp,
 				"%-18s %-6s %-11s %-15s %-11s\n",
 				src, proto, range, host, port ? : range);
@@ -303,9 +303,9 @@ ej_route_table(int eid, webs_t wp, int argc, char **argv)
 
 	if (!(fp = fopen("/proc/net/route", "r"))) return 0;
 
-	while (fgets(buff, sizeof(buff), fp) != NULL ) 
+	while (fgets(buff, sizeof(buff), fp) != NULL )
 	{
-		if (nl) 
+		if (nl)
 		{
 			int ifl = 0;
 			while (buff[ifl]!=' ' && buff[ifl]!='\t' && buff[ifl]!='\0')
@@ -316,7 +316,7 @@ ej_route_table(int eid, webs_t wp, int argc, char **argv)
 				//error_msg_and_die( "Unsuported kernel route format\n");
 				//continue;
 			}
-			
+
 			ifl = 0;	/* parse flags */
 			if (flgs&1)
 				flags[ifl++]='U';
@@ -332,7 +332,7 @@ ej_route_table(int eid, webs_t wp, int argc, char **argv)
 					inet_ntoa(dest)));
 			strcpy(sgw,    (gw.s_addr==0   ? "*"       :
 					inet_ntoa(gw)));
-			
+
 			ret += websWrite(wp, "%-16s%-16s%-16s%-6s%-6d %-2d %7d %s\n",
 				sdest, sgw, inet_ntoa(mask), flags, metric, ref, use, buff);
 		}
@@ -343,7 +343,7 @@ ej_route_table(int eid, webs_t wp, int argc, char **argv)
 	return ret;
 }
 
-int 
+int
 ej_conntrack_table(int eid, webs_t wp, int argc, char **argv)
 {
 	FILE *fp;
@@ -360,7 +360,7 @@ ej_conntrack_table(int eid, webs_t wp, int argc, char **argv)
 	while (fgets(buff, sizeof(buff), fp) != NULL) {
 		if (sscanf(buff, "%15s %*s %15s", ipv, proto) < 2)
 			continue;
-		
+
 		if (strcmp(proto, "tcp") == 0 || strcmp(proto, "sctp") == 0) {
 			if (sscanf(buff, "%*s %*s %*s %*s %*s %31s src=%63s dst=%63s sport=%7s dport=%7s", state, src, dst, sport, dport) < 5)
 				continue;
@@ -626,7 +626,7 @@ char* GetBW(int BW)
 	case BW_80:
 		return "80M";
 	case BW_160:
-		return "160";
+		return "160M";
 	default:
 		return "N/A";
 	}
@@ -861,7 +861,6 @@ getRate(MACHTTRANSMIT_SETTING HTSetting)
 		rate_index = rate_count-1;
 
 	return (MCSMappingRateTable[rate_index]);
-
 }
 
 int
@@ -893,7 +892,7 @@ get_apcli_wds_entry(const char *ifname, RT_802_11_MAC_ENTRY *pme)
 	wrq.u.data.flags = 0;
 
 	if (wl_ioctl(ifname, RTPRIV_IOCTL_GET_MAC_TABLE_STRUCT, &wrq) >= 0 &&
-	    wrq.u.data.length == sizeof(RT_802_11_MAC_ENTRY)) {
+	    wrq.u.data.length == sizeof(RT_802_11_MAC_ENTRY)) { //bug with mt7615 driver
 		return 1;
 	}
 
@@ -929,10 +928,10 @@ is_mac_in_sta_list(const unsigned char* p_mac)
 #if defined(USE_RT3352_MII)
 	if (nvram_get_int("inic_disable") == 1)
 		return 0;
-	
+
 	if (nvram_get_int("mlme_radio_rt") == 0)
 		return 0;
-	
+
 	/* query rt for authenticated sta list */
 	memset(mac_table_data, 0, sizeof(mac_table_data));
 	wrq.u.data.pointer = mac_table_data;
@@ -975,7 +974,7 @@ print_apcli_wds_header(webs_t wp, const char *caption)
 	ret += websWrite(wp, caption);
 	ret += websWrite(wp, "----------------------------------------\n");
 	ret += websWrite(wp, "%-19s%-8s%-4s%-4s%-4s%-5s%-5s%-6s%-5s\n",
-				   "BSSID", "PhyMode", " BW", "MCS", "SGI", "LDPC", "STBC", "TRate", "RSSI");
+				   "BSSID", "PhyMode", "BW", "MCS", "SGI", "LDPC", "STBC", "TRate", "RSSI");
 
 	return ret;
 }
@@ -1048,12 +1047,12 @@ print_sta_list(webs_t wp, RT_802_11_MAC_TABLE *mp, int num_ss_rx, int ap_idx)
 #endif
 	ret += websWrite(wp, "----------------------------------------\n");
 	ret += websWrite(wp, "%-19s%-8s%-4s%-4s%-4s%-5s%-5s%-6s%-5s%-4s%-12s\n",
-			   "MAC", "PhyMode", " BW", "MCS", "SGI", "LDPC", "STBC", "TRate", "RSSI", "PSM", "Connect Time");
+			   "MAC", "PhyMode", "BW", "MCS", "SGI", "LDPC", "STBC", "TRate", "RSSI", "PSM", "Connect Time");
 
 	for (i = 0; i < mp->Num; i++) {
 		if ((int)mp->Entry[i].ApIdx != ap_idx)
 			continue;
-		
+
 		hr = mp->Entry[i].ConnectedTime / 3600;
 		min = (mp->Entry[i].ConnectedTime % 3600) / 60;
 		sec = mp->Entry[i].ConnectedTime - hr * 3600 - min * 60;
@@ -1068,7 +1067,7 @@ print_sta_list(webs_t wp, RT_802_11_MAC_TABLE *mp, int num_ss_rx, int ap_idx)
 			if ((int)mp->Entry[i].AvgRssi2 > rssi && mp->Entry[i].AvgRssi2 != 0)
 				rssi = (int)mp->Entry[i].AvgRssi2;
 		}
-		
+
 		ret += websWrite(wp, "%02X:%02X:%02X:%02X:%02X:%02X  %-7s %3s %3d %3s %4s %4s %4dM %4d %3s %02d:%02d:%02d\n",
 				mp->Entry[i].Addr[0], mp->Entry[i].Addr[1], mp->Entry[i].Addr[2],
 				mp->Entry[i].Addr[3], mp->Entry[i].Addr[4], mp->Entry[i].Addr[5],
@@ -1121,12 +1120,12 @@ print_sta_list_inic(webs_t wp, RT_802_11_MAC_TABLE_INIC* mp, int num_ss_rx, int 
 	ret += websWrite(wp, "\nAP %s Stations List\n", (ap_idx == 0) ? "Main" : "Guest");
 	ret += websWrite(wp, "----------------------------------------\n");
 	ret += websWrite(wp, "%-19s%-8s%-4s%-4s%-4s%-5s%-5s%-6s%-5s%-4s%-12s\n",
-			   "MAC", "PhyMode", " BW", "MCS", "SGI", "LDPC", "STBC", "TRate", "RSSI", "PSM", "Connect Time");
+			   "MAC", "PhyMode", "BW", "MCS", "SGI", "LDPC", "STBC", "TRate", "RSSI", "PSM", "Connect Time");
 
 	for (i = 0; i < mp->Num; i++) {
 		if ((int)mp->Entry[i].ApIdx != ap_idx)
 			continue;
-		
+
 		hr = mp->Entry[i].ConnectedTime / 3600;
 		min = (mp->Entry[i].ConnectedTime % 3600) / 60;
 		sec = mp->Entry[i].ConnectedTime - hr * 3600 - min * 60;
@@ -1137,7 +1136,7 @@ print_sta_list_inic(webs_t wp, RT_802_11_MAC_TABLE_INIC* mp, int num_ss_rx, int 
 			if ((int)mp->Entry[i].AvgRssi1 > rssi && mp->Entry[i].AvgRssi1 != 0)
 				rssi = (int)mp->Entry[i].AvgRssi1;
 		}
-		
+
 		ret += websWrite(wp, "%02X:%02X:%02X:%02X:%02X:%02X  %-7s %3s %3d %3s %4s %4s %4dM %4d %3s %02d:%02d:%02d\n",
 				mp->Entry[i].Addr[0], mp->Entry[i].Addr[1], mp->Entry[i].Addr[2],
 				mp->Entry[i].Addr[3], mp->Entry[i].Addr[4], mp->Entry[i].Addr[5],
@@ -1172,7 +1171,7 @@ print_mac_table_inic(webs_t wp, const char *wif_name, int num_ss_rx, int is_gues
 
 	if (wl_ioctl(wif_name, RTPRIV_IOCTL_GET_MAC_TABLE, &wrq) >= 0) {
 		mp = (RT_802_11_MAC_TABLE_INIC*)wrq.u.data.pointer;
-		
+
 		ret += print_sta_list_inic(wp, mp, num_ss_rx, 0);
 		if (is_guest_on)
 			ret += print_sta_list_inic(wp, mp, num_ss_rx, 1);
@@ -1308,7 +1307,7 @@ print_mac_table(webs_t wp, const char *wif_name, int num_ss_rx, int is_guest_on)
 #if defined (BOARD_MT7615_DBDC) || defined (BOARD_MT7915_DBDC)
 		ret += print_sta_list(wp, mp, num_ss_rx, apidx); 
 #else
-		ret += print_sta_list(wp, mp, num_ss_rx, 0); 
+		ret += print_sta_list(wp, mp, num_ss_rx, 0);
 #endif
 		if (is_guest_on)
 #if defined (BOARD_MT7615_DBDC) || defined (BOARD_MT7915_DBDC)
@@ -1687,8 +1686,8 @@ ej_wl_scan_5g(int eid, webs_t wp, int argc, char **argv)
 #endif
 
 	memset(data, 0, 32);
-	strcpy(data, "SiteSurvey=1"); 
-	wrq.u.data.length = strlen(data)+1; 
+	strcpy(data, "SiteSurvey=1");
+	wrq.u.data.length = strlen(data)+1;
 	wrq.u.data.pointer = data;
 	wrq.u.data.flags = 0;
 
@@ -1721,7 +1720,7 @@ ej_wl_scan_5g(int eid, webs_t wp, int argc, char **argv)
 	{
 		op = sp = wrq.u.data.pointer+line_len+2; // skip \n+\n
 		len = strlen(op);
-		
+
 		while (*sp && ((len - (sp-op)) >= 0))
 		{
 			memcpy(site_line, sp, line_len);
@@ -1736,20 +1735,20 @@ ej_wl_scan_5g(int eid, webs_t wp, int argc, char **argv)
 			site_ssid[33] = '\0';
 			site_bssid[20] = '\0';
 			site_signal[9] = '\0';
-			
+
 			memset(ssid_str, 0, sizeof(ssid_str));
 			char_to_ascii(ssid_str, trim_r(site_ssid));
-			
+
 			if (!strlen(ssid_str))
 				strcpy(ssid_str, "???");
-			
+
 			if (apCount)
 				retval += websWrite(wp, "%s ", ",");
-			
+
 			retval += websWrite(wp, "[\"%s\", \"%s\", \"%s\", \"%s\"]", ssid_str, trim_r(site_bssid), trim_r(site_chnl), trim_r(site_signal));
-			
+
 //			dbg("%s\n", site_line);
-			
+
 			sp+=line_len+1; // skip \n
 			apCount++;
 		}

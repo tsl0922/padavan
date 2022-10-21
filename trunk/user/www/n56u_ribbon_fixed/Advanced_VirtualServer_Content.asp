@@ -561,9 +561,9 @@ function valid_IP_subnet(obj){
                                             <th><#UPnP_Proto#></th>
                                             <td>
                                                 <select name="upnp_proto" class="input">
-                                                    <option value="0" <% nvram_match_x("", "upnp_proto", "0", "selected"); %>>UPnP (*)</option>
+                                                    <option value="0" <% nvram_match_x("", "upnp_proto", "0", "selected"); %>>UPnP</option>
                                                     <option value="1" <% nvram_match_x("", "upnp_proto", "1", "selected"); %>>NAT-PMP & PCP</option>
-                                                    <option value="2" <% nvram_match_x("", "upnp_proto", "2", "selected"); %>>UPnP & NAT-PMP & PCP</option>
+                                                    <option value="2" <% nvram_match_x("", "upnp_proto", "2", "selected"); %>>UPnP & NAT-PMP & PCP (*)</option>
                                                 </select>
                                             </td>
                                         </tr>

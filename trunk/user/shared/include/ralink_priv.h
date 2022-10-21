@@ -33,27 +33,27 @@
 #define FIXED_TXMODE_OFDM 	2
 #define FIXED_TXMODE_VHT	3
 
-#define MODE_CCK		0
-#define MODE_OFDM		1
-#define MODE_HTMIX		2
+#define MODE_CCK			0
+#define MODE_OFDM			1
+#define MODE_HTMIX			2
 #define MODE_HTGREENFIELD	3
-#define MODE_VHT		4
-#define MODE_HE		5
-#define MODE_HE_SU		8
-#define MODE_HE_24G		7
-#define MODE_HE_5G		6
+#define MODE_VHT			4
+#define MODE_HE				5
+#define MODE_HE_SU			8
+#define MODE_HE_24G			7
+#define MODE_HE_5G			6
 #define MODE_HE_EXT_SU		9
 #define MODE_HE_TRIG		10
-#define MODE_HE_MU		11
+#define MODE_HE_MU			11
 #define MODE_UNKNOWN		255
 
-#define BW_20			0
-#define BW_40			1
-#define BW_80			2
-#define BW_160			3
-#define BW_10			4
-#define BW_5			5
-#define BW_8080		6
+#define BW_20				0
+#define BW_40				1
+#define BW_80				2
+#define BW_160				3
+#define BW_10				4
+#define BW_5				5
+#define BW_8080				6
 
 #define WDS_DISABLE_MODE	0
 #define WDS_RESTRICT_MODE	1
