@@ -1,0 +1,11 @@
+diff -urN a/kernel/net/Kbuild b/kernel/net/Kbuild
+--- a/kernel/net/Kbuild	2020-06-26 00:30:16.675629900 +0300
++++ b/kernel/net/Kbuild	2020-06-26 00:29:37.804497500 +0300
+@@ -2,7 +2,6 @@
+ EXTRA_CFLAGS := -DCONFIG_IP_SET_MAX=$(IP_SET_MAX)
+ 
+ obj-m += netfilter/
+-obj-m += sched/
+ 
+ # It's for me...
+ incdirs := $(M) $(KDIR)/include/linux/netfilter $(KDIR)/include/linux/netfilter/ipset
