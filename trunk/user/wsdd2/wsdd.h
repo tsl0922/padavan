@@ -39,6 +39,7 @@
 #include <time.h>
 #include <syslog.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <netinet/in.h>
@@ -47,6 +48,7 @@
 #include <linux/rtnetlink.h>
 
 extern int debug_L, debug_W;
+extern char *netbiosname, *workgroup;
 #define DEBUG(x, y, ...)	\
 	do {	\
 		if (debug_##y >= (x)) {	\
@@ -97,8 +99,12 @@ struct endpoint {
 	size_t mlen, llen;
 	_saddr_t mcast, local;
 	union {
+#ifdef USE_ip_mreq
 		struct ip_mreq ip_mreq;
 		/* struct ip_mreqn ip_mreq; */
+#else
+		struct ip_mreqn ip_mreq;
+#endif
 		struct ipv6_mreq ipv6_mreq;
 	} mreq;
 	size_t mreqlen;

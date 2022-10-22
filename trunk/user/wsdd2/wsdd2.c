@@ -23,6 +23,8 @@
 #include "wsdd.h"
 
 int debug_L, debug_W, debug_N;
+int ifindex = 0;
+char *ifname = NULL;
 
 static int netlink_recv(struct endpoint *ep);
 
@@ -291,7 +293,7 @@ static int open_ep(struct endpoint **epp, struct service *sv,
 		};
 		struct servent *se = getservbyname(sv->port_name,
 						servicename[sv->type]);
-		ep->port = se ? se->s_port : 0;
+		ep->port = se ? ntohs(se->s_port) : 0;
 		if (!ep->port)
 			ep->port = sv->port_num;
 		if (!ep->port) {
@@ -322,14 +324,12 @@ static int open_ep(struct endpoint **epp, struct service *sv,
 				return -1;
 			}
 			ep->mreq.ip_mreq.imr_multiaddr = ep->mcast.in.sin_addr;
-#if 0
-			ep->mreq.ip_mreq.imr_address	=
-				((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
-			ep->mreq.ip_mreq.imr_ifindex =
-				if_nametoindex(ep->ifname);
+#ifdef USE_ip_mreq
+			ep->mreq.ip_mreq.imr_interface = ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+
 #else
-			ep->mreq.ip_mreq.imr_interface =
-				((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+			ep->mreq.ip_mreq.imr_address = ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+			ep->mreq.ip_mreq.imr_ifindex = if_nametoindex(ep->ifname);
 #endif
 		}
 
@@ -376,6 +376,31 @@ static int open_ep(struct endpoint **epp, struct service *sv,
 	setsockopt(ep->sock, SOL_SOCKET, SO_REUSEPORT,
 				&enable, sizeof enable);
 #endif
+#ifdef IPV6_V6ONLY
+	if ((ep->family == AF_INET6) &&
+		setsockopt(ep->sock, sp->ipproto_ip, IPV6_V6ONLY,
+				&enable, sizeof enable)) {
+		ep->errstr = __FUNCTION__ ": IPV6_V6ONLY";
+		ep->_errno = errno;
+		close(ep->sock);
+		return -1;
+	}
+#endif
+
+#ifdef SO_BINDTODEVICE
+	if (!sv->mcast_addr &&
+			(ep->family == AF_INET || ep->family == AF_INET6)) {
+		struct ifreq ifr;
+		strncpy(ifr.ifr_name, ep->ifname, IFNAMSIZ-1);
+		if (setsockopt(ep->sock, SOL_SOCKET, SO_BINDTODEVICE,
+				&ifr, sizeof(ifr))) {
+			ep->errstr = __FUNCTION__ ": SO_BINDTODEVICE";
+			ep->_errno = errno;
+			close(ep->sock);
+			return -1;
+		}
+	}
+#endif
 
 	if (bind(ep->sock, (struct sockaddr *)&ep->local, ep->llen)) {
 		ep->errstr = __FUNCTION__ ": bind";
@@ -398,6 +423,16 @@ static int open_ep(struct endpoint **epp, struct service *sv,
 			close(ep->sock);
 			return -1;
 		}
+#ifdef IP_MULTICAST_IF
+		/* Set multicast sending interface to avoid error: wsdd-mcast-v4: wsd_send_soap_msg: send: No route to host */
+		if ((ep->family == AF_INET) &&
+			setsockopt(ep->sock, sp->ipproto_ip, IP_MULTICAST_IF, &ep->mreq, ep->mreqlen)) {
+			ep->errstr = __FUNCTION__ ": IP_MULTICAST_IF";
+			ep->_errno = errno;
+			close(ep->sock);
+			return -1;
+		}
+#endif
 		/* Disable loopback. */
 		if (setsockopt(ep->sock, sp->ipproto_ip, sp->ip_multicast_loop,
 				&disable, sizeof disable)) {
@@ -467,6 +502,13 @@ static bool is_new_addr(struct nlmsghdr *nh)
 
 	if (nh->nlmsg_type != RTM_NEWADDR)
 		return false;
+
+	if (ifindex && ifam->ifa_index != ifindex) {
+		char buf[IFNAMSIZ];
+		if (!if_indextoname(ifindex, buf) || strcmp(buf, ifname) != 0)
+			return false;
+		ifindex = ifam->ifa_index;
+	}
 
 	while (RTA_OK(rta, rtasize)) {
 		struct ifa_cacheinfo *cache_info;
@@ -547,6 +589,9 @@ static void help(const char *prog, int ec, const char *fmt, ...)
 		"       -t  TCP only\n"
 		"       -u  UDP only\n"
 		"       -w  WSDD only\n"
+		"       -i \"interface\"  Listening interface (optional)\n"
+		"       -N  set NetbiosName manually\n"
+		"       -G  set Workgroup manually\n"
 		"       -b \"key1:val1,key2:val2,...\"  Boot parameters\n",
 			prog);
 	printBootInfoKeys(stdout, 11);
@@ -567,7 +612,7 @@ int main(int argc, char **argv)
 	const char *prog = basename(*argv);
 	unsigned int ipv46 = 0, tcpudp = 0, llmnrwsdd = 0;
 
-	while ((opt = getopt(argc, argv, "?46LWb:dhltuw")) != -1) {
+	while ((opt = getopt(argc, argv, "?46LWb:dhltuwi:N:G:")) != -1) {
 		switch (opt) {
 		case 'L':
 			debug_L++;
@@ -584,7 +629,6 @@ int main(int argc, char **argv)
 		case 'd':
 			daemon = true;
 			break;
-		case '?':
 		case 'h':
 			help(prog, EXIT_SUCCESS, NULL);
 			break;
@@ -606,6 +650,27 @@ int main(int argc, char **argv)
 		case 'u':
 			tcpudp	|= _UDP;
 			break;
+		case 'i':
+			if (optarg != NULL && strlen(optarg) > 1) {
+				ifindex = if_nametoindex(optarg);
+				if (ifindex == 0)
+					help(prog, EXIT_FAILURE, "bad interface '%s'\n", optarg);
+				ifname = strdup(optarg);
+			}
+			break;
+		case 'N':
+			if (optarg != NULL && strlen(optarg) > 1) {
+				netbiosname = strdup(optarg);
+			}
+			break;
+		case 'G':
+			if (optarg != NULL && strlen(optarg) > 1) {
+				workgroup = strdup(optarg);
+			}
+			break;
+		case '?':
+			if (optopt == 'b' || optopt == 'i' || optopt == 'N' || optopt == 'G')
+				fprintf (stderr, "Option -%c requires an argument.\n", optopt);
 		default:
 			help(prog, EXIT_FAILURE, "bad option '%c'\n", opt);
 		}
@@ -646,15 +711,15 @@ again:
 
 	struct ifaddrs *ifaddrs;
 	fd_set fds;
-	int svn, rv = 0, nfds = -1;
+	int rv = 0, nfds = -1;
 	struct endpoint *ep, *badep = NULL;
 
 	FD_ZERO(&fds);
 
-	if (getifaddrs(&ifaddrs))
+	if (getifaddrs(&ifaddrs) !=0)
 		err(EXIT_FAILURE, "ifaddrs");
 
-	for (svn = 0; svn < ARRAY_SIZE(services); svn++) {
+	for (int svn = 0; svn < ARRAY_SIZE(services); svn++) {
 		struct service *sv = &services[svn];
 
 		if (!(ipv46 & _4) && sv->family == AF_INET)
@@ -670,39 +735,47 @@ again:
 		if (!(llmnrwsdd & _WSDD) && strstr(sv->name, "wsdd"))
 			continue;
 
-		struct ifaddrs *ifa;
-
 		if (sv->family == AF_INET || sv->family == AF_INET6) {
-			for (ifa = ifaddrs; ifa; ifa = ifa->ifa_next) {
+			for (struct ifaddrs *ifa = ifaddrs; ifa; ifa = ifa->ifa_next) {
 				if (!ifa->ifa_addr ||
 					(ifa->ifa_addr->sa_family != sv->family) ||
 					(ifa->ifa_flags & IFF_LOOPBACK) ||
+					(ifa->ifa_flags & IFF_SLAVE) ||
+					(ifname && strcmp(ifa->ifa_name, ifname !=0)) ||
 					(strncmp(ifa->ifa_name, "br0", 3)) ||
 					(sv->mcast_addr &&
 					!(ifa->ifa_flags & IFF_MULTICAST)))
 					continue;
 
+				if (!ifname) {
+					char path[sizeof("/sys/class/net//brport")+IFNAMSIZ];
+					struct stat st;
+					snprintf(path, sizeof(path), "/sys/class/net/%s/brport", ifa->ifa_name);
+					if (stat(path, &st) == 0)
+						continue;
+				}
+
 				char ifaddr[_ADDRSTRLEN];
-				void *addr =
-					_SIN_ADDR((_saddr_t *)ifa->ifa_addr);
+				const char *servicename[] = {
+					[SOCK_STREAM]	= "tcp",
+					[SOCK_DGRAM]	= "udp",
+					[SOCK_RAW]	= "raw",
+				};
+				void *addr = _SIN_ADDR((_saddr_t *)ifa->ifa_addr);
 
-				inet_ntop(ifa->ifa_addr->sa_family, addr,
-						ifaddr, sizeof ifaddr);
-
-				DEBUG(2, W, "%s %s %s@%s",
-					sv->name,
-					sv->mcast_addr ? sv->mcast_addr : "",
-					ifa->ifa_name,
-					ifaddr);
+				inet_ntop(ifa->ifa_addr->sa_family, addr, ifaddr, sizeof(ifaddr));
+				DEBUG(2, W, "%s %s %s %s:%d @ %s", sv->name, servicename[sv->type],
+					sv->mcast_addr ? sv->mcast_addr : "-",
+					ifaddr, sv->port_num, ifa->ifa_name);
 
 				if (open_ep(&ep, sv, ifa)) {
 					syslog(LOG_USER | LOG_ERR, "error: %s: %s",
 						ep->service->name, ep->errstr);
 					free(ep);
 					continue;
-				} else if (ep->sock < 0)
+				} else if (ep->sock < 0) {
 					free(ep);
-				else {
+				} else {
 					ep->next = endpoints;
 					endpoints = ep;
 					FD_SET(ep->sock, &fds);
@@ -719,9 +792,9 @@ again:
 			if (open_ep(&ep, sv, &ifa)) {
 				badep = ep;
 				break;
-			} else if (ep->sock < 0)
+			} else if (ep->sock < 0) {
 				free(ep);
-			else {
+			} else {
 				ep->next = endpoints;
 				endpoints = ep;
 				FD_SET(ep->sock, &fds);
