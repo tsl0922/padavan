@@ -1,24 +1,66 @@
-name: build
+name: Build
 
 on: 
-  push:
-    branches:
-    - "*"
+#  push:
+#    branches:
+#    - "*"
   workflow_dispatch:
-
+    inputs:
+      target:
+        type: choice
+        description: 'Please select the model to compile'
+        options:
+        - 'B70'
+        - 'BELL-A040WQ'
+        - 'CR660x'
+        - 'DIR-878'
+        - 'DIR-882'
+        - 'EA7500'
+        - 'GHL'
+        - 'JCG-836PRO'
+        - 'JCG-AC860M'
+        - 'JCG-Q20-PB'
+        - 'JCG-Q20'
+        - 'JCG-Y2'
+        - 'K2P-USB'
+        - 'K2P-NANO'
+        - 'K2P'
+        - 'MI-4'
+        - 'MI-R3G'
+        - 'MI-R3P-PB'
+        - 'MI-R3P-SPI'
+        - 'MI-R3P'
+        - 'MI-R4A'
+        - 'MR2600'
+        - 'MSG1500'
+        - 'NETGEAR-BZV'
+        - 'NEWIFI'
+        - 'NEWIFI3'
+        - 'QM-B1'
+        - 'R2100'
+        - 'R6800'
+        - 'RE-CP-02'
+        - 'RM2100'
+        - 'RT-AC85P'
+        - 'TX1801'
+        - 'WR1200JS'
+        - 'XY-C1'
+        - 'ZTE-E8820S'
+        default: 'K2P'
+      release:
+        type: boolean
+        description: 'upload to release'
+        default: 'true'
 jobs:
   build:
     name: build
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        target: [K2P, K2P-NANO, K2P-USB]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: hendrikmuhs/ccache-action@v1.2
+      - uses: hendrikmuhs/ccache-action@v1.2.3
       - uses: actions/setup-go@v3
         with:
-          go-version: '^1.18.6'
+          go-version: '^1.19.2'
       - uses: actions/cache@v3
         with:
           path: |
@@ -27,29 +69,20 @@ jobs:
           key: ${{ runner.os }}-go-v1
           restore-keys: |
             ${{ runner.os }}-go-
-      - name: Prepare
+      - name: Prepare environment
         run: |
           sudo apt update
           sudo apt install libtool-bin gperf python3-docutils autopoint gettext ccache
-          # https://github.com/actions/setup-go/issues/107
-          echo "${GOROOT}/bin" >> $GITHUB_PATH
-      - name: Build
+      - name: Start Build
         run: |
-          make ${{ matrix.target }}
-          if [ "${{ matrix.target }}" = "K2P-NANO" ]; then
-            image=$(ls trunk/images/*.trx)
-            mv $image $(echo $image | sed 's/K2P/K2P-NANO/')
-          fi
+          make ${{ inputs.target }}
           echo "TAG_ANME=$(date +%Y%m%d)" >> $GITHUB_ENV
       - uses: actions/upload-artifact@v3
         with:
-          name: images
+          name: ${{ inputs.target }}-${{ env.TAG_ANME }}
           path: trunk/images/*.trx
-      - uses: rickstaa/action-create-tag@v1
-        with:
-          tag: ${{ env.TAG_ANME }}
-          force_push_tag: true
       - uses: ncipollo/release-action@v1
+        if: github.event.inputs.release == 'true'
         with:
           commit: ${{ github.sha }}
           tag: ${{ env.TAG_ANME }}
