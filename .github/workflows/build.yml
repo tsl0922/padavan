@@ -46,6 +46,7 @@ on:
         - 'WR1200JS'
         - 'XY-C1'
         - 'ZTE-E8820S'
+        - 'WE410443-TC'
         default: 'K2P'
       release:
         type: boolean
