@@ -40,7 +40,7 @@ static struct hnat_l2tp l2tp_log;
 static struct hnat_l2tp l2tp_tunnel;/*for wan->lan*/
 static struct hnat_pptp pptp_log;
 static struct hnat_pptp pptp_tunnel;
-extern uint32_t sync_tx_sequence;
+extern uint32_t sync_tx_sequence=0;
 extern struct pkt_parse_result   ppe_parse_result;
 extern int32_t    fast_bind;
 extern uint32_t	  debug_level;
