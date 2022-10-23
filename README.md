@@ -56,6 +56,7 @@ This project is based on original rt-n56u with latest mtk 4.4.198 kernel, which 
 - NEWIFI3(from https://github.com/GH-X/padavan-4.4, 必须拆除主板上编号为C48的电容(位于CPU旁边), 否则外网(WAN)将不能正常工作)
 - MI-R4A(from https://github.com/vipshmily/padavan-4.4, 没有机器测试，自行判断)
 - QM-B1(from https://github.com/monw/padavan, 没有机器测试，自行判断)
+- WE410443-TC(from https://github.com/akw28888/padavan-4.4, 没有机器测试，自行判断)
 
 # Compilation steps
 
