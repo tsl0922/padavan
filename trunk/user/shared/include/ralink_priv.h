@@ -234,7 +234,10 @@ typedef struct _PAIR_CHANNEL_FREQ_ENTRY
 #define MTD_PART_NAME_KERNEL	"kernel"
 #define MTD_PART_NAME_RWFS	"RWFS"
 
-#if defined (BOARD_360P2)
+#if defined (BOARD_WE410443_TC)
+#define OFFSET_MAC_GMAC0 	0xFFF0
+#define OFFSET_MAC_GMAC2 	0xFFF6
+#elif defined (BOARD_360P2)
 #define OFFSET_MAC_GMAC0	0xFFE8
 #define OFFSET_MAC_GMAC2	0xFFEE
 #elif defined (CONFIG_RALINK_MT7621)
