@@ -2555,50 +2555,50 @@ Arguments:
 PSTRING GetEncryptType(CHAR enc)
 {
     if(enc == Ndis802_11WEPDisabled)
-        return "NONE";
+	{return "NONE";}
     if(enc == Ndis802_11WEPEnabled)
-    	return "WEP";
+	{return "WEP";}
     if(enc == Ndis802_11TKIPEnable)
-    	return "TKIP";
+	{return "TKIP";}
     if(enc == Ndis802_11AESEnable)
-    	return "AES";
+	{return "AES";}
 	if(enc == Ndis802_11TKIPAESMix)
-    	return "TKIPAES";
+	{return "TKIPAES";}
 #ifdef WAPI_SUPPORT
 	if(enc == Ndis802_11EncryptionSMS4Enabled)
-    	return "SMS4";
+	{return "SMS4";}
 #endif /* WAPI_SUPPORT */
     else
-    	return "UNKNOW";
+	{return "UNKNOW";}
 }
 
 PSTRING GetAuthMode(CHAR auth)
 {
     if(auth == Ndis802_11AuthModeOpen)
-    	return "OPEN";
+	{return "OPEN";}
     if(auth == Ndis802_11AuthModeShared)
-    	return "SHARED";
+	{return "SHARED";}
 	if(auth == Ndis802_11AuthModeAutoSwitch)
-    	return "AUTOWEP";
+	{return "AUTOWEP";}
     if(auth == Ndis802_11AuthModeWPA)
-    	return "WPA";
+	{return "WPA";}
     if(auth == Ndis802_11AuthModeWPAPSK)
-    	return "WPAPSK";
+	{return "WPAPSK";}
     if(auth == Ndis802_11AuthModeWPANone)
-    	return "WPANONE";
+	{return "WPANONE";}
     if(auth == Ndis802_11AuthModeWPA2)
-    	return "WPA2";
+	{return "WPA2";}
     if(auth == Ndis802_11AuthModeWPA2PSK)
-    	return "WPA2PSK";
+	{return "WPA2PSK";}
 	if(auth == Ndis802_11AuthModeWPA1WPA2)
-    	return "WPA1WPA2";
+	{return "WPA1WPA2";}
 	if(auth == Ndis802_11AuthModeWPA1PSKWPA2PSK)
-    	return "WPA1PSKWPA2PSK";
+	{return "WPA1PSKWPA2PSK";}
 #ifdef WAPI_SUPPORT
 	if(auth == Ndis802_11AuthModeWAICERT)
-    	return "WAI-CERT";
+	{return "WAI-CERT";}
 	if(auth == Ndis802_11AuthModeWAIPSK)
-    	return "WAI-PSK";
+	{return "WAI-PSK";}
 #endif /* WAPI_SUPPORT */
 	
     	return "UNKNOW";
