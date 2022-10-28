@@ -135,7 +135,7 @@ config  MT76X2_AP_TXBF_SUPPORT
 choice
 	prompt "MT7620 Power Design"
 	depends on MT76X2_AP
-	depends on RT_FIRST_IF_MT7620
+	depends on (RT_FIRST_IF_MT7612E || RT_SECOND_IF_MT7612E)
 	default MT76X2_AP_INTERNAL_PA_INTERNAL_LNA
 config MT76X2_AP_INTERNAL_PA_INTERNAL_LNA
 	bool "Internal PA & Internal LNA"
@@ -148,14 +148,14 @@ endchoice
 config  MT76X2_AP_RTMP_INTERNAL_TX_ALC
 	bool "MT7620 TSSI Compensation (Internal TX ALC)"
 	depends on MT76X2_AP
-	depends on RT_FIRST_IF_MT7620
+	depends on (RT_FIRST_IF_MT7612E || RT_SECOND_IF_MT7612E)
 	depends on !MT76X2_AP_EXTERNAL_PA_EXTERNAL_LNA
 	default n
 
 config  MT76X2_AP_RTMP_TEMPERATURE_COMPENSATION
 	bool "MT7620 Temperature Compensation (External TX ALC)"
 	depends on MT76X2_AP
-	depends on RT_FIRST_IF_MT7620
+	depends on (RT_FIRST_IF_MT7612E || RT_SECOND_IF_MT7612E)
 	default n
 
 config  MT76X2_AP_ADJ_PWR_CONSUMPTION
