@@ -33,6 +33,7 @@ on:
         - 'MI-R4A'
         - 'MR2600'
         - 'MSG1500'
+        - 'MSG1500-Z'
         - 'NETGEAR-BZV'
         - 'NEWIFI'
         - 'NEWIFI3'
