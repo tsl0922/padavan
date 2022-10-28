@@ -1974,7 +1974,7 @@ SmartDNS23=双栈主动优选IPV6
 SmartDNS24=停用IPV6地址解析
 SmartDNS24_1=强制 AAAA 地址返回 SOA
 SmartDNS25=Force qtype SOA
-SmartDNS25_1==强制指定 qtype 返回 SOA
+SmartDNS25_1=强制指定 qtype 返回 SOA
 SmartDNS26=域名预加载
 SmartDNS27=过期缓存服务
 SmartDNS27_1=开启此功能后，如果有请求时尝试回应 TTL 为 0 的过期记录，并发查询记录，以避免查询等待
