@@ -133,7 +133,7 @@ config  MT76X2_AP_TXBF_SUPPORT
 	default n
 
 choice
-	prompt "MT7620 Power Design"
+	#prompt "MT7620 Power Design"
 	depends on MT76X2_AP
 	depends on (RT_FIRST_IF_MT7612E || RT_SECOND_IF_MT7612E)
 	default MT76X2_AP_INTERNAL_PA_INTERNAL_LNA
