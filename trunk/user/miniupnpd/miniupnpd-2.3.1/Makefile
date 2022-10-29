@@ -31,8 +31,8 @@ CFLAGS += -D_GNU_SOURCE
 CPPFLAGS += -D_GNU_SOURCE
 CFLAGS += -Wall
 CFLAGS += -Wextra -Wstrict-prototypes -Wdeclaration-after-statement
-# CFLAGS += -Wno-missing-field-initializers
-# CFLAGS += -ansi	# iptables headers does use typeof which is a gcc extension
+#CFLAGS += -Wno-missing-field-initializers
+#CFLAGS += -ansi	# iptables headers does use typeof which is a gcc extension
 # LDFLAGS += -Wl,-z,now -Wl,-z,relro -pie
 CC ?= gcc
 RM = rm -f
@@ -181,4 +181,3 @@ print-%:
 ifneq ($(MAKECMDGOALS),clean)
 -include $(DEP)
 endif
-

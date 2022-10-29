@@ -1,25 +1,12 @@
-/* $Id: macros.h,v 1.6 2021/08/21 08:26:48 nanard Exp $ */
+/* $Id: rw_unaligned.h,v 1.1 2022/10/16 06:02:01 nanard Exp $ */
 /* MiniUPnP project
- * http://miniupnp.free.fr/ or http://miniupnp.tuxfamily.org/
- * (c) 2012-2021 Thomas Bernard
+ * http://miniupnp.free.fr/ or https://miniupnp.tuxfamily.org/
+ * (c) 2012-2022 Thomas Bernard
  * This software is subject to the conditions detailed
  * in the LICENCE file provided within the distribution */
 
-#ifndef MACROS_H_INCLUDED
-#define MACROS_H_INCLUDED
-
-#define UNUSED(arg)	(void)(arg)
-
-#if defined(__GNUC__) && (__GNUC__ >= 7)
-#define FALL_THROUGH __attribute__((fallthrough))
-#else
-#define FALL_THROUGH
-#endif
-
-/* Macro to print errors during initialization.
- * Print them on both stderr and syslog.
- * if debug_flag is on, syslog already print on console */
-#define INIT_PRINT_ERR(...) do { if (!debug_flag) fprintf(stderr, __VA_ARGS__); syslog(LOG_ERR, __VA_ARGS__); } while(0)
+#ifndef RW_UNALIGNED_H_INCLUDED
+#define RW_UNALIGNED_H_INCLUDED
 
 #include <stdint.h>
 
@@ -55,4 +42,4 @@ INLINE void writenu16(uint8_t * p, uint16_t n)
 }
 #define WRITENU16(p, n) writenu16(p, n)
 
-#endif /* MACROS_H_INCLUDED */
+#endif /* RW_UNALIGNED_H_INCLUDED */

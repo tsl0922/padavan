@@ -1,8 +1,8 @@
-/* $Id: getifaddr.c,v 1.27 2020/09/28 21:32:33 nanard Exp $ */
+/* $Id: getifaddr.c,v 1.28 2022/02/19 18:58:25 nanard Exp $ */
 /* vim: tabstop=4 shiftwidth=4 noexpandtab
  * MiniUPnP project
  * http://miniupnp.free.fr/ or https://miniupnp.tuxfamily.org/
- * (c) 2006-2019 Thomas Bernard
+ * (c) 2006-2022 Thomas Bernard
  * This software is subject to the conditions detailed
  * in the LICENCE file provided within the distribution */
 
@@ -118,6 +118,10 @@ err:
 		switch(ife->ifa_addr->sa_family)
 		{
 		case AF_INET:
+			/* only consider the address if it is the 1st candidate or
+			   if it is not privante AND the current candidate is a private address.
+			   So we return a private address only if there is no public address
+			   on this interface */
 			if(!candidate ||
 			   (addr_is_reserved(&((struct sockaddr_in *)candidate->ifa_addr)->sin_addr) &&
 			    !addr_is_reserved(&((struct sockaddr_in *)ife->ifa_addr)->sin_addr)))
@@ -143,9 +147,8 @@ err:
 		if(mask) *mask = ((struct sockaddr_in *)candidate->ifa_netmask)->sin_addr;
 	}
 	freeifaddrs(ifap);
-
-	return 0;
 #endif
+	return 0;
 }
 
 #ifdef ENABLE_PCP

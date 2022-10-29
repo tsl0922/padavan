@@ -1,4 +1,4 @@
-/* $Id: upnpdescgen.c,v 1.89 2021/08/21 08:16:16 nanard Exp $ */
+/* $Id: upnpdescgen.c,v 1.91 2022/10/16 05:49:41 nanard Exp $ */
 /* vim: tabstop=4 shiftwidth=4 noexpandtab
  * MiniUPnP project
  * http://miniupnp.free.fr/ or https://miniupnp.tuxfamily.org/
@@ -22,6 +22,7 @@
 #include "upnpdescstrings.h"
 #include "upnpurns.h"
 #include "getconnstatus.h"
+#include "macros.h"
 
 
 /* Event magical values codes */
@@ -900,6 +901,10 @@ genXML(char * str, int * len, int * tmplen,
 		unsigned short j;
 		const char * eltname;
 	} pile[GENXML_STACK_SIZE]; /* stack */
+#if !defined(IGD_V2)
+	UNUSED(force_igd1);
+#endif
+
 	top = -1;
 	i = 0;	/* current node */
 	j = 1;	/* i + number of nodes*/
@@ -943,7 +948,9 @@ genXML(char * str, int * len, int * tmplen,
 				str = strcat_str(str, len, tmplen, eltname);
 				str = strcat_char(str, len, tmplen, '>');
 			}
+#ifdef IGD_V2
 unstack:
+#endif
 			for(;;)
 			{
 				if(top < 0)
@@ -1040,6 +1047,10 @@ genServiceDesc(int * len, const struct serviceDesc * s, int force_igd1)
 	const struct argument * args;
 	char * str;
 	int tmplen;
+#if !defined(IGD_V2)
+	UNUSED(force_igd1);
+#endif
+
 	tmplen = 2048;
 	str = (char *)malloc(tmplen);
 	if(str == NULL)

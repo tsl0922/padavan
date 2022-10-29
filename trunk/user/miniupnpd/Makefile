@@ -1,12 +1,12 @@
-SRC_NAME=miniupnpd-2.3.0
+SRC_NAME=miniupnpd-2.3.1
 SRC_URL=http://miniupnp.free.fr/files/download.php?file=$(SRC_NAME).tar.gz
 
 # reference to iptables package
-IPT_VERSION:=iptables-1.8.8
+IPT_VERSION:=iptables-1.8.7
 
 # disable support IPv6 yet, because no profit w/o IGDv2
 # e.g. Windows not supported IGDv2 and UPnP not worked
-ENABLE_IPV6:=1
+ENABLE_IPV6:=0
 
 IPTABLESPATH=$(ROOTDIR)/user/iptables/$(IPT_VERSION)
 

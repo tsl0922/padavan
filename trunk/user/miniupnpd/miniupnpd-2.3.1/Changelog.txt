@@ -1,8 +1,21 @@
-$Id: Changelog.txt,v 1.486 2022/02/19 19:15:24 nanard Exp $
+$Id: Changelog.txt,v 1.491 2022/10/16 05:46:32 nanard Exp $
+
+2022/10/10:
+  NFTables : fix for Big Endian. iport was always read as 0
+
+2022/08/06:
+  Fixes DeletePCPMap() for "IPv6 pinholes" with netfilter_nftables backend
+
+2022/06/02:
+  Fixes "Port Triggering" with OpenBSD 4.7+
+
+2022/05/18:
+  improve configure script for cross builds
 
 2022/02/19:
   prefer non-reserved over reserved addresses in getifaddr()
   pf: use external IP for NAT in double NAT setups
+  miniupnpd.init.d.script: support nftables
 
 VERSION 2.3.0 : released on 2022/01/23
 
@@ -1435,3 +1448,4 @@ VERSION 1.0 :
 2006/07/20:
   Command line arguments processing
   Added possibility to listen internally on several interfaces
+
