@@ -39,7 +39,7 @@ run_bin() {
 
 while [ "1" = "1" ]  #死循环
 do 
-	sleep 30
+	sleep 10
 	#redir tcp
 	if [ $redir_tcp_process -gt 0 ] ;then
 		icount=`ps -w | grep ssr-retcp | grep -v grep | wc -l`
@@ -68,19 +68,21 @@ do
 			for i in `seq $server_process_count`
 			do
 				run_bin /usr/bin/ssr-server -c /tmp/shadowsocksr_$i.json -u -f /tmp/ssr-server$i.pid   
-			done  
-		fi   
+			done
+		fi
 	fi
-	#V2RAY
+	#V2RAY/XRAY/TROJAN
 	if [ $v2ray_process -gt 0 ] ;then
 		bin="$(nvram get d_type)"
+		conf="/tmp/v2-redir.json"
 		[ ! -f "/usr/bin/$bin" ] && bin=$(echo -e "v2ray\nxray" | grep -v $bin)
+		[ $bin = "trojan" ] && conf="/tmp/tj-redir.json"
 		icount=`ps -w | grep $bin | grep -v grep| wc -l`
 		if [ $icount -lt $v2ray_process ]  #如果进程挂掉就重启它
 		then
 			log "检测到 $bin 进程挂掉，重新启动!"
 			killall -q -9 $bin
-			run_bin /usr/bin/$bin -config /tmp/v2-redir.json
+			run_bin /usr/bin/$bin --config $conf
 		fi   
 	fi
 	#local

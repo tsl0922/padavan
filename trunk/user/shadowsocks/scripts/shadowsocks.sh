@@ -107,6 +107,7 @@ gen_config_file() {
 		sed -i 's/\\//g' $config_file
 		;;
 	trojan)
+		v2ray_enable=1
 		if [ "$2" = "0" ]; then
 			lua /etc_ro/ss/gentrojanconfig.lua $1 nat 1080 >$trojan_json_file
 			sed -i 's/\\//g' $trojan_json_file
