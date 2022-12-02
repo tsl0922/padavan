@@ -1,12 +1,20 @@
-SRC_NAME = smartdns-ba282c8
+SRC_NAME = smartdns-38.1
+SRC_URL=https://github.com/pymumu/smartdns/archive/refs/tags/Release38.1.tar.gz
+
 THISDIR = $(shell pwd)
 
-all: extract_test config_test
+all: download_test extract_test config_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+
+download_test:
+	( if [ ! -f $(THISDIR)/$(SRC_NAME).tar.gz ]; then \
+		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
+	fi )
 
 extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \
-		tar zxf $(SRC_NAME).tar.gz ; \
+		mkdir $(SRC_NAME); \
+		tar zxf $(SRC_NAME).tar.gz --strip-components=1 -C $(SRC_NAME) ; \
 	fi )
 
 config_test:
