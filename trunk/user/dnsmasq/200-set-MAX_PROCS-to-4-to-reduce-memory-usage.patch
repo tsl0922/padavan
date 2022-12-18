@@ -1,0 +1,25 @@
+From 757bcdd82af64d7904af2a6f5fca7eb34ed8106c Mon Sep 17 00:00:00 2001
+From: Shuanglei Tao <tsl0922@gmail.com>
+Date: Sun, 18 Dec 2022 09:55:58 +0800
+Subject: [PATCH] set MAX_PROCS to 4 to reduce memory usage
+
+---
+ src/config.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/config.h b/src/config.h
+index 1e7b30f..0cc318f 100644
+--- a/src/config.h
++++ b/src/config.h
+@@ -15,7 +15,7 @@
+ */
+ 
+ #define FTABSIZ 150 /* max number of outstanding requests (default) */
+-#define MAX_PROCS 20 /* max no children for TCP requests */
++#define MAX_PROCS 4 /* max no children for TCP requests */
+ #define CHILD_LIFETIME 150 /* secs 'till terminated (RFC1035 suggests > 120s) */
+ #define TCP_MAX_QUERIES 100 /* Maximum number of queries per incoming TCP connection */
+ #define TCP_BACKLOG 32  /* kernel backlog limit for TCP connections */
+-- 
+2.32.0 (Apple Git-132)
+
