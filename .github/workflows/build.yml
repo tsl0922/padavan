@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-    name: build
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -16,23 +15,25 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.target }}
+          append-timestamp: false
       - uses: actions/setup-go@v3
         with:
-          go-version: '^1.18.6'
+          go-version: '1.20'
+          check-latest: true
       - uses: actions/cache@v3
         with:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
           key: ${{ runner.os }}-go-v1
-          restore-keys: |
-            ${{ runner.os }}-go-
       - name: Prepare
         run: |
           sudo apt update
           sudo apt install libtool-bin gperf python3-docutils autopoint gettext ccache
-          # https://github.com/actions/setup-go/issues/107
-          echo "${GOROOT}/bin" >> $GITHUB_PATH
+          # workaround for actions/setup-go#107
+          sudo rm -f /bin/go && sudo ln -s -f /usr/bin/go $GOROOT/bin/go
       - name: Build
         run: |
           make ${{ matrix.target }}
@@ -40,11 +41,19 @@ jobs:
             image=$(ls trunk/images/*.trx)
             mv $image $(echo $image | sed 's/K2P/K2P-NANO/')
           fi
-          echo "TAG_ANME=$(date +%Y%m%d)" >> $GITHUB_ENV
       - uses: actions/upload-artifact@v3
         with:
           name: images
           path: trunk/images/*.trx
+  publish:
+    needs: [build]
+    runs-on: ubuntu-22.04
+    if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+      - name: Set Tag Name
+        run: echo "TAG_ANME=$(date +%Y%m%d)" >> $GITHUB_ENV
       - uses: rickstaa/action-create-tag@v1
         with:
           tag: ${{ env.TAG_ANME }}
@@ -53,5 +62,5 @@ jobs:
         with:
           commit: ${{ github.sha }}
           tag: ${{ env.TAG_ANME }}
-          artifacts: trunk/images/*.trx
+          artifacts: "images/*.trx"
           allowUpdates: true
