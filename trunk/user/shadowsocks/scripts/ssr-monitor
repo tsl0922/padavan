@@ -32,6 +32,8 @@ run_bin() {
 	(if [ "$(nvram get ss_cgroups)" = "1" ]; then
 	 	echo 0 > /sys/fs/cgroup/cpu/$NAME/tasks
 	 	echo 0 > /sys/fs/cgroup/memory/$NAME/tasks
+		limit_bytes="$(cat /sys/fs/cgroup/memory/$NAME/memory.limit_in_bytes)"
+		[ -n "$limit_bytes" ] && export GOMEMLIMIT="$limit_bytes"
 	 fi
 	 "$@" > /dev/null 2>&1
 	) &
