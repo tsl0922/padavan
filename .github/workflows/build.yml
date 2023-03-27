@@ -18,22 +18,15 @@ jobs:
         with:
           key: ${{ matrix.target }}
           append-timestamp: false
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: '1.20'
           check-latest: true
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-v1
+          cache-dependency-path: '**/go.sum'
       - name: Prepare
         run: |
           sudo apt update
           sudo apt install libtool-bin gperf python3-docutils autopoint gettext ccache
-          # workaround for actions/setup-go#107
-          sudo rm -f /bin/go && sudo ln -s -f /usr/bin/go $GOROOT/bin/go
       - name: Build
         run: |
           make ${{ matrix.target }}
