@@ -21,7 +21,7 @@ build_extract:
 
 build:
 	( cd $(THISDIR)/$(V2RAY_DIR); \
-	GOOS=linux GOARCH=mipsle go build -gcflags=all="-l" -ldflags "-w -s -buildid=" -trimpath -o $(THISDIR)/bin/v2ray; \
+	GOOS=linux GOARCH=mipsle CGO_ENABLED=0 go build -o $(THISDIR)/bin/v2ray -trimpath -ldflags "-s -w -buildid="; \
 	)
 
 clean:
