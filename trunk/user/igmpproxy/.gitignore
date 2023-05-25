@@ -1,8 +1,3 @@
+igmpproxy-*/
+igmpproxy-*.tar.gz
 igmpproxy
-Makefile
-igmpproxy-0.1/config.h
-igmpproxy-0.1/configure.lineno
-igmpproxy-0.1/doc/igmpproxy.8
-igmpproxy-0.1/doc/igmpproxy.conf.5
-igmpproxy-0.1/src/igmpproxy
-igmpproxy-0.1/src/os.h
