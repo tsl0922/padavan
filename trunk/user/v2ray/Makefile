@@ -1,32 +1,29 @@
-V2RAY_VERSION := 5.5.0
-V2RAY_URL := https://github.com/v2fly/v2ray-core/archive/refs/tags/v$(V2RAY_VERSION).tar.gz
-V2RAY_DIR = "v2ray-core/core/main"
+SRC_NAME := v2ray-5.5.0
+SRC_URL := https://github.com/v2fly/v2ray-core/archive/refs/tags/v5.5.0.tar.gz
 
 THISDIR = $(shell pwd)
 
-all: download build_extract build
+all: download_test extract_test build
 
-download:
-	( if [ ! -f $(THISDIR)/v2ray-core-$(V2RAY_VERSION).tar.gz ]; then \
-	curl --create-dirs -L $(V2RAY_URL) -o $(THISDIR)/v2ray-core-$(V2RAY_VERSION).tar.gz ; \
+download_test:
+	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
+		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
 	fi )
 
-build_extract:
-	mkdir -p $(THISDIR)/v2ray-core
-	mkdir -p $(THISDIR)/bin
-	( if [ ! -d $(THISDIR)/v2ray-core/core ]; then \
-	tar zxf $(THISDIR)/v2ray-core-$(V2RAY_VERSION).tar.gz -C $(THISDIR)/v2ray-core ; \
-	mv $(THISDIR)/v2ray-core/v2ray-core-$(V2RAY_VERSION) $(THISDIR)/v2ray-core/core ; \
+extract_test:
+	( if [ ! -d $(SRC_NAME) ]; then \
+		mkdir -p $(SRC_NAME); \
+		tar xf $(SRC_NAME).tar.gz -C $(SRC_NAME) --strip-components=1; \
 	fi )
 
 build:
-	( cd $(THISDIR)/$(V2RAY_DIR); \
-	GOOS=linux GOARCH=mipsle CGO_ENABLED=0 go build -o $(THISDIR)/bin/v2ray -trimpath -ldflags "-s -w -buildid="; \
+	( cd $(SRC_NAME)/main; \
+	GOOS=linux GOARCH=mipsle CGO_ENABLED=0 go build -o $(THISDIR)/v2ray -trimpath -ldflags "-s -w -buildid="; \
 	)
 
 clean:
-	rm -rf $(THISDIR)/v2ray-core
-	rm -rf $(THISDIR)/bin
+	rm -rf $(SRC_NAME)
+	rm -f v2ray
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/bin/v2ray /usr/bin/v2ray
+	$(ROMFSINST) -p +x $(THISDIR)/v2ray /usr/bin/v2ray

@@ -1,3 +1,3 @@
-bin/
-v2ray-core/
-v2ray-core-*.tar.gz
+v2ray
+v2ray-*/
+v2ray-*.tar.gz
