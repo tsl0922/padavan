@@ -1,32 +1,29 @@
-XRAY_VERSION := 1.7.5
-XRAY_URL := https://codeload.github.com/XTLS/Xray-core/tar.gz/v$(XRAY_VERSION)
-XRAY_DIR = xray-core/Xray-core-$(XRAY_VERSION)/main
+SRC_NAME := xray-1.7.5
+SRC_URL := https://github.com/XTLS/Xray-core/archive/refs/tags/v1.7.5.tar.gz
 
 THISDIR = $(shell pwd)
 
-all: download build_extract build
+all: download_test extract_test build
 
-download:
-	( if [ ! -f $(THISDIR)/Xray-core-$(XRAY_VERSION).tar.gz ]; then \
-	curl --create-dirs -L $(XRAY_URL) -o $(THISDIR)/Xray-core-$(XRAY_VERSION).tar.gz ; \
+download_test:
+	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
+		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
 	fi )
 
-build_extract:
-	mkdir -p $(THISDIR)/xray-core
-	mkdir -p $(THISDIR)/bin
-	( if [ ! -d $(THISDIR)/xray-core/Xray-core-$(XRAY_VERSION) ]; then \
-	rm -rf $(THISDIR)/xray-core/* ; \
-	tar zxf $(THISDIR)/Xray-core-$(XRAY_VERSION).tar.gz -C $(THISDIR)/xray-core ; \
+extract_test:
+	( if [ ! -d $(SRC_NAME) ]; then \
+		mkdir -p $(SRC_NAME); \
+		tar xf $(SRC_NAME).tar.gz -C $(SRC_NAME) --strip-components=1; \
 	fi )
 
 build:
-	( cd $(THISDIR)/$(XRAY_DIR); \
-	GOOS=linux GOARCH=mipsle CGO_ENABLED=0 go build -o $(THISDIR)/bin/xray -trimpath -ldflags "-s -w -buildid="; \
+	( cd $(SRC_NAME)/main; \
+	GOOS=linux GOARCH=mipsle CGO_ENABLED=0 go build -o $(THISDIR)/xray -trimpath -ldflags "-s -w -buildid="; \
 	)
 
 clean:
-	rm -rf $(THISDIR)/xray-core
-	rm -rf $(THISDIR)/bin
+	rm -rf $(SRC_NAME)
+	rm -f xray
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/bin/xray /usr/bin/xray
+	$(ROMFSINST) -p +x $(THISDIR)/xray /usr/bin/xray
