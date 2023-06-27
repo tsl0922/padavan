@@ -21,11 +21,13 @@ extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \
 		mkdir -p $(SRC_NAME); \
 		tar xf $(SRC_NAME).tar.gz -C $(SRC_NAME) --strip-components=1; \
+		cd $(SRC_NAME); \
+		patch -p1 < ../main-embed-unzip.diff; \
 	fi )
 
 build:
 	( cd $(SRC_NAME); \
-	NODE_OPTIONS=--openssl-legacy-provider make js-deps js-build; \
+	NODE_OPTIONS=--openssl-legacy-provider make js-deps js-build; zip -r embed.zip build; \
 	GOOS=linux GOARCH=mipsle CGO_ENABLED=0 go build -o $(THISDIR)/AdGuardHome -trimpath -ldflags "$(LD_FLAGS)"; \
 	)
 
