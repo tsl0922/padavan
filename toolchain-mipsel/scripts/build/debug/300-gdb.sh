@@ -76,6 +76,7 @@ do_debug_gdb_build()
             ldflags="${CT_LDFLAGS_FOR_HOST}" \
             prefix="${CT_PREFIX_DIR}" \
             static="${CT_GDB_CROSS_STATIC}" \
+            static_libstdcxx="${CT_GDB_CROSS_STATIC}" \
             --with-sysroot="${CT_SYSROOT_DIR}"          \
             "${cross_extra_config[@]}"
 
@@ -131,6 +132,12 @@ do_debug_gdb_build()
             native_extra_config+=("--disable-inprocess-agent")
         fi
 
+        if [ "${CT_COMP_LIBS_ZSTD}}" = "y" ]; then
+            native_extra_config+=("--with-zstd=${complibs}")
+        else
+            native_extra_config+=("--without-zstd")
+        fi
+
         export ac_cv_func_strncmp_works=yes
 
         # TBD do we need all these?
@@ -161,8 +168,8 @@ do_debug_gdb_build()
         # version of expat and will attempt to link that, despite the -static flag.
         # The link will fail, and configure will abort with "expat missing or unusable"
         # message.
-        extra_config+=("--with-expat")
-        extra_config+=("--without-libexpat-prefix")
+        native_extra_config+=("--with-expat")
+        native_extra_config+=("--without-libexpat-prefix")
 
         do_gdb_backend \
             buildtype=native \
@@ -171,7 +178,7 @@ do_debug_gdb_build()
             cflags="${CT_ALL_TARGET_CFLAGS}" \
             ldflags="${CT_ALL_TARGET_LDFLAGS}" \
             static="${CT_GDB_NATIVE_STATIC}" \
-            static_libstdc="${CT_GDB_NATIVE_STATIC_LIBSTDC}" \
+            static_libstdcxx="${CT_GDB_NATIVE_STATIC_LIBSTDCXX}" \
             prefix=/usr \
             destdir="${CT_DEBUGROOT_DIR}" \
             "${native_extra_config[@]}"
@@ -239,7 +246,7 @@ do_debug_gdb_build()
 
 do_gdb_backend()
 {
-    local host prefix destdir cflags ldflags static buildtype subdir
+    local host prefix destdir cflags ldflags static buildtype subdir includedir
     local -a extra_config
 
     for arg in "$@"; do
@@ -253,22 +260,6 @@ do_gdb_backend()
         esac
     done
 
-    # Starting with glibc 2.25, it now provides a <proc_service.h> header. The
-    # problem is that GDB releases prior to 7.12 used to implement one of the
-    # interfaces, ps_get_thread_are with a const qualifier on one of the arguments.
-    # Therefore, such older versions cannot be compiled against a newer glibc.
-    # If we detect such a combination, mitigate by creating a local proc_service.h
-    # with a prototype adjusted for GDB requirements.
-    if [ -r "${CT_HEADERS_DIR}/proc_service.h" -a "${CT_GDB_CONST_GET_THREAD_AREA}" = "y" ]; then
-        CT_DoLog DEBUG "Fixing up the prototype in <proc_service.h>"
-        CT_DoExecLog ALL mkdir -p gdb/gdbserver
-        CT_DoExecLog ALL cp "${CT_HEADERS_DIR}/proc_service.h" gdb/proc_service.h
-        CT_DoExecLog ALL sed -i \
-            "s/\(ps_get_thread_area *(\).*\(struct ps_prochandle\)/\1const \2/" \
-            gdb/proc_service.h
-        CT_DoExecLog ALL cp gdb/proc_service.h gdb/gdbserver/proc_service.h
-    fi
-
     [ -n "${CT_PKGVERSION}" ] && extra_config+=("--with-pkgversion=${CT_PKGVERSION}")
     [ -n "${CT_TOOLCHAIN_BUGURL}" ] && extra_config+=("--with-bugurl=${CT_TOOLCHAIN_BUGURL}")
 
@@ -276,10 +267,6 @@ do_gdb_backend()
     extra_config+=("--disable-binutils")
     extra_config+=("--disable-ld")
     extra_config+=("--disable-gas")
-
-    if [ "${CT_GDB_HAS_DISABLE_CXX_BUILD}" = "y" ]; then
-        extra_config+=("--disable-build-with-cxx")
-    fi
 
     case "${CT_THREADS}" in
         none)   extra_config+=("--disable-threads");;
@@ -322,6 +309,17 @@ do_gdb_backend()
         CT_mkdir_pushd "${subdir}"
     fi
 
+    # Use a relative path for include directory if gdb or gdbserver
+    # is being built and installed for a target. Otherwise headers
+    # are installed in ${destdir}${CT_HEADERS_DIR} - a concatenation
+    # of ${destdir} and an absolute path to sysroot's include directory.
+    # As a result debug-root may contain wrong paths for includes.
+    if [ -n "${destdir}" ]; then
+        includedir="/usr/include"
+    else
+        includedir=${CT_HEADERS_DIR}
+    fi
+
     # TBD: is passing CPP/CC/CXX/LD needed? GCC should be determining this automatically from the triplets
     CT_DoExecLog CFG                                \
     CPP="${host}-cpp"                               \
@@ -338,7 +336,7 @@ do_gdb_backend()
         --target=${CT_TARGET}                       \
         --prefix="${prefix}"                        \
         --with-build-sysroot="${CT_SYSROOT_DIR}"    \
-        --includedir="${CT_HEADERS_DIR}"            \
+        --includedir="${includedir}"                \
         --disable-werror                            \
         "${extra_config[@]}"                        \
 

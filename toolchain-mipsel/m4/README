@@ -1,0 +1,7 @@
+These autoconf helper macros come from various sources:
+
+- ax_*.m4: autoconf-archive, version 2022.09.03 (copied)
+- pkg.m4: pkgconf, version 1.8.0 (run configure, then copy)
+- gettext.m4, iconv.m4, intlmacosx.m4, nls.m4: gettext 0.21.9
+- ctng_*.m4: obviously, implemented anew
+- po.m4: a local dummy stub for gettext's version

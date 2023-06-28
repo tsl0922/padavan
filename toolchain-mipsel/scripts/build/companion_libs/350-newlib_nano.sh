@@ -203,7 +203,7 @@ ENABLE_TARGET_OPTSPACE:target-optspace
 %rename cpp_unique_options  nano_cpp_unique_options
 
 *cpp_unique_options:
--isystem =/include/newlib-nano %(nano_cpp_unique_options)
+-isystem %:getenv(GCC_EXEC_PREFIX ../../${CT_TARGET}/include/newlib-nano) %(nano_cpp_unique_options)
 
 *nano_libc:
 -lc_nano
@@ -234,7 +234,7 @@ EOF
 -idirafter %:getenv(GCC_EXEC_PREFIX ../../newlib-nano/${CT_TARGET}/include) %(newlib_nano_cc1plus)
 
 *link:
--L%:getenv(GCC_EXEC_PREFIX ../../newlib-nano/${CT_TARGET}/lib/%M) -L%:getenv(GCC_EXEC_PREFIX ../../newlib-nano/${CT_TARGET}/lib)
+-L%:getenv(GCC_EXEC_PREFIX ../../newlib-nano/${CT_TARGET}/lib/%M) -L%:getenv(GCC_EXEC_PREFIX ../../newlib-nano/${CT_TARGET}/lib) %(newlib_nano_link)
 
 EOF
     fi
@@ -263,6 +263,8 @@ newlib_nano_copy_multilibs()
     for arg in "$@"; do
         eval "${arg// /\\ }"
     done
+
+    CT_DoExecLog ALL mkdir -p "${CT_PREFIX_DIR}/${CT_TARGET}/lib/${multi_dir}"
 
     for lib_a in "${nano_lib_dir}/${CT_TARGET}/lib/${multi_dir}/"*.a; do
        if [ -f ${lib_a} ] && [ ! -L ${lib_a} ]; then

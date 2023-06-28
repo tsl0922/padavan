@@ -17,6 +17,12 @@ config CC_SUPPORT_JAVA
 config CC_SUPPORT_ADA
     bool
 
+config CC_SUPPORT_D
+    bool
+
+config CC_SUPPORT_JIT
+    bool
+
 config CC_SUPPORT_OBJC
     bool
 
@@ -50,6 +56,17 @@ config CC_LANG_FORTRAN
       Only select this if you know that your specific version of the
       compiler supports this language.
 
+config CC_LANG_JIT
+    bool
+    prompt "JIT (EXPERIMENTAL)"
+    depends on CC_SUPPORT_JIT
+    depends on EXPERIMENTAL
+    help
+      Enable building the GCC JIT library.
+
+      Only select this if you know that your specific version of the
+      compiler supports the libgccjit.
+
 if ! BARE_METAL
 
 config CC_LANG_JAVA
@@ -64,11 +81,22 @@ config CC_LANG_JAVA
 
 config CC_LANG_ADA
     bool
-    prompt "ADA (EXPERIMENTAL)"
+    prompt "Ada (EXPERIMENTAL)"
     depends on CC_SUPPORT_ADA
     depends on EXPERIMENTAL
     help
       Enable building an Ada compiler.
+
+      Only select this if you know that your specific version of the
+      compiler supports this language.
+
+config CC_LANG_D
+    bool
+    prompt "D (EXPERIMENTAL)"
+    depends on CC_SUPPORT_D
+    depends on EXPERIMENTAL
+    help
+      Enable building a D compiler.
 
       Only select this if you know that your specific version of the
       compiler supports this language.

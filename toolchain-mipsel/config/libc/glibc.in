@@ -17,10 +17,6 @@
 # are still using quite ancient versions. Please do not retire versions
 # (including versions in between) until the EOL dates indicated in version.desc.
 
-if GLIBC_USE_PORTS_EXTERNAL
-source "config/versions/glibc-ports.in"
-endif
-
 # Glibc has some dependencies on the kernel headers:
 config GLIBC_DEP_KERNEL_HEADERS_VERSION
     def_bool y
@@ -126,10 +122,6 @@ config GLIBC_USE_PORTS_ADDON
     depends on GLIBC_HAS_PORTS_ADDON
     depends on !GLIBC_USE_ORACLE
 
-config GLIBC_USE_PORTS_EXTERNAL
-    def_bool y
-    depends on GLIBC_USE_PORTS_ADDON && GLIBC_HAS_PORTS_ADDON_EXTERNAL
-
 config GLIBC_USE_NPTL_ADDON
     def_bool y
     depends on THREADS_NATIVE && GLIBC_HAS_NPTL_ADDON
@@ -179,6 +171,13 @@ config GLIBC_CONFIGPARMS
       
       Note: If you need to pass more than one value, separate them with
             '\n'. Eg.:  var1=val1\nvar2=val2
+
+config GLIBC_ENABLE_DEBUG
+    bool
+    default y
+    prompt "Enable debug symbols"
+    help
+      Compile glibc using -g modifier.
 
 config GLIBC_EXTRA_CFLAGS
     string
@@ -407,13 +406,16 @@ config GLIBC_SSP
 # GCC9-related fixes were available in glibc 2.29
 # GCC10-related fixes were available in glibc 2.31
 # GCC11-related fixes were available in glibc 2.34
+# GCC13-related fixes were available in glibc 2.37
 config GLIBC_ENABLE_WERROR
     bool "Enable -Werror during the build"
-    default y if GCC_7_or_older
-    default y if GCC_8_or_later && !GCC_9_or_later && GLIBC_2_27_or_later
-    default y if GCC_9_or_later && !GCC_10_or_later && GLIBC_2_29_or_later
-    default y if GCC_10_or_later && !GCC_11_or_later && GLIBC_2_31_or_later
-    default y if GCC_11_or_later && GLIBC_2_34_or_later
+    depends on GCC_7_or_older || \
+        (GCC_8_or_later && !GCC_9_or_later && GLIBC_2_27_or_later) || \
+        (GCC_9_or_later && !GCC_10_or_later && GLIBC_2_29_or_later) || \
+        (GCC_10_or_later && !GCC_11_or_later && GLIBC_2_31_or_later) || \
+        (GCC_11_or_later && !GCC_13_or_later && GLIBC_2_34_or_later) || \
+        (GCC_13_or_later && GLIBC_2_37_or_later)
+    default y
     help
       By default, glibc enables strict warning checks during the build.
       However, older version of glibc may not build with newer versions

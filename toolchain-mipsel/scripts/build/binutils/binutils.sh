@@ -176,6 +176,12 @@ do_binutils_backend() {
 
     [ "${CT_TOOLCHAIN_ENABLE_NLS}" != "y" ] && extra_config+=("--disable-nls")
 
+    if [ "${CT_COMP_LIBS_ZSTD}}" = "y" ]; then
+        extra_config+=("--with-zstd=${complibs}")
+    else
+        extra_config+=("--without-zstd")
+    fi
+
     # Disable usage of glob for higher compatibility.
     # Not strictly needed for anything but GDB anyways.
     export ac_cv_func_glob=no
@@ -310,8 +316,9 @@ do_binutils_for_target() {
     local -a install_targets
     local t
 
-    [ "${CT_BINUTILS_FOR_TARGET_IBERTY}" = "y" ] && targets+=("libiberty")
-    [ "${CT_BINUTILS_FOR_TARGET_BFD}"    = "y" ] && targets+=("bfd")
+    [ "${CT_BINUTILS_FOR_TARGET_IBERTY}"  = "y" ] && targets+=("libiberty")
+    [ "${CT_BINUTILS_FOR_TARGET_BFD}"     = "y" ] && targets+=("bfd")
+    [ "${CT_BINUTILS_FOR_TARGET_OPCODES}" = "y" ] && targets+=("opcodes")
     for t in "${targets[@]}"; do
         build_targets+=("all-${t}")
         install_targets+=("install-${t}")

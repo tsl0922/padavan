@@ -43,7 +43,9 @@ cc_gcc_lang_list() {
     [ "${CT_CC_LANG_CXX}" = "y"      ] && lang_list+=",c++"
     [ "${CT_CC_LANG_FORTRAN}" = "y"  ] && lang_list+=",fortran"
     [ "${CT_CC_LANG_ADA}" = "y"      ] && lang_list+=",ada"
+    [ "${CT_CC_LANG_D}" = "y"      ] && lang_list+=",d"
     [ "${CT_CC_LANG_JAVA}" = "y"     ] && lang_list+=",java"
+    [ "${CT_CC_LANG_JIT}" = "y"      ] && lang_list+=",jit"
     [ "${CT_CC_LANG_OBJC}" = "y"     ] && lang_list+=",objc"
     [ "${CT_CC_LANG_OBJCXX}" = "y"   ] && lang_list+=",obj-c++"
     [ "${CT_CC_LANG_GOLANG}" = "y"   ] && lang_list+=",go"
@@ -262,6 +264,8 @@ do_gcc_core_backend() {
     local -a core_targets_install
     local -a extra_user_config
     local arg
+    local file
+    local ext
 
     for arg in "$@"; do
         eval "${arg// /\\ }"
@@ -285,14 +289,13 @@ do_gcc_core_backend() {
             ;;
         libstdcxx)
             CT_DoLog EXTRA "Configuring libstdc++ for ${libstdcxx_name}"
-            if [ "${header_dir}" = "" ]; then
+            if [ -z "${header_dir}" ]; then
                 header_dir="${CT_PREFIX_DIR}/${libstdcxx_name}/include"
             fi
-            if [ "${exec_prefix}" = "" ]; then
+            if [ -z "${exec_prefix}" ]; then
                 exec_prefix="${CT_PREFIX_DIR}/${libstdcxx_name}"
             fi
             extra_config+=( "${CT_CC_SYSROOT_ARG[@]}" )
-            extra_config+=( "--with-headers=${header_dir}" )
             extra_user_config=( "${CT_CC_GCC_EXTRA_CONFIG_ARRAY[@]}" )
             log_txt="libstdc++ ${libstdcxx_name} library"
             # to inhibit the libiberty and libgcc tricks later on
@@ -303,7 +306,7 @@ do_gcc_core_backend() {
             ;;
     esac
 
-    if [ "${exec_prefix}" = "" ]; then
+    if [ -z "${exec_prefix}" ]; then
         exec_prefix="${prefix}"
     fi
 
@@ -339,6 +342,10 @@ do_gcc_core_backend() {
     # Hint GCC we'll use a bit special version of Newlib
     if [ "${CT_LIBC_NEWLIB_NANO_FORMATTED_IO}" = "y" ]; then
         extra_config+=("--enable-newlib-nano-formatted-io")
+    fi
+
+    if [ "${CT_CC_LANG_JIT}" = "y" ]; then
+        extra_config+=("--enable-host-shared")
     fi
 
     if [ "${CT_CC_CXA_ATEXIT}" = "y" ]; then
@@ -377,11 +384,20 @@ do_gcc_core_backend() {
 
     case "${CT_CC_GCC_LIBSTDCXX_VERBOSE}" in
         y)  extra_config+=("--enable-libstdcxx-verbose");;
+        m)  ;;
         "") extra_config+=("--disable-libstdcxx-verbose");;
     esac
 
     if [ "${build_libstdcxx}" = "no" ]; then
         extra_config+=(--disable-libstdcxx)
+    fi
+
+    if [ "${CT_LIBC_PICOLIBC}" = "y" ]; then
+	extra_config+=("--with-default-libc=picolibc")
+	extra_config+=("--enable-stdio=pure")
+	if [ "${CT_PICOLIBC_older_than_1_8}" = "y" ]; then
+	    extra_config+=("--disable-wchar_t")
+	fi
     fi
 
     core_LDFLAGS+=("${ldflags}")
@@ -396,12 +412,6 @@ do_gcc_core_backend() {
             host_libstdcxx_flags+=("-Wl,-Bstatic,-lstdc++")
             host_libstdcxx_flags+=("-lm")
         fi
-        # Companion libraries are build static (eg !shared), so
-        # the libstdc++ is not pulled automatically, although it
-        # is needed. Shoe-horn it in our LDFLAGS
-        # Ditto libm on some Fedora boxen
-        core_LDFLAGS+=("-lstdc++")
-        core_LDFLAGS+=("-lm")
     else
         if [ "${CT_CC_GCC_STATIC_LIBSTDCXX}" = "y" -a "${CT_GCC_older_than_6}" = "y" ]; then
             # this is from CodeSourcery arm-2010q1-202-arm-none-linux-gnueabi.src.tar.bz2
@@ -412,12 +422,6 @@ do_gcc_core_backend() {
             host_libstdcxx_flags+=("-Wl,-Bstatic,-lstdc++,-Bdynamic")
             host_libstdcxx_flags+=("-lm")
         fi
-        # When companion libraries are build static (eg !shared),
-        # the libstdc++ is not pulled automatically, although it
-        # is needed. Shoe-horn it in our LDFLAGS
-        # Ditto libm on some Fedora boxen
-        core_LDFLAGS+=("-lstdc++")
-        core_LDFLAGS+=("-lm")
     fi
 
     extra_config+=("--with-gmp=${complibs}")
@@ -442,6 +446,10 @@ do_gcc_core_backend() {
 
     if [ ${#host_libstdcxx_flags[@]} -ne 0 ]; then
         extra_config+=("--with-host-libstdcxx=${host_libstdcxx_flags[*]}")
+    fi
+
+    if [ "${CT_CC_GCC_ENABLE_DEFAULT_PIE}" = "y" ]; then
+        extra_config+=("--enable-default-pie")
     fi
 
     if [ "${CT_CC_GCC_ENABLE_TARGET_OPTSPACE}" = "y" ] || \
@@ -558,6 +566,13 @@ do_gcc_core_backend() {
         fi
     fi
 
+    # Add an extra system include dir if we have one. This is especially useful
+    # when building libstdc++ with a libc other than the system libc (e.g.
+    # picolibc)
+    if [ -n "${header_dir}" ]; then
+        cflags_for_target="${cflags_for_target} -idirafter ${header_dir}"
+    fi
+
     # For non-sysrooted toolchain, GCC doesn't search except at the installation
     # prefix; in core stage we use a temporary installation prefix - but
     # we may have installed something into the final prefix. This is less than ideal:
@@ -610,6 +625,12 @@ do_gcc_core_backend() {
         --enable-languages="${lang_list}"              \
         "${extra_user_config[@]}"
 
+    gcc_core_build_libcpp=all-build-libcpp
+    # disable target all-build-libcpp in gcc older verions
+    if [ "${CT_GCC_older_than_5}" = "y" ]; then
+        gcc_core_build_libcpp=""
+    fi
+
     if [ "${build_libgcc}" = "yes" ]; then
         # HACK: we need to override SHLIB_LC from gcc/config/t-slibgcc-elf-ver or
         # gcc/config/t-libunwind so -lc is removed from the link for
@@ -631,10 +652,10 @@ do_gcc_core_backend() {
             CT_DoExecLog CFG make ${CT_JOBSFLAGS} configure-libiberty
             CT_DoExecLog ALL make ${CT_JOBSFLAGS} -C libiberty libiberty.a
             CT_DoExecLog CFG make ${CT_JOBSFLAGS} configure-gcc configure-libcpp
-            CT_DoExecLog ALL make ${CT_JOBSFLAGS} all-libcpp
+            CT_DoExecLog ALL make ${CT_JOBSFLAGS} all-libcpp ${gcc_core_build_libcpp}
         else
             CT_DoExecLog CFG make ${CT_JOBSFLAGS} configure-gcc configure-libcpp configure-build-libiberty
-            CT_DoExecLog ALL make ${CT_JOBSFLAGS} all-libcpp all-build-libiberty
+            CT_DoExecLog ALL make ${CT_JOBSFLAGS} all-libcpp ${gcc_core_build_libcpp} all-build-libiberty
         fi
         # HACK: gcc-4.2 uses libdecnumber to build libgcc.mk, so build it here.
         if [ -d "${CT_SRC_DIR}/gcc/libdecnumber" ]; then
@@ -717,7 +738,7 @@ do_gcc_core_backend() {
     # to call the C compiler with the same, somewhat canonical name.
     # check whether compiler has an extension
     file="$( ls -1 "${prefix}/bin/${CT_TARGET}-${CT_CC}."* 2>/dev/null || true )"
-    [ -z "${file}" ] || ext=".${file##*.}"
+    [ -z "${file}" ] && ext="" || ext=".${file##*.}"
     if [ -f "${prefix}/bin/${CT_TARGET}-${CT_CC}${ext}" ]; then
         CT_DoExecLog ALL ln -sfv "${CT_TARGET}-${CT_CC}${ext}" "${prefix}/bin/${CT_TARGET}-cc${ext}"
     fi
@@ -728,8 +749,12 @@ do_gcc_core_backend() {
     # If binutils want the LTO plugin, point them to it
     if [ -d "${CT_PREFIX_DIR}/lib/bfd-plugins" -a "${build_step}" = "gcc_host" ]; then
         local gcc_version=$(cat "${CT_SRC_DIR}/gcc/gcc/BASE-VER" )
-        CT_DoExecLog ALL ln -sfv "../../libexec/gcc/${CT_TARGET}/${gcc_version}/liblto_plugin.so" \
-                "${CT_PREFIX_DIR}/lib/bfd-plugins/liblto_plugin.so"
+        local plugins_dir="libexec/gcc/${CT_TARGET}/${gcc_version}"
+        file="$( ls -1 "${CT_PREFIX_DIR}/${plugins_dir}/liblto_plugin."* 2>/dev/null | \
+            sort | head -n1 || true )"
+        [ -z "${file}" ] && ext="" || ext=".${file##*.}"
+        CT_DoExecLog ALL ln -sfv "../../${plugins_dir}/liblto_plugin${ext}" \
+                "${CT_PREFIX_DIR}/lib/bfd-plugins/liblto_plugin${ext}"
     fi
 }
 
@@ -798,7 +823,7 @@ gcc_movelibs()
 
     # Move only files, directories are for other multilibs. We're looking inside
     # GCC's directory structure, thus use unmangled multi_os_dir that GCC reports.
-    gcc_dir="${CT_PREFIX_DIR}/${CT_TARGET}/lib/${multi_os_dir_gcc}"
+    gcc_dir="${canon_prefix}/${CT_TARGET}/lib/${multi_os_dir_gcc}"
     if [ ! -d "${gcc_dir}" ]; then
         # GCC didn't install anything outside of sysroot
         return
@@ -811,7 +836,7 @@ gcc_movelibs()
         dst_dir="${canon_root}/lib/${multi_os_dir}"
     fi
     CT_SanitizeVarDir dst_dir gcc_dir
-    rel=$( echo "${gcc_dir#${CT_PREFIX_DIR}/}" | sed 's#[^/]\{1,\}#..#g' )
+    rel=$( echo "${gcc_dir#${canon_prefix}/}" | sed 's#[^/]\{1,\}#..#g' )
 
     ls "${gcc_dir}" | while read f; do
         case "${f}" in
@@ -905,7 +930,6 @@ do_gcc_backend() {
     local extra_cxxflags_for_target
     local ldflags
     local build_manuals
-    local exec_prefix
     local header_dir
     local libstdcxx_name
     local -a host_libstdcxx_flags
@@ -913,12 +937,14 @@ do_gcc_backend() {
     local -a final_LDFLAGS
     local tmp
     local arg
+    local file
+    local ext
 
     for arg in "$@"; do
         eval "${arg// /\\ }"
     done
 
-    if [ "${exec_prefix}" = "" ]; then
+    if [ -z "${exec_prefix}" ]; then
         exec_prefix="${prefix}"
     fi
 
@@ -1001,11 +1027,11 @@ do_gcc_backend() {
         extra_config+=(--disable-libquadmath-support)
     fi
 
-    if [ "${CT_CC_GCC_LIBSANITIZER}" = "y" ]; then
-        extra_config+=(--enable-libsanitizer)
-    else
-        extra_config+=(--disable-libsanitizer)
-    fi
+    case "${CT_CC_GCC_LIBSANITIZER}" in
+        y) extra_config+=(--enable-libsanitizer);;
+        m) ;;
+        "") extra_config+=(--disable-libsanitizer);;
+    esac
 
     if [ "${CT_CC_GCC_HAS_LIBMPX}" = "y" ]; then
         if [ "${CT_CC_GCC_LIBMPX}" = "y" ]; then
@@ -1017,11 +1043,18 @@ do_gcc_backend() {
 
     case "${CT_CC_GCC_LIBSTDCXX_VERBOSE}" in
         y)  extra_config+=("--enable-libstdcxx-verbose");;
+        m)  ;;
         "") extra_config+=("--disable-libstdcxx-verbose");;
     esac
     
     if [ "${build_libstdcxx}" = "no" ]; then
         extra_config+=(--disable-libstdcxx)
+    fi
+
+    if [ "${CT_LIBC_PICOLIBC}" = "y" ]; then
+	extra_config+=("--with-default-libc=picolibc")
+	extra_config+=("--enable-stdio=pure")
+	extra_config+=("--disable-wchar_t")
     fi
 
     final_LDFLAGS+=("${ldflags}")
@@ -1036,12 +1069,6 @@ do_gcc_backend() {
             host_libstdcxx_flags+=("-Wl,-Bstatic,-lstdc++")
             host_libstdcxx_flags+=("-lm")
         fi
-        # Companion libraries are build static (eg !shared), so
-        # the libstdc++ is not pulled automatically, although it
-        # is needed. Shoe-horn it in our LDFLAGS
-        # Ditto libm on some Fedora boxen
-        final_LDFLAGS+=("-lstdc++")
-        final_LDFLAGS+=("-lm")
     else
         if [ "${CT_CC_GCC_STATIC_LIBSTDCXX}" = "y" -a "${CT_GCC_older_than_6}" = "y" ]; then
             # this is from CodeSourcery arm-2010q1-202-arm-none-linux-gnueabi.src.tar.bz2
@@ -1052,12 +1079,6 @@ do_gcc_backend() {
             host_libstdcxx_flags+=("-Wl,-Bstatic,-lstdc++,-Bdynamic")
             host_libstdcxx_flags+=("-lm")
         fi
-        # When companion libraries are build static (eg !shared),
-        # the libstdc++ is not pulled automatically, although it
-        # is needed. Shoe-horn it in our LDFLAGS
-        # Ditto libm on some Fedora boxen
-        final_LDFLAGS+=("-lstdc++")
-        final_LDFLAGS+=("-lm")
     fi
 
     extra_config+=("--with-gmp=${complibs}")
@@ -1080,7 +1101,7 @@ do_gcc_backend() {
         extra_config+=("--disable-lto")
     fi
     case "${CT_CC_GCC_LTO_ZSTD}" in
-        y) extra_config+=("--with-zstd");;
+        y) extra_config+=("--with-zstd=${complibs}");;
         m) ;;
         *) extra_config+=("--without-zstd");;
     esac
@@ -1204,6 +1225,13 @@ do_gcc_backend() {
         fi
     fi
 
+    # Add an extra system include dir if we have one. This is especially useful
+    # when building libstdc++ with a libc other than the system libc (e.g.
+    # picolibc)
+    if [ -n "${header_dir}" ]; then
+        cflags_for_target="${cflags_for_target} -idirafter ${header_dir}"
+    fi
+
     # Assume '-O2' by default for building target libraries.
     cflags_for_target="-g -O2 ${cflags_for_target}"
 
@@ -1236,7 +1264,7 @@ do_gcc_backend() {
         --target=${CT_TARGET}                          \
         --prefix="${prefix}"                           \
         --exec_prefix="${exec_prefix}"                 \
-        ${CT_CC_SYSROOT_ARG}                           \
+        "${CT_CC_SYSROOT_ARG[@]}"                      \
         "${extra_config[@]}"                           \
         --with-local-prefix="${CT_SYSROOT_DIR}"        \
         --enable-long-long                             \
@@ -1278,7 +1306,7 @@ do_gcc_backend() {
     # to call the C compiler with the same, somewhat canonical name.
     # check whether compiler has an extension
     file="$( ls -1 "${CT_PREFIX_DIR}/bin/${CT_TARGET}-${CT_CC}."* 2>/dev/null || true )"
-    [ -z "${file}" ] || ext=".${file##*.}"
+    [ -z "${file}" ] && ext="" || ext=".${file##*.}"
     if [ -f "${CT_PREFIX_DIR}/bin/${CT_TARGET}-${CT_CC}${ext}" ]; then
         CT_DoExecLog ALL ln -sfv "${CT_TARGET}-${CT_CC}${ext}" "${prefix}/bin/${CT_TARGET}-cc${ext}"
     fi
@@ -1289,7 +1317,11 @@ do_gcc_backend() {
     # If binutils want the LTO plugin, point them to it
     if [ -d "${CT_PREFIX_DIR}/lib/bfd-plugins" -a "${build_step}" = "gcc_host" ]; then
         local gcc_version=$(cat "${CT_SRC_DIR}/gcc/gcc/BASE-VER" )
-        CT_DoExecLog ALL ln -sfv "../../libexec/gcc/${CT_TARGET}/${gcc_version}/liblto_plugin.so" \
-                "${CT_PREFIX_DIR}/lib/bfd-plugins/liblto_plugin.so"
+        local plugins_dir="libexec/gcc/${CT_TARGET}/${gcc_version}"
+        file="$( ls -1 "${CT_PREFIX_DIR}/${plugins_dir}/liblto_plugin."* 2>/dev/null | \
+            sort | head -n1 || true )"
+        [ -z "${file}" ] && ext="" || ext=".${file##*.}"
+        CT_DoExecLog ALL ln -sfv "../../${plugins_dir}/liblto_plugin${ext}" \
+                "${CT_PREFIX_DIR}/lib/bfd-plugins/liblto_plugin${ext}"
     fi
 }
