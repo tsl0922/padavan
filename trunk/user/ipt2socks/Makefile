@@ -1,9 +1,15 @@
-SRC_NAME = ipt2socks-1.1.2
+SRC_NAME = ipt2socks-1.1.3
+SRC_URL = https://github.com/zfl9/ipt2socks/archive/refs/tags/v1.1.3.tar.gz
 THISDIR = $(shell pwd)
 
-all: extract_test
+all: download_test extract_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) CC="$(CC)"
-	
+
+download_test:
+	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
+		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
+	fi )
+
 extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \
 		tar zxf $(SRC_NAME).tar.gz ; \
@@ -22,4 +28,3 @@ clean:
 
 romfs:
 	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/ipt2socks /usr/bin/ipt2socks
-
