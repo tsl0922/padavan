@@ -59,7 +59,9 @@ This project is based on original rt-n56u with latest mtk 4.4.198 kernel, which 
       texinfo build-essential help2man pkg-config zlib1g-dev libgmp3-dev \
       libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget libc-dev-bin
   ```
-  **Optional:** install [golang](https://go.dev/doc/install) (and add it to PATH), if you are going to build go programs
+  **Optional:**
+  - install [golang](https://go.dev/doc/install) for building go programs
+  - install [nodejs](https://nodejs.org/en/download) for building [AdGuardHome](trunk/user/adguardhome)
 - Clone source code
   ```sh
   git clone https://github.com/tsl0922/padavan.git
