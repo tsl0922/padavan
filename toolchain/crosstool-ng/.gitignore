@@ -52,5 +52,3 @@ testing/docker/*/xtools
 .build-all/
 # .. and release creation
 release/
-
-toolchain-4.4.x/
