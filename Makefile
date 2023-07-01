@@ -1,8 +1,8 @@
-TOPDIR:=${CURDIR}
-SOURCE_DIR:=$(TOPDIR)/trunk
-TEMPLATE_DIR:=$(SOURCE_DIR)/configs/templates
-PRODUCTS:=$(shell ls $(TEMPLATE_DIR) | sed 's/.config//g')
-CONFIG:=$(SOURCE_DIR)/.config
+TOPDIR       = ${CURDIR}
+SOURCE_DIR   = $(TOPDIR)/trunk
+TEMPLATE_DIR = $(SOURCE_DIR)/configs/templates
+PRODUCTS     = $(shell ls $(TEMPLATE_DIR) | sed 's/.config//g')
+CONFIG       = $(SOURCE_DIR)/.config
 
 all: build
 
