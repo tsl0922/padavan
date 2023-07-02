@@ -29,6 +29,7 @@ config_test:
 
 configure:
 	( cd $(SRC_NAME) ; \
+	autoreconf -fi; \
 	PKG_CONFIG_PATH="$(STAGEDIR)/lib/pkgconfig" \
 	LIBS="-liconv" \
 	./configure \

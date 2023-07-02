@@ -24,6 +24,7 @@
 #include <rtutils.h>
 #include <shutils.h>
 #include <nvram_linux.h>
+#include <time.h>
 
 #define SYSLOG_ID_HTTPD		"httpd"
 

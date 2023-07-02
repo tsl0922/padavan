@@ -34,6 +34,7 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <sys/time.h>
+#include <sys/sysmacros.h>
 
 #include "rc.h"
 #include "gpio_pins.h"

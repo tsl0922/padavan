@@ -18,6 +18,8 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#include <stdint.h>
+
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -38,10 +40,10 @@
 #define	MAX(a, b)		(((a) > (b))?(a):(b))
 #endif /* MAX */
 
-typedef u_int64_t u64;
-typedef u_int32_t u32;
-typedef u_int16_t u16;
-typedef u_int8_t u8;
+typedef uint64_t u64;
+typedef uint32_t u32;
+typedef uint16_t u16;
+typedef uint8_t u8;
 
 #define EVM_RESTART_FIREWALL		(1ULL <<  0)
 #define EVM_RESTART_DHCPD		(1ULL <<  1)

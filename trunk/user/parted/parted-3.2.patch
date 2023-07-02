@@ -1,7 +1,15 @@
-diff -urw parted-3.2-ref/libparted/arch/linux.c parted-3.2/libparted/arch/linux.c
---- parted-3.2-ref/libparted/arch/linux.c	2014-06-15 23:15:54.000000000 +0400
-+++ parted-3.2/libparted/arch/linux.c	2018-04-12 21:42:56.000000000 +0300
-@@ -2304,6 +2304,7 @@
+diff --color -urw parted-3.2-orig/libparted/arch/linux.c parted-3.2/libparted/arch/linux.c
+--- parted-3.2-orig/libparted/arch/linux.c	2023-07-02 22:22:03.188943868 +0800
++++ parted-3.2/libparted/arch/linux.c	2023-07-02 22:33:44.518944301 +0800
+@@ -41,6 +41,7 @@
+ #include <sys/utsname.h>        /* for uname() */
+ #include <scsi/scsi.h>
+ #include <assert.h>
++#include <sys/sysmacros.h>
+ #ifdef ENABLE_DEVICE_MAPPER
+ #include <libdevmapper.h>
+ #endif
+@@ -2304,6 +2305,7 @@
    return r < 0 ? NULL : resultp;
  }
  
@@ -9,7 +17,7 @@ diff -urw parted-3.2-ref/libparted/arch/linux.c parted-3.2/libparted/arch/linux.
  static char *
  dm_canonical_path (PedDevice const *dev)
  {
-@@ -2326,12 +2327,17 @@
+@@ -2326,12 +2328,17 @@
  err:
          return NULL;
  }
@@ -27,7 +35,7 @@ diff -urw parted-3.2-ref/libparted/arch/linux.c parted-3.2/libparted/arch/linux.
          size_t path_len = strlen (devpath);
          char *result;
          /* Check for devfs-style /disc => /partN transformation
-@@ -2349,8 +2355,10 @@
+@@ -2349,8 +2356,10 @@
                                   ? "p" : "");
                  result = zasprintf ("%s%s%d", devpath, p, num);
          }
@@ -38,7 +46,7 @@ diff -urw parted-3.2-ref/libparted/arch/linux.c parted-3.2/libparted/arch/linux.
          return result;
  }
  
-@@ -2944,13 +2952,15 @@
+@@ -2944,13 +2953,15 @@
                                                 unsigned long long *start,
                                                 unsigned long long *length);
  
@@ -56,3 +64,14 @@ diff -urw parted-3.2-ref/libparted/arch/linux.c parted-3.2/libparted/arch/linux.
                  add_partition = _blkpg_add_partition;
                  remove_partition = _blkpg_remove_partition;
  #ifdef BLKPG_RESIZE_PARTITION
+diff --color -urw parted-3.2-orig/libparted/fs/xfs/platform_defs.h parted-3.2/libparted/fs/xfs/platform_defs.h
+--- parted-3.2-orig/libparted/fs/xfs/platform_defs.h	2023-07-02 22:22:03.188943868 +0800
++++ parted-3.2/libparted/fs/xfs/platform_defs.h	2023-07-02 22:23:04.078945294 +0800
+@@ -38,6 +38,7 @@
+ #include <stdarg.h>
+ #include <assert.h>
+ #include <endian.h>
++#include <fcntl.h>
+ #include <stddef.h>
+ #include <stdlib.h>
+ #include <string.h>

@@ -4,9 +4,9 @@ TARGET_CFLAGS += -DLUA_USE_LINUX -fPIC -std=gnu99
 
 all:
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) \
-		CC="$(CONFIG_CROSS_COMPILER_ROOT)/bin/mipsel-linux-uclibc-gcc" \
-		AR="$(CONFIG_CROSS_COMPILER_ROOT)/bin/mipsel-linux-uclibc-ar rcu" \
-		RANLIB="$(CONFIG_CROSS_COMPILER_ROOT)/bin/mipsel-linux-uclibc-ranlib" \
+		CC="$(CC)" \
+		AR="$(AR) rcu" \
+		RANLIB="$(RANLIB)" \
 		INSTALL_ROOT=/usr \
 		CFLAGS="$(TARGET_CPPFLAGS) $(TARGET_CFLAGS)" \
 		PKG_VERSION="5.1.5" \

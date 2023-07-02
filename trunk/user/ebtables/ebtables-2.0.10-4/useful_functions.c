@@ -25,7 +25,7 @@
 #include "include/ebtables_u.h"
 #include "include/ethernetdb.h"
 #include <stdio.h>
-#include <netinet/ether.h>
+// #include <netinet/ether.h>
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>

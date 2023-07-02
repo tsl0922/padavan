@@ -22,11 +22,11 @@
 #include <signal.h>
 
 /* Use SVID search */
-#define __USE_GNU
+#define _GNU_SOURCE
 #include <search.h>
 
 /* CGI hash table */
-static struct hsearch_data htab;
+static struct hsearch_data *htab = NULL;
 
 void
 unescape(char *s)
@@ -51,11 +51,10 @@ get_cgi(char *name)
 {
 	ENTRY e, *ep;
 
-	if (!htab.table)
-		return NULL;
+	if (htab == NULL) return NULL;
 
 	e.key = name;
-	hsearch_r(e, FIND, &ep, &htab);
+	hsearch_r(e, FIND, &ep, htab);
 
 	return ep ? ep->data : NULL;
 }
@@ -65,16 +64,15 @@ set_cgi(char *name, char *value)
 {
 	ENTRY e, *ep;
 
-	if (!htab.table)
-		return;
+	if (htab == NULL) return;
 
 	e.key = name;
-	hsearch_r(e, FIND, &ep, &htab);
+	hsearch_r(e, FIND, &ep, htab);
 	if (ep)
 		ep->data = value;
 	else {
 		e.data = value;
-		hsearch_r(e, ENTER, &ep, &htab);
+		hsearch_r(e, ENTER, &ep, htab);
 	}
 }
 
@@ -86,7 +84,11 @@ init_cgi(char *query)
 
 	/* Clear variables */
 	if (!query) {
-		hdestroy_r(&htab);
+		if (htab != NULL) {
+			hdestroy_r(htab);
+			free(htab);
+			htab = NULL;
+		}
 		return;
 	}
 
@@ -96,7 +98,9 @@ init_cgi(char *query)
 	nel = 1;
 	while (strsep(&q, "&;"))
 		nel++;
-	hcreate_r(nel, &htab);
+	if (htab == NULL)
+		htab = calloc(1, sizeof(htab));
+	hcreate_r(nel, htab);
 
 	for (q = query; q < (query + len);) {
 		/* Unescape each assignment */

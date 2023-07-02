@@ -5,7 +5,7 @@ endif
 include boards.mk
 include cflags.mk
 
-CFLAGS += -fPIC
+CFLAGS += -fPIC -D_GNU_SOURCE
 CFLAGS += -Wall -I. -I./include -I$(ROOTDIR)/$(LINUXDIR)/include/nvram
 
 LDFLAGS += -L.

@@ -18,18 +18,19 @@
 #define __LINUX_H__
 
 #include <unistd.h>
+#include <stdint.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 
 struct usb_ctrltransfer {
 	/* keep in sync with usbdevice_fs.h:usbdevfs_ctrltransfer */
-	u_int8_t  bRequestType;
-	u_int8_t  bRequest;
-	u_int16_t wValue;
-	u_int16_t wIndex;
-	u_int16_t wLength;
+	uint8_t  bRequestType;
+	uint8_t  bRequest;
+	uint16_t wValue;
+	uint16_t wIndex;
+	uint16_t wLength;
 
-	u_int32_t timeout;	/* in milliseconds */
+	uint32_t timeout;	/* in milliseconds */
 
 	/* pointer to data */
 	void *data;

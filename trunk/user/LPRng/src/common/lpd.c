@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 
     sigset_t sigs_to_catch;
     sigemptyset(&sigs_to_catch);
-    sigaddset(&sigs_to_catch, SIGCLD);
+    sigaddset(&sigs_to_catch, SIGCHLD);
     sigaddset(&sigs_to_catch, SIGINT);
     sigaddset(&sigs_to_catch, SIGQUIT);
     sigaddset(&sigs_to_catch, SIGKILL);
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
     sigprocmask(SIG_UNBLOCK, &sigs_to_catch, NULL);
 
     //Setup the signal handler
-    signal(SIGCLD, sig_child); 
+    signal(SIGCHLD, sig_child); 
     signal(SIGINT, sig_cleanup); 
     signal(SIGQUIT, sig_cleanup); 
     signal(SIGKILL, sig_cleanup);

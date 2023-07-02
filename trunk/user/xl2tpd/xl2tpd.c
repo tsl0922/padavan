@@ -46,6 +46,7 @@
 #include <net/route.h>
 #include <sys/ioctl.h>
 #include <resolv.h>
+#include <limits.h>
 #include "l2tp.h"
 
 struct tunnel_list tunnels;

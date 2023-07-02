@@ -5,6 +5,11 @@ THISDIR = $(shell pwd)
 
 CFLAGS += -ffunction-sections -fdata-sections
 LDFLAGS += -Wl,--gc-sections
+CONFIGURE_VARS =
+
+ifneq (,$(findstring musl,$(CROSS_COMPILE)))
+	CONFIGURE_VARS += ac_cv_func_lseek64=yes
+endif
 
 all: download_test extract_test config_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
@@ -31,7 +36,7 @@ configure:
 	( cd $(SRC_NAME) ; \
 	autoreconf -fi ; \
 	PKG_CONFIG_PATH=$(STAGEDIR)/lib/pkgconfig \
-	./configure \
+	./configure $(CONFIGURE_VARS) \
 		--prefix= \
 		--disable-bmap-stats \
 		--disable-debugfs \

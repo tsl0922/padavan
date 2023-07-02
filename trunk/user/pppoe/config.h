@@ -61,7 +61,7 @@
 #define HAVE_GETOPT_H 1
 
 /* Define if you have the <linux/if_ether.h> header file.  */
-#define HAVE_LINUX_IF_ETHER_H 1
+/* #undef HAVE_LINUX_IF_ETHER_H */
 
 /* Define if you have kernel-mode PPPoE in Linux file.  */
 #define HAVE_LINUX_KERNEL_PPPOE 1
@@ -103,7 +103,7 @@
 #define HAVE_NETPACKET_PACKET_H 1
 
 /* Define if you have the <sys/cdefs.h> header file.  */
-#define HAVE_SYS_CDEFS_H 1
+/* #undef HAVE_SYS_CDEFS_H */
 
 /* Define if you have the <sys/dlpi.h> header file.  */
 /* #undef HAVE_SYS_DLPI_H */

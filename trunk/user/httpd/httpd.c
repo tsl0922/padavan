@@ -25,12 +25,12 @@
 #include <time.h>
 #include <unistd.h>
 #include <ctype.h>
-#include <error.h>
 #include <sys/signal.h>
 #include <sys/sysinfo.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <sys/time.h>

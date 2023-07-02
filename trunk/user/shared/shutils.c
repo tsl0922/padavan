@@ -29,7 +29,6 @@
 #include <sys/wait.h>
 #include <sys/ioctl.h>
 #include <ctype.h>
-#include <error.h>
 #include <termios.h>
 #include <sys/time.h>
 #include <sys/sysinfo.h>

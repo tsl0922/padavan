@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 
 #include <netutils.h>
 #include <include/ibox.h>
