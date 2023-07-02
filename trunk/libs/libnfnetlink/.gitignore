@@ -1,2 +1,2 @@
-Makefile
-libtool
+libnfnetlink-*/
+libnfnetlink-*.tar.bz2
