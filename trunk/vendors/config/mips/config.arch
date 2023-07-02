@@ -47,9 +47,9 @@ HOST_TARGET   ?= mipsel-linux
 
 MACHINE        = mips
 ARCH           = mips
-CROSS_COMPILE  = mipsel-linux-uclibc-
+CROSS_COMPILE  = $(CONFIG_TOOLCHAIN)-
 CROSS          = $(CROSS_COMPILE)
-CONFIGURE_HOST = mipsel-linux-uclibc-
+CONFIGURE_HOST = $(CONFIG_TOOLCHAIN)-
 
 CC             = $(CROSS_COMPILE)gcc $(CPUFLAGS)
 GCC            = $(CROSS_COMPILE)gcc $(CPUFLAGS)
