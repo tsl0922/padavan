@@ -12,11 +12,12 @@ jobs:
     strategy:
       matrix:
         target: [K2P, K2P-NANO, K2P-USB]
+        toolchain: [mipsel-linux-uclibc, mipsel-linux-musl]
     steps:
       - uses: actions/checkout@v3
       - uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.target }}
+          key: ${{ matrix.target }}-${{ matrix.toolchain }}
           append-timestamp: false
       - uses: actions/setup-go@v4
         with:
@@ -33,14 +34,14 @@ jobs:
           sudo apt install libtool-bin gperf python3-docutils autopoint gettext ccache
       - name: Build
         run: |
-          make ${{ matrix.target }}
+          make ${{ matrix.target }} TOOLCHAIN=${{ matrix.toolchain }}
           if [ "${{ matrix.target }}" = "K2P-NANO" ]; then
             image=$(ls trunk/images/*.trx)
             mv $image $(echo $image | sed 's/K2P/K2P-NANO/')
           fi
       - uses: actions/upload-artifact@v3
         with:
-          name: images
+          name: ${{ matrix.toolchain }}
           path: trunk/images/*.trx
   publish:
     needs: [build]
@@ -59,5 +60,5 @@ jobs:
         with:
           commit: ${{ github.sha }}
           tag: ${{ env.TAG_ANME }}
-          artifacts: "images/*.trx"
+          artifacts: "mipsel-linux-musl/*.trx"
           allowUpdates: true
