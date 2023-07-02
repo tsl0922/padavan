@@ -29,3 +29,10 @@ download:
 		mkdir -p $(CT_PREFIX); \
 		curl -fSsLo- $(TOOLCHAIN_URL) | tar Jx -C $(CT_PREFIX); \
 	fi
+ifeq ($(CT_TARGET),mipsel-linux-musl)
+	@if [ ! -f $(CT_PREFIX)/$(CT_TARGET)/sysroot/usr/include/sys/queue.h ]; then \
+		echo "Install sys/queue.h..."; \
+		curl -fSsL -o $(CT_PREFIX)/$(CT_TARGET)/sysroot/usr/include/sys/queue.h \
+			"https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=misc/sys/queue.h;hb=HEAD" ; \
+	fi
+endif
