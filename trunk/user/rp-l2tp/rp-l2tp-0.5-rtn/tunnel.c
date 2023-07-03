@@ -28,6 +28,7 @@ static char const RCSID[] =
 #include <netdb.h>
 #include <features.h>
 #include <resolv.h>
+#include <limits.h>
 
 /* Hash tables of all tunnels */
 static hash_table tunnels_by_my_id;
