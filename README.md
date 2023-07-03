@@ -9,7 +9,7 @@ This project is based on original rt-n56u with latest mtk 4.4.198 kernel, which 
 - Added ccache support, may save up to 50%+ build time
 - Upgraded the toolchain and libc:
   - gcc 12.3.0
-  - uClibc-ng 1.0.43
+  - musl 1.2.4 / uClibc-ng 1.0.43
  - Enabled kernel cgroups support
  - Fixed K2P led label names
  - Replaced udpxy with msd_lite
