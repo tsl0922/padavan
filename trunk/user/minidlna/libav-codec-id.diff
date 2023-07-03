@@ -1,0 +1,12 @@
+diff --color -urw minidlna-1.3.3-orig/libav.h minidlna-1.3.3/libav.h
+--- minidlna-1.3.3-orig/libav.h	2023-07-03 22:56:03.533554114 +0800
++++ minidlna-1.3.3/libav.h	2023-07-03 22:56:19.923549515 +0800
+@@ -213,7 +213,7 @@
+ {
+ #if LIBAVFORMAT_VERSION_INT >= ((54<<16)+(6<<8))
+ 	if (s->disposition & AV_DISPOSITION_ATTACHED_PIC &&
+-	    lav_codec_id(s) == AV_CODEC_ID_MJPEG)
++	    lav_codec_id(s) == CODEC_ID_MJPEG)
+ 	{
+ 		if (data)
+ 			*data = s->attached_pic.data;
