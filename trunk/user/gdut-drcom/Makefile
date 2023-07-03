@@ -4,7 +4,7 @@ SRC_URL = https://github.com/chenhaowen01/gdut-drcom/archive/1.6.8.tar.gz
 THISDIR = $(shell pwd)
 
 all: download_test extract_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/src CC=$(CONFIG_CROSS_COMPILER_ROOT)/bin/mipsel-linux-uclibc-gcc
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/src
 
 download_test:
 	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
