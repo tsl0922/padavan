@@ -7,6 +7,12 @@
 #ifndef _OS_UNIX_H_
 #define _OS_UNIX_H_
 
+#include <limits.h>
+
+#ifndef MAXNAMLEN
+#define MAXNAMLEN NAME_MAX
+#endif
+
 #define PATHSEP '/'
 #define PATHSEP_STR "/"
 #define OS_SOCKETTYPE unsigned int
