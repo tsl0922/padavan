@@ -1,7 +1,7 @@
 TOPDIR        = ${CURDIR}
 CT_DIR        = $(TOPDIR)/crosstool-ng
 CT_PREFIX     = $(TOPDIR)/toolchain-mipsel
-CT_TARGET     := mipsel-linux-uclibc
+CT_TARGET     := mipsel-linux-musl
 TOOLCHAIN_URL := https://github.com/tsl0922/padavan/releases/download/toolchain/$(CT_TARGET).tar.xz
 
 all: build
@@ -31,7 +31,7 @@ download:
 	fi
 ifeq ($(CT_TARGET),mipsel-linux-musl)
 	@if [ ! -f $(CT_PREFIX)/$(CT_TARGET)/sysroot/usr/include/sys/queue.h ]; then \
-		echo "Install sys/queue.h..."; \
+		echo "Installing sys/queue.h..."; \
 		curl -fSsL -o $(CT_PREFIX)/$(CT_TARGET)/sysroot/usr/include/sys/queue.h \
 			"https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=misc/sys/queue.h;hb=HEAD" ; \
 	fi
