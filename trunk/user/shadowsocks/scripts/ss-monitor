@@ -46,7 +46,7 @@ do
 	if [ $redir_tcp_process -gt 0 ] ;then
 		icount=`ps -w | grep ssr-retcp | grep -v grep | wc -l`
 		if [ $icount = 0 ] ;then
-			log "检测到SS进程挂掉，重新启动!"
+			log "检测到SS进程挂掉, 重新启动!"
 			/usr/bin/shadowsocks.sh restart 
 			exit 0
 		fi
@@ -55,7 +55,7 @@ do
 	if [ $redir_udp_process -gt 0 ] ;then
 		icount=`ps -w | grep ssr-reudp | grep -v grep | wc -l`
 		if [ $icount = 0 ] ;then
-			log "检测到SS进程挂掉，重新启动!"
+			log "检测到SS进程挂掉, 重新启动!"
 			/usr/bin/shadowsocks.sh restart  
 			exit 0
 		fi
