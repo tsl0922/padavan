@@ -1,0 +1,129 @@
+diff --git a/display.c b/display.c
+index 41fb053..2d2e768 100644
+--- a/display.c
++++ b/display.c
+@@ -771,7 +771,9 @@ rl_redisplay ()
+ 	 appear in the first and last lines of the prompt */
+       wadjust = (newlines == 0)
+ 		  ? prompt_invis_chars_first_line
+-		  : ((newlines == prompt_lines_estimate) ? wrap_offset : prompt_invis_chars_first_line);
++		  : ((newlines == prompt_lines_estimate)
++		  	? (wrap_offset - prompt_invis_chars_first_line)
++		  	: 0);
+ 
+       /* fix from Darin Johnson <darin@acuson.com> for prompt string with
+          invisible characters that is longer than the screen width.  The
+diff --git a/history.c b/history.c
+index 3b8dbc5..129c57a 100644
+--- a/history.c
++++ b/history.c
+@@ -57,6 +57,8 @@ extern int errno;
+ /* How big to make the_history when we first allocate it. */
+ #define DEFAULT_HISTORY_INITIAL_SIZE	502
+ 
++#define MAX_HISTORY_INITIAL_SIZE	8192
++
+ /* The number of slots to increase the_history by. */
+ #define DEFAULT_HISTORY_GROW_SIZE 50
+ 
+@@ -277,6 +279,7 @@ add_history (string)
+      const char *string;
+ {
+   HIST_ENTRY *temp;
++  int new_length;
+ 
+   if (history_stifled && (history_length == history_max_entries))
+     {
+@@ -293,13 +296,9 @@ add_history (string)
+ 
+       /* Copy the rest of the entries, moving down one slot.  Copy includes
+ 	 trailing NULL.  */
+-#if 0
+-      for (i = 0; i < history_length; i++)
+-	the_history[i] = the_history[i + 1];
+-#else
+       memmove (the_history, the_history + 1, history_length * sizeof (HIST_ENTRY *));
+-#endif
+ 
++      new_length = history_length;
+       history_base++;
+     }
+   else
+@@ -307,11 +306,13 @@ add_history (string)
+       if (history_size == 0)
+ 	{
+ 	  if (history_stifled && history_max_entries > 0)
+-	    history_size = history_max_entries + 2;
++	    history_size = (history_max_entries > MAX_HISTORY_INITIAL_SIZE)
++				? MAX_HISTORY_INITIAL_SIZE
++				: history_max_entries + 2;
+ 	  else
+ 	    history_size = DEFAULT_HISTORY_INITIAL_SIZE;
+ 	  the_history = (HIST_ENTRY **)xmalloc (history_size * sizeof (HIST_ENTRY *));
+-	  history_length = 1;
++	  new_length = 1;
+ 	}
+       else
+ 	{
+@@ -321,14 +322,15 @@ add_history (string)
+ 	      the_history = (HIST_ENTRY **)
+ 		xrealloc (the_history, history_size * sizeof (HIST_ENTRY *));
+ 	    }
+-	  history_length++;
++	  new_length = history_length + 1;
+ 	}
+     }
+ 
+   temp = alloc_history_entry ((char *)string, hist_inittime ());
+ 
+-  the_history[history_length] = (HIST_ENTRY *)NULL;
+-  the_history[history_length - 1] = temp;
++  the_history[new_length] = (HIST_ENTRY *)NULL;
++  the_history[new_length - 1] = temp;
++  history_length = new_length;
+ }
+ 
+ /* Change the time stamp of the most recent history entry to STRING. */
+diff --git a/input.c b/input.c
+index 286897d..24126ea 100644
+--- a/input.c
++++ b/input.c
+@@ -513,6 +513,7 @@ rl_getc (stream)
+       result = 0;
+ #if defined (HAVE_PSELECT)
+       sigemptyset (&empty_set);
++      sigprocmask (SIG_BLOCK, (sigset_t *)NULL, &empty_set);
+       FD_ZERO (&readfds);
+       FD_SET (fileno (stream), &readfds);
+       result = pselect (fileno (stream) + 1, &readfds, NULL, NULL, NULL, &empty_set);
+diff --git a/patchlevel b/patchlevel
+index d8c9df7..e0ba09d 100644
+--- a/patchlevel
++++ b/patchlevel
+@@ -1,3 +1,3 @@
+ # Do not edit -- exists only for use by patch
+ 
+-0
++5
+diff --git a/readline.c b/readline.c
+index e51df4f..a05b35e 100644
+--- a/readline.c
++++ b/readline.c
+@@ -1057,7 +1057,7 @@ _rl_subseq_result (r, map, key, got_subseq)
+ 	/* We probably shadowed a keymap, so keep going. */
+ 	r = _rl_dispatch (ANYOTHERKEY, m);
+     }
+-  else if (r && map[ANYOTHERKEY].function)
++  else if (r < 0 && map[ANYOTHERKEY].function)
+     {
+       /* We didn't match (r is probably -1), so return something to
+ 	 tell the caller that it should try ANYOTHERKEY for an
+@@ -1069,7 +1069,7 @@ _rl_subseq_result (r, map, key, got_subseq)
+       _rl_dispatching_keymap = map;
+       return -2;
+     }
+-  else if (r && got_subseq)
++  else if (r < 0 && got_subseq)		/* XXX */
+     {
+       /* OK, back up the chain. */
+       if (RL_ISSTATE (RL_STATE_MACROINPUT))

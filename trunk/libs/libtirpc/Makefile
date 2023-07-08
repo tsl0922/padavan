@@ -1,48 +1,25 @@
-SRC_NAME=libtirpc-1.3.3
-SRC_URL=https://downloads.sourceforge.net/libtirpc/$(SRC_NAME).tar.bz2
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=libtirpc
+PKG_VERSION:=1.3.3
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.bz2 ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.bz2 $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE_URL:=@SF/$(PKG_NAME)
+PKG_HASH:=6474e98851d9f6f33871957ddee9714fdcd9d8a5ee9abb5a98d63ea2e60e12f3
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar xjf $(SRC_NAME).tar.bz2; \
-	fi )
+PKG_FIXUP:=autoreconf
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-configure:
-	( cd $(SRC_NAME) ; \
-	autoreconf -fi ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-shared \
-		--disable-static \
-		--disable-gssapi \
-		$(if $(CONFIG_IPV6),--enable-ipv6,--disable-ipv6) \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+CONFIGURE_ARGS += \
+	--enable-shared \
+	--disable-static \
+	--disable-gssapi
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libtirpc))
 
 romfs:
-	cp -fP $(DESTDIR)/lib/libtirpc.so* $(ROMFSDIR)/lib
-	cp -fP $(DESTDIR)/etc/netconfig $(ROMFSDIR)/etc_ro
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libtirpc.so* $(ROMFSDIR)/lib/
+	$(INSTALL_DIR) $(ROMFSDIR)/etc_ro
+	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/etc/netconfig $(ROMFSDIR)/etc_ro/netconfig

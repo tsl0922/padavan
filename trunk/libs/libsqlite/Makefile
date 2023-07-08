@@ -1,57 +1,32 @@
-SRC_NAME=sqlite-autoconf-3260000
-SRC_URL=https://www.sqlite.org/2018/$(SRC_NAME).tar.gz
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=sqlite
+PKG_VERSION:=3260000
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-autoconf-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://www.sqlite.org/2018/
+PKG_HASH:=5daa6a3fb7d1e8c767cd59c4ded8da6e4b00c61d3b466d0685e35c4dd6d7bf5d
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar zxf $(SRC_NAME).tar.gz; \
-	fi )
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-autoconf-$(PKG_VERSION)
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi ) 
+include $(INCLUDE_DIR)/package.mk
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		$(if $(LIBS_BUILD_SHARED),--disable-static,--enable-static) \
-		$(if $(LIBS_BUILD_SHARED),--enable-shared,--disable-shared) \
-		--disable-readline \
-		--disable-dynamic-extensions \
-		--disable-fts3 \
-		--disable-fts4 \
-		--disable-fts5 \
-		--disable-json1 \
-		--disable-rtree \
-		--disable-session \
-		--disable-debug \
-		--disable-static-shell \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+CONFIGURE_ARGS += \
+	$(if $(LIBS_BUILD_SHARED),--disable-static,--enable-static) \
+	$(if $(LIBS_BUILD_SHARED),--enable-shared,--disable-shared) \
+	--disable-readline \
+	--disable-dynamic-extensions \
+	--disable-fts3 \
+	--disable-fts4 \
+	--disable-fts5 \
+	--disable-json1 \
+	--disable-rtree \
+	--disable-session \
+	--disable-debug \
+	--disable-static-shell
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,sqlite))
 
 romfs:
-ifeq ($(LIBS_BUILD_SHARED),y)
-	cp -fP $(DESTDIR)/lib/libsqlite3.so* $(ROMFSDIR)/lib ;
-endif
-
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libsqlite3.so* $(ROMFSDIR)/lib/

@@ -1,56 +1,32 @@
-SRC_NAME=libpcap-1.9.1
-SRC_URL=http://www.tcpdump.org/release/$(SRC_NAME).tar.gz
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=libpcap
+PKG_VERSION:=1.9.1
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://www.tcpdump.org/release/
+PKG_HASH:=635237637c5b619bcceba91900666b64d56ecb7be63f298f601ec786ce087094
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar zxf $(SRC_NAME).tar.gz; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+CONFIGURE_ARGS += \
+	--enable-static \
+	--enable-shared \
+	--disable-yydebug \
+	--disable-dbus \
+	--disable-usb \
+	--disable-bluetooth \
+	--with-pcap=linux \
+	--without-flex \
+	--without-bison \
+	--without-dag \
+	--without-septel \
+	--without-libnl
 
-configure:
-	( cd $(SRC_NAME) ; \
-	ac_cv_netfilter_can_compile=no \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-static \
-		--enable-shared \
-		$(if $(CONFIG_IPV6),--enable-ipv6,--disable-ipv6) \
-		--disable-yydebug \
-		--disable-dbus \
-		--disable-usb \
-		--disable-bluetooth \
-		--with-pcap=linux \
-		--without-flex \
-		--without-bison \
-		--without-dag \
-		--without-septel \
-		--without-libnl \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+CONFIGURE_VARS += ac_cv_netfilter_can_compile=no
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libpcap))
 
 romfs:
-	cp -fP $(DESTDIR)/lib/libpcap.so* $(ROMFSDIR)/lib
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libpcap.so* $(ROMFSDIR)/lib/

@@ -1,42 +1,16 @@
-SRC_NAME=udns-0.4
-SRC_URL=http://www.corpit.ru/mjt/udns/udns-0.4.tar.gz
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=udns
+PKG_VERSION:=0.4
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=http://www.corpit.ru/mjt/udns/
+PKG_HASH:=115108dc791a2f9e99e150012bcb459d9095da2dd7d80699b584ac0ac3768710
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar xf $(SRC_NAME).tar.gz ; \
-	fi )
+PKG_FIXUP:=autoreconf
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-configure:
-	( cd $(SRC_NAME) ; \
-	patch -s -r - -N -p1 <../100-cross-compile-dirty-fix.patch ; \
-	./configure \
-		--enable-cross_compile ; \
-	)
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
-
-install:
-	cp -f $(SRC_NAME)/udns.h $(STAGEDIR)/include
-	cp -f $(SRC_NAME)/*.a $(STAGEDIR)/lib
+$(eval $(call BuildPackage,udns))
 
 romfs:
-	

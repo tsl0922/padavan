@@ -1,49 +1,24 @@
-SRC_NAME=libiconv-1.17
-SRC_URL=https://ftp.gnu.org/pub/gnu/libiconv/$(SRC_NAME).tar.gz
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=libiconv
+PKG_VERSION:=1.17
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
+PKG_SOURCE:=libiconv-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=@GNU/libiconv
+PKG_HASH:=8f74213b56238c85a50a5329f77e06198771e70dd9a739779f4c02f65d971313
+PKG_BUILD_DIR:=$(BUILD_DIR)/libiconv-$(PKG_VERSION)
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar xzf $(SRC_NAME).tar.gz; \
-		patch -d $(SRC_NAME) -p1 < strip-charsets.patch; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+CONFIGURE_ARGS += \
+	--enable-shared \
+	--disable-static \
+	--disable-debug-mode \
+	--enable-relocatable \
+	--disable-nls
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-shared \
-		--disable-static \
-		--disable-debug-mode \
-		--enable-relocatable \
-		--disable-nls \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD); \
-	)
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) clean ; \
-	fi ; \
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libiconv))
 
 romfs:
-	cp -fP $(DESTDIR)/lib/libiconv.so* $(ROMFSDIR)/lib
-	chmod +x $(ROMFSDIR)/lib/libiconv.so*
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libiconv.so* $(ROMFSDIR)/lib/

@@ -1,49 +1,28 @@
-SRC_NAME=librtlsdr-0.6.0
-SRC_URL=https://github.com/steve-m/librtlsdr/archive/v0.6.0.zip
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/build
+PKG_NAME:=librtlsdr
+PKG_VERSION:=0.6.0
 
-download_test:
-	( if [ ! -f $(SRC_NAME).zip ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).zip $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://github.com/steve-m/librtlsdr/archive/refs/tags/
+PKG_SOURCE_URL_FILE:=$(PKG_VERSION).tar.gz
+PKG_HASH:=80a5155f3505bca8f1b808f8414d7dcd7c459b662a1cde84d3a2629a6e72ae55
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		unzip -qq $(SRC_NAME).zip; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/cmake.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
-
-configure:
-	( mkdir -p $(SRC_NAME)/build && cd $(SRC_NAME)/build ; \
-	cmake -DCMAKE_BUILD_TYPE=Release \
-	-DCMAKE_INSTALL_PREFIX=$(STAGEDIR) \
-	-DCMAKE_TOOLCHAIN_FILE=$(CONFIG_CMAKE_TOOLCHAIN_FILE) \
-	.. \
-	)
-
-clean:
-	rm -rf $(SRC_NAME)/build
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME)/build install DESTDIR=""
+$(eval $(call BuildPackage,librtlsdr))
 
 romfs:
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_RTL_SDR),y)
-	$(ROMFSINST) -d $(DESTDIR)/bin/rtl_adsb /usr/bin/rtl_adsb
-	$(ROMFSINST) -d $(DESTDIR)/bin/rtl_eeprom /usr/bin/rtl_eeprom
-	$(ROMFSINST) -d $(DESTDIR)/bin/rtl_fm /usr/bin/rtl_fm
-	$(ROMFSINST) -d $(DESTDIR)/bin/rtl_power /usr/bin/rtl_power
-	$(ROMFSINST) -d $(DESTDIR)/bin/rtl_sdr /usr/bin/rtl_sdr
-	$(ROMFSINST) -d $(DESTDIR)/bin/rtl_tcp /usr/bin/rtl_tcp
-	$(ROMFSINST) -d $(DESTDIR)/bin/rtl_test /usr/bin/rtl_test
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/rtl_adsb $(ROMFSDIR)/usr/bin/rtl_adsb
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/rtl_eeprom $(ROMFSDIR)/usr/bin/rtl_eeprom
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/rtl_fm $(ROMFSDIR)/usr/bin/rtl_fm
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/rtl_power $(ROMFSDIR)/usr/bin/rtl_power
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/rtl_sdr $(ROMFSDIR)/usr/bin/rtl_sdr
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/rtl_tcp $(ROMFSDIR)/usr/bin/rtl_tcp
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/rtl_test $(ROMFSDIR)/usr/bin/rtl_test
 endif
-	cp -fP $(DESTDIR)/lib/librtlsdr.so* $(ROMFSDIR)/lib
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/librtlsdr.so* $(ROMFSDIR)/lib/

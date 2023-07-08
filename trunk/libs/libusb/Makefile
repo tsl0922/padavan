@@ -1,37 +1,19 @@
-SRC_NAME=libusb-0.1.12
+include $(ROOTDIR)/rules.mk
 
-CFLAGS += -Wno-format-truncation
+PKG_NAME:=libusb
+PKG_VERSION:=0.1.12
 
-all: config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+include $(INCLUDE_DIR)/package.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+SRC_DIR=./libusb-0.1.12
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-static \
-		--disable-shared \
-		--disable-build-docs \
-		--enable-debug=no \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+CONFIGURE_ARGS += \
+	--enable-static \
+	--disable-shared \
+	--disable-build-docs \
+	--enable-debug=no
+TARGET_CFLAGS += -Wno-format-truncation
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libusb))
 
 romfs:
-

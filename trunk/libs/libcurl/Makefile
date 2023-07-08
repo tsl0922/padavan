@@ -1,80 +1,55 @@
-SRC_NAME=curl-8.1.2
-SRC_URL=https://github.com/curl/curl/releases/download/curl-8_1_2/curl-8.1.2.tar.xz
+include $(ROOTDIR)/rules.mk
 
-LDFLAGS += -Wl,-rpath-link=$(STAGEDIR)/lib
+PKG_NAME:=curl
+PKG_VERSION:=8.1.2
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_SOURCE_URL:=https://github.com/curl/curl/releases/download/curl-$(subst .,_,$(PKG_VERSION))/
+PKG_HASH:=31b1118eb8bfd43cd95d9a3f146f814ff874f6ed3999b29d94f4d1e7dbac5ef6
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.xz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.xz $(SRC_URL); \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar xf $(SRC_NAME).tar.xz; \
-		patch -d $(SRC_NAME) -p1 -i ../no_docs_test.patch; \
-	fi )
+TARGET_LDFLAGS += -Wl,-rpath-link=$(STAGEDIR)/lib
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+CONFIGURE_ARGS += \
+	--enable-static \
+	--enable-shared \
+	--disable-gopher \
+	--disable-ldap \
+	--disable-ldaps \
+	--disable-rtsp \
+	--disable-telnet \
+	--disable-tftp \
+	--disable-smtp \
+	--disable-pop3 \
+	--disable-imap \
+	--disable-sspi \
+	--disable-dict \
+	--disable-ares \
+	--disable-debug \
+	--disable-curldebug \
+	--disable-manual \
+	--disable-verbose \
+	--disable-tls-srp \
+	--disable-libcurl-option \
+	--disable-threaded-resolver \
+	--without-gnutls \
+	--without-libidn \
+	--without-libssh2 \
+	--without-krb4 \
+	--without-nss \
+	--without-ca-path \
+	--with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
+	--with-random=/dev/urandom \
+	--with-zlib=$(STAGING_DIR) \
+	--with-ssl=$(STAGING_DIR)
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-static \
-		--enable-shared \
-		$(if $(CONFIG_IPV6),--enable-ipv6,--disable-ipv6) \
-		--disable-gopher \
-		--disable-ldap \
-		--disable-ldaps \
-		--disable-rtsp \
-		--disable-telnet \
-		--disable-tftp \
-		--disable-smtp \
-		--disable-pop3 \
-		--disable-imap \
-		--disable-sspi \
-		--disable-dict \
-		--disable-ares \
-		--disable-debug \
-		--disable-curldebug \
-		--disable-manual \
-		--disable-verbose \
-		--disable-tls-srp \
-		--disable-libcurl-option \
-		--disable-threaded-resolver \
-		--without-gnutls \
-		--without-libidn \
-		--without-libssh2 \
-		--without-krb4 \
-		--without-nss \
-		--without-ca-path \
-		--with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
-		--with-random=/dev/urandom \
-		--with-zlib=$(STAGEDIR) \
-		--with-ssl=$(STAGEDIR) \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) clean ; \
-	fi ; \
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,curl))
 
 romfs:
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_CURL),y)
-	$(ROMFSINST) -d $(DESTDIR)/bin/curl /usr/bin/curl
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/bin/curl $(ROMFSDIR)/usr/bin/
 endif
-	cp -fP $(DESTDIR)/lib/libcurl.so* $(ROMFSDIR)/lib
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libcurl.so* $(ROMFSDIR)/lib/
