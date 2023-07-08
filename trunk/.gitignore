@@ -21,9 +21,10 @@ config.log
 config.status
 config_done
 stamp-h1
+
+/.ccache
+/build
+/download
 /romfs
-/romfs/*
 /images
-/images/*
 /stage
-/stage/*
