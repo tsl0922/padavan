@@ -1,72 +1,53 @@
-SRC_NAME=dropbear-2022.83
-SRC_URL=https://matt.ucc.asn.au/dropbear/$(SRC_NAME).tar.bz2
+include $(ROOTDIR)/rules.mk
+
+PKG_NAME:=dropbear
+PKG_VERSION:=2022.83
+
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE_URL:= \
+	https://matt.ucc.asn.au/dropbear/releases/ \
+	https://dropbear.nl/mirror/releases/
+PKG_HASH:=bc5a121ffbc94b5171ad5ebe01be42746d50aa797c9549a4639894a16749443b
+
+PKG_FIXUP:=autoreconf
+
+include $(INCLUDE_DIR)/package.mk
 
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_SFTP),y)
-COPT=-DSFTPSERVER_PATH=\"/usr/libexec/sftp-server\"
+TARGET_CFLAGS += -DSFTPSERVER_PATH=\\\"/usr/libexec/sftp-server\\\"
 else
-COPT=-DSFTPSERVER_PATH=\"/opt/libexec/sftp-server\"
+TARGET_CFLAGS += -DSFTPSERVER_PATH=\\\"/opt/libexec/sftp-server\\\"
 endif
 ifneq ($(CONFIG_FIRMWARE_INCLUDE_DROPBEAR_FAST_CODE),y)
-COPT+=-DDROPBEAR_SMALL_CODE
+TARGET_CFLAGS += -DDROPBEAR_SMALL_CODE
 endif
-CFLAGS+=$(COPT) -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections
+TARGET_CFLAGS += -ffunction-sections -fdata-sections
+TARGET_LDFLAGS += -Wl,--gc-sections
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" MULTI=1
+CONFIGURE_ARGS += \
+	--disable-lastlog \
+	--disable-utmp \
+	--disable-utmpx \
+	--disable-wtmp \
+	--disable-wtmpx \
+	--disable-loginfunc \
+	--disable-pututline \
+	--disable-pututxline \
+	--disable-harden \
+	--enable-zlib \
+	--enable-bundled-libtom
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.bz2 ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.bz2 $(SRC_URL); \
-	fi )
+MAKE_FLAGS += PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" MULTI=1
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar xjf $(SRC_NAME).tar.bz2; \
-		patch -d $(SRC_NAME) -p1 -i ../100-update-default-host-keys-path.patch; \
-	fi )
-
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
-
-configure:
-	( cd $(SRC_NAME) ; \
-	autoreconf -v; \
-	./configure \
-		--prefix=/usr \
-		--disable-lastlog \
-		--disable-utmp \
-		--disable-utmpx \
-		--disable-wtmp \
-		--disable-wtmpx \
-		--disable-loginfunc \
-		--disable-pututline \
-		--disable-pututxline \
-		--disable-harden \
-		--enable-zlib \
-		--enable-bundled-libtom \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f dropbearmulti
-	rm -f config_done
+$(eval $(call BuildPackage,dropbear))
 
 romfs:
-	cp $(SRC_NAME)/dropbearmulti .
-	$(STRIP) dropbearmulti
-	$(ROMFSINST) /usr/bin/dropbearmulti
-	$(ROMFSINST) -p +x /usr/bin/sshd.sh
-	$(ROMFSINST) -s dropbearmulti /usr/bin/ssh
-	$(ROMFSINST) -s dropbearmulti /usr/bin/scp
-	$(ROMFSINST) -s dropbearmulti /usr/bin/dropbearkey
-	$(ROMFSINST) -s dropbearmulti /usr/bin/dropbearconvert
-	$(ROMFSINST) -s /usr/bin/dropbearmulti /usr/sbin/dropbear
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/dropbearmulti $(ROMFSDIR)/usr/bin/dropbearmulti
+	$(INSTALL_BIN) ./sshd.sh $(ROMFSDIR)/usr/bin/sshd.sh
+	$(LN) dropbearmulti $(ROMFSDIR)/usr/bin/ssh
+	$(LN) dropbearmulti $(ROMFSDIR)/usr/bin/scp
+	$(LN) dropbearmulti $(ROMFSDIR)/usr/bin/dropbearkey
+	$(LN) dropbearmulti $(ROMFSDIR)/usr/bin/dropbearconvert
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/sbin
+	$(LN) ../bin/dropbearmulti $(ROMFSDIR)/usr/sbin/dropbear
