@@ -2,11 +2,9 @@
 CFLAGS?=-Wall -g -D_GNU_SOURCE -DDEBUG -Wstrict-prototypes -Wdeclaration-after-statement
 CC?=gcc
 
-# the following sucks, but works
-LIBS  = $(IPTABLESPATH)/libiptc/.libs/libip4tc.a
-endif
-CFLAGS += -DIPTABLES_143 -I$(IPTABLESPATH)/include/
-LDFLAGS += -L$(IPTABLESPATH)/libiptc/.libs
+LIBS = -lip4tc -lip6tc
+
+CFLAGS += -DIPTABLES_143
 
 all:	iptcrdr.o iptpinhole.o
 #        testiptcrdr_peer testiptcrdr_dscp test_nfct_get
