@@ -23,7 +23,7 @@ if [ ! -x "$depmod_bin" ]; then
 	exit 1
 fi
 
-ipset_dir="${ROOTDIR}/user/ipset/ipset-7.11/kernel/net/netfilter"
+ipset_dir="${ROOTDIR}/build/ipset-7.11/kernel/net/netfilter"
 mkdir -p "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/kernel/net/netfilter/ipset"
 cp -f "$ipset_dir/xt_set.ko" "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/kernel/net/netfilter"
 cp -f "$ipset_dir/ipset/"*.ko "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/kernel/net/netfilter/ipset"
