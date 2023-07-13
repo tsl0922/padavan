@@ -2,7 +2,7 @@
 # pppstats makefile
 # $Id: Makefile.linux,v 1.9 2006/06/04 05:07:46 paulus Exp $
 #
-DESTDIR = $(INSTROOT)/usr
+DESTDIR = $(INSTROOT)@DESTDIR@
 BINDIR = $(DESTDIR)/sbin
 MANDIR = $(DESTDIR)/share/man/man8
 
@@ -16,13 +16,13 @@ LIBS =
 
 INSTALL= install
 
-CFLAGS += $(COPTS) $(COMPILE_FLAGS)
+CFLAGS = $(COPTS) $(COMPILE_FLAGS)
 
 all: pppstats
 
 install: pppstats
 	-mkdir -p $(MANDIR)
-	$(INSTALL) -s -c pppstats $(BINDIR)
+	$(INSTALL) pppstats $(BINDIR)
 	$(INSTALL) -c -m 444 pppstats.8 $(MANDIR)
 
 pppstats: $(PPPSTATSRCS)

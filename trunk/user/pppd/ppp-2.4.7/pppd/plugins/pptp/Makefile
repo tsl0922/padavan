@@ -28,7 +28,7 @@ pptp.so: libplugin.a pptp.o
 
 install: all
 	$(INSTALL) -d -m 755 $(LIBDIR)
-	$(INSTALL) -s -c -m 4550 pptp.so $(LIBDIR)
+	$(INSTALL) -m 4550 pptp.so $(LIBDIR)
 
 pptp.o: pptp.c
 	$(CC) $(CFLAGS) -c -o $@ -fPIC $^
