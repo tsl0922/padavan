@@ -10,7 +10,9 @@ PKG_HASH:=6931283d9ac87c5073f30b6290c4c75f21632bb4fc3603ac8100812bed248159
 include $(INCLUDE_DIR)/package.mk
 
 CONFIGURE_ARGS += \
-	--with-install-prefix=$(STAGING_DIR) \
+	--with-terminfo-dirs=/usr/share/terminfo \
+	--with-default-terminfo-dir=/usr/share/terminfo \
+	--with-pkg-config-libdir=/lib/pkgconfig \
 	--without-ada \
 	--without-termlib \
 	--without-progs \
