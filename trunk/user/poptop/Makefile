@@ -1,38 +1,24 @@
-SRC_NAME=pptpd-1.4.0
-THISDIR=$(shell pwd)
+include $(ROOTDIR)/rules.mk
 
-CFLAGS  += -O2
-CFLAGS  += -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections
+PKG_NAME:=pptpd
+PKG_VERSION:=1.4.0
 
-all: config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_FIXUP:=autoreconf
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./reconf ; \
-	export ac_cv_header_libintl_h=no ; \
-	./configure \
-		--prefix=/usr \
-		--enable-bcrelay \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+SRC_DIR=./pptpd-1.4.0
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
+CONFIGURE_ARGS += --enable-bcrelay
+CONFIGURE_VARS += ac_cv_header_libintl_h=no
+MAKE_FLAGS += \
+	COPTS="$(TARGET_CFLAGS)" \
+	INSTALL="install"
+
+$(eval $(call BuildPackage,pptpd))
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/pptpd /usr/sbin/pptpd
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/pptpctrl /usr/sbin/pptpctrl
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/bcrelay /usr/sbin/bcrelay
+	$(INSTALL_DIR) $(ROMFSDIR)/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/pptpd $(ROMFSDIR)/usr/sbin/pptpd
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/pptpctrl $(ROMFSDIR)/usr/sbin/pptpctrl
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bcrelay $(ROMFSDIR)/usr/sbin/bcrelay

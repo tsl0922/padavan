@@ -99,7 +99,6 @@ dir_y						+= iptables
 ifneq ($(CONFIG_WITHOUT_KERNEL),y)
 dir_$(CONFIG_FIRMWARE_INCLUDE_IPSET)		+= ipset
 endif
-dir_y						+= poptop
 dir_y						+= ebtables
 dir_y						+= iproute2
 dir_y						+= wireless_tools
@@ -126,6 +125,7 @@ dir_y						+= 802.1x
 dir_y						+= wpa_supplicant
 dir_y						+= pppd
 dir_y						+= pppoe
+dir_y						+= poptop
 dir_y						+= xl2tpd
 dir_$(CONFIG_FIRMWARE_INCLUDE_RPL2TP)		+= rp-l2tp
 dir_y						+= lldt
