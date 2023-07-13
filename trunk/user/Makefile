@@ -101,7 +101,7 @@ dir_$(CONFIG_FIRMWARE_INCLUDE_IPSET)		+= ipset
 endif
 dir_y						+= ebtables
 dir_y						+= iproute2
-dir_y						+= wireless_tools
+dir_y						+= wireless-tools
 dir_y						+= shared
 dir_$(STORAGE_ENABLED)				+= libdisk
 dir_y						+= nvram

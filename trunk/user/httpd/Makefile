@@ -9,11 +9,10 @@ include $(SHDIR)/boards.mk
 include $(SHDIR)/cflags.mk
 
 CFLAGS += -Wall -I. -I$(SHDIR) -I$(SHDIR)/include
-CFLAGS += -I$(USERDIR)/wireless_tools
 
 LDFLAGS += -L. -lm
 LDFLAGS += -L$(SHDIR) -lshared
-LDFLAGS += -L$(USERDIR)/wireless_tools -liw
+LDFLAGS += -liw
 ifeq ($(STORAGE_ENABLED),y)
 CFLAGS  += -I$(USERDIR)/libdisk
 LDFLAGS += -L$(USERDIR)/libdisk -ldisk
