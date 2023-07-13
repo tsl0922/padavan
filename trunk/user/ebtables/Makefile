@@ -1,12 +1,20 @@
-SRC_NAME=ebtables-2.0.10-4
+include $(ROOTDIR)/rules.mk
 
-all:
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) static KERNEL_INCLUDES=$(KERNEL_HEADERS_PATH)
+PKG_NAME:=ebtables
+PKG_VERSION:=2.0.10
 
-clean:
-	rm -f ebtables
-	$(MAKE) -C $(SRC_NAME) clean
+include $(INCLUDE_DIR)/package.mk
+
+SRC_DIR=./ebtables-2.0.10-4
+
+MAKE_FLAGS += \
+	static \
+	KERNEL_INCLUDES=$(KERNEL_HEADERS_PATH)
+
+$(eval $(call BuildPackage,ebtables))
 
 romfs:
-	$(ROMFSINST) $(SRC_NAME)/static /bin/ebtables
-	$(ROMFSINST) $(SRC_NAME)/ethertypes /etc_ro/ethertypes
+	$(INSTALL_DIR) $(ROMFSDIR)/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/static $(ROMFSDIR)/bin/ebtables
+	$(INSTALL_DIR) $(ROMFSDIR)/etc_ro
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/ethertypes $(ROMFSDIR)/etc_ro/ethertypes
