@@ -107,6 +107,7 @@ endef
 STAMP_PREPARED=$(PKG_BUILD_DIR)/.prepared
 STAMP_CONFIGURED=$(PKG_BUILD_DIR)/.configured
 STAMP_BUILT=$(PKG_BUILD_DIR)/.built
+STAMP_INSTALLED=$(PKG_BUILD_DIR)/.installed
 
 Build/Prepare=$(call Build/Prepare/Default,)
 Build/Configure=$(call Build/Configure/Default,)
@@ -114,9 +115,11 @@ Build/Compile=$(call Build/Compile/Default,)
 Build/Install=$(call Build/Install/Default,)
 
 define BuildPackage
-  all: $(STAMP_BUILT)
+  .PHONY: all install clean
 
-  install: $(STAMP_BUILT)
+  all: $(STAMP_BUILT) $(if $(PKG_INSTALL),$(STAMP_INSTALLED))
+
+  install: $(STAMP_INSTALLED)
 
   clean:
 	rm -rf $(PKG_BUILD_DIR)
@@ -144,6 +147,9 @@ define BuildPackage
 	$(foreach hook,$(Hooks/Compile/Pre),$(call $(hook))$(sep))
 	$(Build/Compile)
 	$(foreach hook,$(Hooks/Compile/Post),$(call $(hook))$(sep))
+	touch $$@
+
+  $(STAMP_INSTALLED): $(STAMP_BUILT)
 	$(Build/Install)
 	$(foreach hook,$(Hooks/Install/Post),$(call $(hook))$(sep))
 	touch $$@
