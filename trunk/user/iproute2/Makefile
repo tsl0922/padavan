@@ -1,15 +1,17 @@
-SRC_NAME=iproute2-5.12.0
+include $(ROOTDIR)/rules.mk
 
-THISDIR = $(shell pwd)
+PKG_NAME:=iproute2
+PKG_VERSION:=5.12.0
 
-all:
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) V=1
+include $(INCLUDE_DIR)/package.mk
 
-clean:
-	$(MAKE) -C $(SRC_NAME) clean
+SRC_DIR=./iproute2-5.12.0
+
+$(eval $(call BuildPackage,iproute2))
 
 romfs:
-	$(ROMFSINST) $(THISDIR)/$(SRC_NAME)/ip/ip /bin/ip
+	$(INSTALL_DIR) $(ROMFSDIR)/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ip/ip $(ROMFSDIR)/bin/ip
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_SQM),y)
-	$(ROMFSINST) $(THISDIR)/$(SRC_NAME)/tc/tc /bin/tc
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/tc/tc $(ROMFSDIR)/bin/tc
 endif
