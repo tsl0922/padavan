@@ -115,6 +115,7 @@ Build/Compile=$(call Build/Compile/Default,)
 Build/Install=$(call Build/Install/Default,)
 
 define BuildPackage
+  .DEFAULT_GOAL := all
   .PHONY: all install clean
 
   all: $(STAMP_BUILT) $(if $(PKG_INSTALL),$(STAMP_INSTALLED))
