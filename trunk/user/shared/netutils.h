@@ -24,12 +24,6 @@
 
 #include <ralink_boards.h>
 
-#if ((__UCLIBC_MAJOR__ == 0) && (__UCLIBC_MINOR__ < 9 || (__UCLIBC_MINOR__ == 9 && __UCLIBC_SUBLEVEL__ < 30)))
-#undef HAVE_GETIFADDRS
-#else
-#define HAVE_GETIFADDRS 1
-#endif
-
 //#define IFUP				(IFF_UP | IFF_RUNNING | IFF_BROADCAST | IFF_MULTICAST)
 #define IFUP				(IFF_UP | IFF_RUNNING)
 #define sin_addr(s)			(((struct sockaddr_in *)(s))->sin_addr)

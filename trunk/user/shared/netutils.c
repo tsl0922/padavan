@@ -40,13 +40,11 @@
 #include <linux/if_vlan.h>
 #include <linux/if_bridge.h>
 
+#include <ifaddrs.h>
+
 #include "nvram_linux.h"
 #include "netutils.h"
 #include "shutils.h"
-
-#if defined (HAVE_GETIFADDRS)
-#include <ifaddrs.h>
-#endif
 
 static const struct ifname_desc_t {
 	const char *ifname;
@@ -839,7 +837,6 @@ static int get_prefix6_len(struct sockaddr_in6 *mask6)
 }
 
 char *get_ifaddr6(const char *ifname, int linklocal, char *p_addr6s)
-#if defined (HAVE_GETIFADDRS)
 {
 	char *ret = NULL;
 	int prefix;
@@ -863,7 +860,7 @@ char *get_ifaddr6(const char *ifname, int linklocal, char *p_addr6s)
 			if (inet_ntop(ife->ifa_addr->sa_family, &addr6->sin6_addr, p_addr6s, INET6_ADDRSTRLEN) != NULL) {
 				prefix = get_prefix6_len((struct sockaddr_in6 *)ife->ifa_netmask);
 				if (prefix > 0 && prefix < 128)
-					sprintf(p_addr6s, "%s/%d", p_addr6s, prefix);
+					sprintf(p_addr6s + strlen(p_addr6s), "/%d", prefix);
 				ret = p_addr6s;
 				break;
 			}
@@ -872,45 +869,6 @@ char *get_ifaddr6(const char *ifname, int linklocal, char *p_addr6s)
 	freeifaddrs(ifap);
 	return ret;
 }
-#else
-/* getifaddrs replacement */
-{
-	FILE *fp;
-	char *ret = NULL;
-	char addr6s[INET6_ADDRSTRLEN], addr6p[8][8], devname[32];
-	int if_idx, plen, scope, scope_need, dad_status;
-	struct in6_addr addr6;
-
-	scope_need = (linklocal) ? 0x20 : 0x00;
-
-	fp = fopen("/proc/net/if_inet6", "r");
-	if (!fp)
-		return NULL;
-	while (fscanf(fp, "%4s%4s%4s%4s%4s%4s%4s%4s %08x %02x %02x %02x %20s\n",
-		addr6p[0], addr6p[1], addr6p[2], addr6p[3], addr6p[4],
-		addr6p[5], addr6p[6], addr6p[7], &if_idx, &plen, &scope,
-		&dad_status, devname) != EOF)
-	{
-		if (strcmp(ifname, devname) != 0)
-			continue;
-		scope = scope & 0x00f0;
-		if (scope != scope_need)
-			continue;
-		sprintf(addr6s, "%s:%s:%s:%s:%s:%s:%s:%s",
-			addr6p[0], addr6p[1], addr6p[2], addr6p[3],
-			addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
-		if (inet_pton(AF_INET6, addr6s, &addr6) > 0 &&
-		    inet_ntop(AF_INET6, &addr6, p_addr6s, INET6_ADDRSTRLEN) != NULL) {
-			if (plen > 0 && plen < 128)
-				sprintf(p_addr6s, "%s/%d", p_addr6s, plen);
-			ret = p_addr6s;
-			break;
-		}
-	}
-	fclose(fp);
-	return ret;
-}
-#endif
 #endif
 
 
