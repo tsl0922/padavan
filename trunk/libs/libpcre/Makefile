@@ -16,6 +16,12 @@ CONFIGURE_ARGS += \
 	--disable-cpp \
 	--with-match-limit-recursion=16000
 
+define update_pcre_config_prefix
+	$(SED) 's,^\(prefix\|exec_prefix\)=.*,\1=$(STAGING_DIR)/usr,g' $(STAGING_DIR)/bin/pcre-config
+endef
+
+Hooks/Install/Post += update_pcre_config_prefix
+
 $(eval $(call BuildPackage,pcre))
 
 romfs:

@@ -14,6 +14,8 @@ CP:=cp -fpR
 LN:=ln -sf
 FIND:=find
 PATCH:=patch
+SED:=sed -i -e
+TAR:=tar
 XARGS:=xargs -r
 
 INSTALL_BIN:=install -m0755

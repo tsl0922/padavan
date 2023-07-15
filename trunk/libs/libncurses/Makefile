@@ -26,6 +26,12 @@ CONFIGURE_ARGS += \
 	--enable-overwrite \
 	--enable-pc-files
 
+define update_ncurses_config_prefix
+	$(SED) 's,^\(prefix\|exec_prefix\)=.*,\1=$(STAGING_DIR)/usr,g' $(STAGING_DIR)/bin/ncursesw6-config
+endef
+
+Hooks/Install/Post += update_ncurses_config_prefix
+
 $(eval $(call BuildPackage,ncurses))
 
 romfs:

@@ -2,8 +2,7 @@
 #
 # Copyright (C) 2006-2020 OpenWrt.org
 
-HOST_TAR:=tar
-TAR_CMD=$(HOST_TAR) -C $(1)/.. -xf -
+TAR_CMD=$(TAR) -C $(1)/.. -xf -
 UNZIP_CMD=unzip -q -d $(1)/.. $(DL_DIR)/$(PKG_SOURCE)
 
 ext=$(word $(words $(subst ., ,$(1))),$(subst ., ,$(1)))

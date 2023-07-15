@@ -44,6 +44,12 @@ CONFIGURE_ARGS += \
 	--with-zlib=$(STAGING_DIR) \
 	--with-ssl=$(STAGING_DIR)
 
+define update_curl_config_prefix
+	$(SED) 's,^\(prefix\|exec_prefix\)=.*,\1=$(STAGING_DIR)/usr,g' $(STAGING_DIR)/bin/curl-config
+endef
+
+Hooks/Install/Post += update_curl_config_prefix
+
 $(eval $(call BuildPackage,curl))
 
 romfs:
