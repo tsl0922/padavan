@@ -142,6 +142,7 @@ dir_$(CONFIG_FIRMWARE_INCLUDE_V2RAY)	        += v2ray
 dir_$(CONFIG_FIRMWARE_INCLUDE_XRAY)	        += xray
 dir_$(CONFIG_FIRMWARE_INCLUDE_SINGBOX)	        += sing-box
 dir_$(CONFIG_FIRMWARE_INCLUDE_TROJAN)	        += trojan
+dir_$(CONFIG_FIRMWARE_INCLUDE_NAIVEPROXY)	        += naiveproxy
 endif
 dir_$(CONFIG_FIRMWARE_INCLUDE_SSOBFS)                      += simple-obfs
 dir_$(CONFIG_FIRMWARE_INCLUDE_ZEROTIER)	                       += zerotier
