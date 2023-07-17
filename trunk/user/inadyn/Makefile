@@ -1,44 +1,20 @@
-SRC_NAME = inadyn-2.8.1
-SRC_URL = https://github.com/troglobit/inadyn/releases/download/v2.8.1/inadyn-2.8.1.tar.xz
-THISDIR = $(shell pwd)
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=inadyn
+PKG_VERSION:=2.8.1
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.xz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.xz $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_SOURCE_URL:=https://github.com/troglobit/inadyn/releases/download/v$(PKG_VERSION)
+PKG_HASH:=1185a9fb165bfc5f5b5f66f0dd8a695c9bd78d4b20cd162273eeea77f2d2e685
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar -xf $(SRC_NAME).tar.xz; \
-		patch -d $(SRC_NAME) -p1 -i ../$(SRC_NAME).patch; \
-	fi )
+PKG_FIXUP:=autoreconf
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-configure:
-	( cd $(SRC_NAME) ; \
-	autoreconf -fi ; \
-	./configure \
-		--prefix=/usr \
-		--enable-openssl \
-		PKG_CONFIG_LIBDIR="$(STAGEDIR)/lib/pkgconfig/" \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+CONFIGURE_ARGS += --enable-openssl
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
+$(eval $(call BuildPackage,inadyn))
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/src/inadyn /bin/inadyn
+	$(INSTALL_DIR) $(ROMFSDIR)/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/inadyn $(ROMFSDIR)/bin/inadyn
