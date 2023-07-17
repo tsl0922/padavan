@@ -1,19 +1,11 @@
-EXEC = mtd_write
+include $(ROOTDIR)/rules.mk
 
-OBJS = mtd.o crc32.o md5.o jffs2.o
+PKG_NAME:=mtd_write
 
-CFLAGS += -D__BYTE_ORDER=__LITTLE_ENDIAN
-CFLAGS += -ffunction-sections -fdata-sections
+include $(INCLUDE_DIR)/package.mk
 
-LDFLAGS += -Wl,--gc-sections
-
-all: $(EXEC)
-
-$(EXEC): $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
+$(eval $(call BuildPackage,mtd_write))
 
 romfs:
-	$(ROMFSINST) /bin/$(EXEC)
-
-clean:
-	rm -f $(EXEC) *.o
+	$(INSTALL_DIR) $(ROMFSDIR)/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/mtd_write $(ROMFSDIR)/bin/mtd_write
