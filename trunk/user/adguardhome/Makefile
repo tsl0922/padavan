@@ -1,40 +1,38 @@
-VERSION := 0.107.33
-VERSION_PKG := github.com/AdguardTeam/AdGuardHome/internal/version
+include $(ROOTDIR)/rules.mk
 
-SRC_NAME := AdGuardHome-$(VERSION)
-SRC_URL := https://github.com/AdguardTeam/AdGuardHome/archive/refs/tags/v$(VERSION).tar.gz
+PKG_NAME:=AdGuardHome
+PKG_VERSION:=0.107.34
 
-LD_FLAGS := -s -w -buildid= \
-		-X $(VERSION_PKG).channel=release \
-		-X $(VERSION_PKG).version=$(VERSION)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://github.com/AdguardTeam/AdGuardHome/archive/refs/tags/
+PKG_SOURCE_URL_FILE:=v$(PKG_VERSION).tar.gz
+PKG_HASH:=66a78f1817e5b465744259b21f2bfa2bdafbba1db6c65023293a98dc0ec3e754
 
-THISDIR = $(shell pwd)
+include $(INCLUDE_DIR)/package.mk
 
-all: download_test extract_test build
+LD_FLAGS:= \
+	-X github.com/AdguardTeam/AdGuardHome/internal/version.channel=release \
+	-X github.com/AdguardTeam/AdGuardHome/internal/version.version=$(PKG_VERSION)
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
-
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		mkdir -p $(SRC_NAME); \
-		tar xf $(SRC_NAME).tar.gz -C $(SRC_NAME) --strip-components=1; \
-		cd $(SRC_NAME); \
-		patch -p1 < ../main-embed-unzip.diff; \
-	fi )
-
-build:
-	( cd $(SRC_NAME); \
-	NODE_OPTIONS=--openssl-legacy-provider make js-deps js-build; zip -r embed.zip build; \
-	GOOS=linux GOARCH=mipsle CGO_ENABLED=0 go build -o $(THISDIR)/AdGuardHome -trimpath -ldflags "$(LD_FLAGS)"; \
+define Build/Configure
+	(cd $(PKG_BUILD_DIR); \
+		NODE_OPTIONS=--openssl-legacy-provider make js-deps js-build; \
+		zip -r embed.zip build; \
 	)
+endef
 
-clean:
-	rm -rf $(SRC_NAME)
-	rm -f AdGuardHome
+define Build/Compile
+	(cd $(PKG_BUILD_DIR); \
+		GOOS=linux GOARCH=mipsle CGO_ENABLED=0 \
+		go build -v -o AdGuardHome \
+		-trimpath -ldflags "$(LD_FLAGS) -s -w -buildid=" \
+		.; \
+	)
+endef
+
+$(eval $(call BuildPackage,adguardhome))
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/adguardhome.sh /usr/bin/adguardhome.sh
-	$(ROMFSINST) -p +x $(THISDIR)/AdGuardHome /usr/bin/AdGuardHome
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) ./adguardhome.sh $(ROMFSDIR)/usr/bin/adguardhome.sh
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/AdGuardHome $(ROMFSDIR)/usr/bin/AdGuardHome
