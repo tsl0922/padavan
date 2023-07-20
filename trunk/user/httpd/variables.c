@@ -518,6 +518,7 @@
 			{"udpxy_wport", "", NULL, EVM_RESTART_FIREWALL},
 			{"misc_lpr_x", "", NULL, EVM_RESTART_FIREWALL},
 			{"misc_ping_x", "", NULL, EVM_RESTART_FIREWALL},
+			{"fw_pt_pppoe", "", NULL, EVM_RESTART_SYSCTL},
 			{"fw_lw_enable_x", "", NULL, EVM_RESTART_FIREWALL},
 			{"filter_lw_date_x", "", NULL, EVM_RESTART_FIREWALL},
 			{"filter_lw_time_x", "", NULL, EVM_RESTART_FIREWALL},

@@ -11,6 +11,7 @@ mtd_write/mtd_write
 networkmap/networkmap
 nvram/nvram
 pppoe/pppoe-discovery
+pppoe-relay/pppoe-relay
 ralinkiappd/ralinkiappd
 rc/rc
 resolveip/resolveip

@@ -828,6 +828,18 @@ set_tcp_tweaks(void)
 }
 
 void
+set_passthrough_pppoe(int is_on)
+{
+	char* svcs[] = { "pppoe-relay", NULL };
+	if (is_on && nvram_match("fw_pt_pppoe", "1")) {
+		if (!pids(svcs[0]))
+			eval("/usr/sbin/pppoe-relay", "-C", IFNAME_BR, "-S", get_man_ifname(0));
+	}
+	else
+		kill_services(svcs, 3, 1);
+}
+
+void
 set_igmp_mld_version(void)
 {
 	int force_value;
