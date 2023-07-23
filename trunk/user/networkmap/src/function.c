@@ -8,7 +8,7 @@
 #include <sys/time.h>
 
 #include <netutils.h>
-#include <include/ibox.h>
+#include <ibox.h>
 
 #include "networkmap.h"
 

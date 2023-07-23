@@ -1,3 +1,4 @@
+board.mk
 802.1x/rt2860apd
 dns2tcp/dns2tcp/dns2tcp
 dropbear/dropbearmulti

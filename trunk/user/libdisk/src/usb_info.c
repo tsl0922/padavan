@@ -425,7 +425,7 @@ int has_usb_devices(void)
 			continue;
 		
 		id_parent = get_param_int(line, "Prnt=", 10, -1);
-#if 1
+#if defined(CONFIG_USB_SUPPORT)
 		if (id_parent == 1) {
 			int id_port = get_param_int(line, "Port=", 10, 0);
 #if BOARD_USB_PORT_SWAP

@@ -460,7 +460,7 @@ is_usb_storage_mounted(void)
 	ret = 0;
 	while (fgets(line, sizeof(line), fp)) {
 		if (strncmp(line, "/dev/sd", 7) == 0) {
-#if 1
+#if defined(CONFIG_USB_SUPPORT)
 			int port_num = get_usb_root_port_by_sd_device(line+5);
 			switch (port_num)
 			{

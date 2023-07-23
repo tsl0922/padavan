@@ -1,22 +1,14 @@
-ifndef ROOTDIR
-ROOTDIR=../..
-endif
+include $(ROOTDIR)/rules.mk
 
-CFLAGS  += -ffunction-sections -fdata-sections -fvisibility=hidden
-LDFLAGS += -Wl,--gc-sections
+PKG_NAME:=wsdd2
 
-SHDIR		= $(ROOTDIR)/user/shared
-CFLAGS		+= -I$(SHDIR)
-LDFLAGS		+= -L$(SHDIR) -lshared
+include $(INCLUDE_DIR)/package.mk
 
-all:
-	$(CC) $(CFLAGS) $(LDFLAGS) wsdd2.c wsd.c llmnr.c -o wsdd2
+TARGET_CFLAGS += -I$(STAGING_DIR)/include/shared
+TARGET_LDFLAGS += -L$(STAGING_DIR)/lib
 
-install:
-
-clean:
-	rm -f wsdd2
+$(eval $(call BuildPackage,wsdd2))
 
 romfs:
-	$(ROMFSINST) wsdd2 /sbin/wsdd2
-
+	$(INSTALL_DIR) $(ROMFSDIR)/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/wsdd2 $(ROMFSDIR)/sbin/wsdd2

@@ -1,23 +1,14 @@
-USERDIR = $(ROOTDIR)/user
-SHDIR = $(ROOTDIR)/user/shared
+include $(ROOTDIR)/rules.mk
 
-EXEC = networkmap
-OBJS = function.o networkmap.o
+PKG_NAME:=networkmap
 
-CFLAGS  += -Wall -I. -I$(SHDIR) -I$(SHDIR)/include
-CFLAGS  += -s -DNO_PARALLEL
-#CFLAGS  += -DDEBUG -DDEBUG_MORE
+include $(INCLUDE_DIR)/package.mk
 
-LDFLAGS += -L$(SHDIR) -lshared
+TARGET_CFLAGS += -I$(STAGING_DIR)/include/shared
+TARGET_LDFLAGS += -L$(STAGING_DIR)/lib
 
-all: $(EXEC)
-
-$(EXEC): $(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS) $(CFLAGS)
+$(eval $(call BuildPackage,networkmap))
 
 romfs:
-	$(ROMFSINST) /usr/sbin/$(EXEC)
-
-clean: 
-	rm -rf *.o $(EXEC) *~
-
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/networkmap $(ROMFSDIR)/usr/sbin/networkmap

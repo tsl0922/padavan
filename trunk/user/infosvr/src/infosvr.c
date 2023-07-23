@@ -30,7 +30,7 @@
 #include <fcntl.h>
 #include <net/if.h>
 
-#include <include/ibox.h>
+#include <ibox.h>
 #include "infosvr.h"
 
 #define SRV_ADDR INADDR_ANY

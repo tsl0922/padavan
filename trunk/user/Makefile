@@ -16,6 +16,9 @@ include $(ARCH_CONFIG)
 
 INSTALLDIR = $(ROOTDIR)/romfs
 
+BOARD_CONFIG = $(ROOTDIR)/user/boards.mk
+CFLAGS_CONFIG = $(ROOTDIR)/user/cflags.mk
+
 FS_EXT_ENABLED=n
 FS_FAT_ENABLED=n
 FS_NTFS_ENABLED=n

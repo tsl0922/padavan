@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <fcntl.h>
 
-#include <include/bsd_queue.h>
+#include <bsd_queue.h>
 #include <rstats.h>
 
 #include "rc.h"
