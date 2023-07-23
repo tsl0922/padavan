@@ -1,18 +1,27 @@
-utils_dir_y =
-utils_dir_  =
+include $(ROOTDIR)/rules.mk
 
-utils_dir_y			+= cpu_usage
-utils_dir_y			+= switch
+PKG_NAME:=utils
 
+include $(INCLUDE_DIR)/package.mk
+
+define Build/Compile
+	$(MAKE) -C $(PKG_BUILD_DIR)/cpu_usage $(MAKE_FLAGS) all
+	$(MAKE) -C $(PKG_BUILD_DIR)/switch $(MAKE_FLAGS) all
 ifdef CONFIG_RA_HW_NAT
-utils_dir_y			+= hw_nat
+	$(MAKE) -C $(PKG_BUILD_DIR)/hw_nat $(MAKE_FLAGS) all
 endif
+endef
 
-all romfs:
-	for i in $(utils_dir_y) ; do make -C $$i $@ || exit $?; done
+$(eval $(call BuildPackage,utils))
 
-clean:
-	for i in `ls -d *` ; do \
-		[ ! -d $$i ] || \
-		$(MAKE) -C $$i clean ; \
-	done
+romfs:
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/cpu_usage/cpu $(ROMFSDIR)/usr/bin/cpu
+	$(INSTALL_DIR) $(ROMFSDIR)/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/switch/switch $(ROMFSDIR)/sbin/switch
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/switch/mii_mgr $(ROMFSDIR)/sbin/mii_mgr
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/switch/mii_mgr_cl45 $(ROMFSDIR)/sbin/mii_mgr_cl45
+ifdef CONFIG_RA_HW_NAT
+	$(INSTALL_DIR) $(ROMFSDIR)/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/hw_nat/hw_nat $(ROMFSDIR)/bin/hw_nat
+endif

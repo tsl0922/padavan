@@ -3,6 +3,3 @@ all:
 
 clean:
 	rm -f cpu
-
-romfs:
-	$(ROMFSINST) /usr/bin/cpu

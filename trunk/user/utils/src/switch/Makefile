@@ -15,11 +15,6 @@ mii_mgr: mii_mgr.c
 mii_mgr_cl45: mii_mgr_cl45.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-romfs:
-	$(ROMFSINST) /sbin/switch
-	$(ROMFSINST) /sbin/mii_mgr
-	$(ROMFSINST) /sbin/mii_mgr_cl45
-
 clean:
 	-rm -f $(EXEC) *.elf *.gdb *.o
 

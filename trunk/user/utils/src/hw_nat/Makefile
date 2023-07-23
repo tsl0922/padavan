@@ -14,8 +14,5 @@ all: $(EXEC)
 hw_nat: $(HWNAT_OBJS) $(CONF_H)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(HWNAT_OBJS) 
 
-romfs:
-	$(ROMFSINST) /bin/hw_nat
-
 clean:
 	rm -f $(EXEC) *.o
