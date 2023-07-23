@@ -1,23 +1,37 @@
-SRC_NAME=wpa_supplicant
+include $(ROOTDIR)/rules.mk
 
+PKG_NAME:=wpa_supplicant
 
-all:
-	cp -f $(SRC_NAME)/.config.def $(SRC_NAME)/.config
+include $(INCLUDE_DIR)/package.mk
+
+CONFIGS :=
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_EAP_PEAP),y)
-	echo CONFIG_EAP_TTLS=y >> $(SRC_NAME)/.config
-	echo CONFIG_EAP_PEAP=y >> $(SRC_NAME)/.config
-	echo CONFIG_EAP_MSCHAPV2=y >> $(SRC_NAME)/.config
-else ifeq (,$(wildcard $(STAGEDIR)/lib/pkgconfig/openssl.pc))
-	echo CONFIG_TLS=internal >> $(SRC_NAME)/.config
-	echo CONFIG_CRYPTO=internal >> $(SRC_NAME)/.config
-	echo CONFIG_INTERNAL_LIBTOMMATH=y >> $(SRC_NAME)/.config
-	echo CONFIG_INTERNAL_RC4=y >> $(SRC_NAME)/.config
+CONFIGS += \
+	CONFIG_EAP_TTLS=y \
+	CONFIG_EAP_PEAP=y \
+	CONFIG_EAP_MSCHAPV2=y
+else ifeq (,$(wildcard $(STAGING_DIR)/lib/pkgconfig/openssl.pc))
+CONFIGS += \
+	CONFIG_TLS=internal \
+	CONFIG_CRYPTO=internal \
+	CONFIG_INTERNAL_LIBTOMMATH=y \
+	CONFIG_INTERNAL_RC4=y
 endif
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 
-clean:
-	$(MAKE) -C $(SRC_NAME) clean
+define Build/Configure
+	(cd $(PKG_BUILD_DIR)/wpa_supplicant; \
+	cp -f .config.def .config; \
+	$(foreach c,$(CONFIGS),echo $(c) >> .config;) \
+	)
+endef
+
+define Build/Compile
+	$(MAKE) -C $(PKG_BUILD_DIR)/wpa_supplicant $(MAKE_FLAGS) all
+endef
+
+$(eval $(call BuildPackage,wpa_supplicant))
 
 romfs:
-	$(ROMFSINST) $(SRC_NAME)/wpa_cli /usr/sbin/wpa_cli
-	$(ROMFSINST) $(SRC_NAME)/wpa_supplicant /usr/sbin/wpa_supplicant
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/wpa_supplicant/wpa_cli $(ROMFSDIR)/usr/sbin/wpa_cli
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/wpa_supplicant/wpa_supplicant $(ROMFSDIR)/usr/sbin/wpa_supplicant
