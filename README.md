@@ -10,6 +10,7 @@ This project is based on original rt-n56u with latest mtk 4.4.198 kernel, which 
 - Upgraded the toolchain and libc:
   - gcc 12.3.0
   - musl 1.2.4 / uClibc-ng 1.0.43
+ - OpenWrt style package Makefile
  - Enabled kernel cgroups support
  - Fixed K2P led label names
  - Replaced udpxy with msd_lite
@@ -55,7 +56,7 @@ This project is based on original rt-n56u with latest mtk 4.4.198 kernel, which 
   ```sh
   # Debian/Ubuntu
   sudo apt install unzip libtool-bin ccache curl cmake gperf gawk flex bison nano xxd \
-      fakeroot kmod cpio git python3-docutils gettext automake autopoint \
+      fakeroot kmod cpio bc zip git python3-docutils gettext automake autopoint \
       texinfo build-essential help2man pkg-config zlib1g-dev libgmp3-dev \
       libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget libc-dev-bin
   ```
