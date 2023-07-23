@@ -1,17 +1,13 @@
-THISDIR = $(shell pwd)
-EXEC = ralinkiappd
-OBJS = rtmpiapp.o mt_iapp_util.o
+include $(ROOTDIR)/rules.mk
 
-# If you want to debug daemon, add following line
-CFLAGS += -I./ -DDBG -DSYSLOG -ffunction-sections -fdata-sections -fvisibility=hidden
-LDFLAGS += -Wl,--gc-sections
-#-DSYSLOG
-$(EXEC): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
+PKG_NAME:=ralinkiappd
+
+include $(INCLUDE_DIR)/package.mk
+
+$(eval $(call BuildPackage,ralinkiappd))
 
 romfs:
-	$(ROMFSINST) /sbin/$(EXEC)
-	$(ROMFSINST) -p +x $(THISDIR)/iappd.sh /usr/bin/iappd.sh
-
-clean:
-	rm -f core *.o ralinkiappd
+	$(INSTALL_DIR) $(ROMFSDIR)/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ralinkiappd $(ROMFSDIR)/sbin/ralinkiappd
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) ./iappd.sh $(ROMFSDIR)/usr/bin/iappd.sh
