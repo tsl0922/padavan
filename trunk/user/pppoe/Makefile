@@ -1,22 +1,15 @@
-EXEC = pppoe-discovery
-THISDIR = $(shell pwd)
-RP_VERSION=3.12
-CFLAGS += '-DRP_VERSION="$(RP_VERSION)"'
-CFLAGS += $(if $(CONFIG_RAETH_GMAC2),,-DUSE_SINGLE_MAC)
+include $(ROOTDIR)/rules.mk
 
-all: $(EXEC)
+PKG_NAME:=pppoe
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ -fPIC $^
+include $(INCLUDE_DIR)/package.mk
 
-pppoe-discovery:  pppoe-discovery.o discovery.o if.o common.o debug.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+TARGET_CFLAGS += $(if $(CONFIG_RAETH_GMAC2),,-DUSE_SINGLE_MAC)
 
-romfs:  
-	$(ROMFSINST) $(THISDIR)/detect.sh /usr/bin/detect.sh
-	$(ROMFSINST) $(THISDIR)/mwan.sh /usr/bin/mwan.sh
-	$(ROMFSINST) /usr/bin/pppoe-discovery
+$(eval $(call BuildPackage,pppoe))
 
-clean:
-	rm -f $(EXEC) *.o
-
+romfs:
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/pppoe-discovery $(ROMFSDIR)/usr/bin/pppoe-discovery
+	$(INSTALL_BIN) ./detect.sh $(ROMFSDIR)/usr/bin/detect.sh
+	$(INSTALL_BIN) ./mwan.sh $(ROMFSDIR)/usr/bin/mwan.sh
