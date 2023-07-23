@@ -1,16 +1,11 @@
-CFLAGS+=-Os -Wall -I. $(EXTRACFLAGS)
-LDFLAGS+=-s
-LIBS=md5.o rmd160.o
+include $(ROOTDIR)/rules.mk
 
-lanauth: lanauth.o $(LIBS)
-	$(CC) $(CFLAGS) $(LDFLAGS) lanauth.o -o lanauth $(LIBS)
+PKG_NAME:=lanauth
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $<
+include $(INCLUDE_DIR)/package.mk
 
-clean:
-	rm -f *.o lanauth
+$(eval $(call BuildPackage,lanauth))
 
 romfs:
-	$(STRIP) lanauth
-	$(ROMFSINST) /usr/sbin/lanauth
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lanauth $(ROMFSDIR)/usr/sbin/lanauth
