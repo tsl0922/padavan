@@ -1,8 +1,7 @@
 SRC_NAME=strongswan-5.9.10
 URL_PATH=https://download.strongswan.org/$(SRC_NAME).tar.bz2
 
-CFLAGS += -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections,-L$(STAGEDIR)/lib,-rpath-link=$(THISDIR)/$(SRC_NAME)/src/libtls/.libs -lcrypto
+LDFLAGS += -L$(STAGEDIR)/lib,-rpath-link=$(THISDIR)/$(SRC_NAME)/src/libtls/.libs -lcrypto
 
 THISDIR = $(shell pwd)
 

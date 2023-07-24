@@ -21,12 +21,10 @@ endif
 CFLAGS += -DSUPPORT_LPRng
 CFLAGS += -Wall -I.
 CFLAGS += $(DEBFLAGS)
-CFLAGS += -ffunction-sections -fdata-sections
 
 LDFLAGS += -lpthread
 LDFLAGS += -lshared
 LDFLAGS += -lusb
-LDFLAGS += -Wl,--gc-sections
 
 all: $(PROGS)
 

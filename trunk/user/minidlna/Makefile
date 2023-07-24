@@ -1,9 +1,7 @@
 SRC_NAME=minidlna-1.3.3
 SRC_URL=https://sourceforge.net/projects/minidlna/files/minidlna/1.3.3/minidlna-1.3.3.tar.gz 
 
-CFLAGS  += -ffunction-sections -fdata-sections
 CFLAGS  += -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
-LDFLAGS += -Wl,--gc-sections
 
 THISDIR = $(shell pwd)
 

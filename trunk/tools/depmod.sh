@@ -29,7 +29,7 @@ cp -f "$ipset_dir/xt_set.ko" "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/k
 cp -f "$ipset_dir/ipset/"*.ko "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/kernel/net/netfilter/ipset"
 
 if [ "$CONFIG_FIRMWARE_INCLUDE_ANTFS" = "y" ] ; then
-	antfs_dir="${ROOTDIR}/user/antfs"
+	antfs_dir="${ROOTDIR}/build/antfs-07.19"
 	mkdir -p "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/kernel/antfs"
 	cp -f "$antfs_dir/"antfs.ko "${INSTALL_MOD_PATH}/lib/modules/${KERNELRELEASE}/kernel/antfs"
 fi

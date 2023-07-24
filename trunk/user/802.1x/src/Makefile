@@ -1,6 +1,3 @@
-CFLAGS  += -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections
-
 # If you want to support multiple radius server for multiple bssid, add following line
 #CFLAGS += -DMULTIPLE_RADIUS
 

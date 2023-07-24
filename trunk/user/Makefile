@@ -14,6 +14,10 @@ UCLINUX_BUILD_USER=1
 include $(PROJECT_CONFIG)
 include $(ARCH_CONFIG)
 
+CFLAGS  += -ffunction-sections -fdata-sections
+CPPFLAGS += -ffunction-sections -fdata-sections
+LDFLAGS += -Wl,--gc-sections
+
 INSTALLDIR = $(ROOTDIR)/romfs
 
 BOARD_CONFIG = $(ROOTDIR)/user/boards.mk

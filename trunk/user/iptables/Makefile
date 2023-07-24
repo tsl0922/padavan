@@ -10,9 +10,6 @@ include $(INCLUDE_DIR)/package.mk
 
 SRC_DIR=./iptables-1.8.7
 
-TARGET_CFLAGS  += -ffunction-sections -fdata-sections
-TARGET_LDFLAGS += -Wl,--gc-sections
-
 CONFIGURE_ARGS += \
 	--enable-static \
 	--disable-shared \

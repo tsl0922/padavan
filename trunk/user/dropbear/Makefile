@@ -21,8 +21,6 @@ endif
 ifneq ($(CONFIG_FIRMWARE_INCLUDE_DROPBEAR_FAST_CODE),y)
 TARGET_CFLAGS += -DDROPBEAR_SMALL_CODE
 endif
-TARGET_CFLAGS += -ffunction-sections -fdata-sections
-TARGET_LDFLAGS += -Wl,--gc-sections
 
 CONFIGURE_ARGS += \
 	--disable-lastlog \

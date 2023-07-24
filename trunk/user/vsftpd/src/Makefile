@@ -2,15 +2,13 @@
 
 IFLAGS	 = -idirafter dummyinc
 
-CFLAGS	+= -O2 -Wall -W -Wshadow -Wformat-security -D_FORTIFY_SOURCE=2
-CFLAGS	+= -ffunction-sections -fdata-sections
+CFLAGS	+= -W -Wshadow -Wformat-security -D_FORTIFY_SOURCE=2
 
 LDFLAGS	+= -ldisk -lshared
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_FTPD_SSL),y)
 CFLAGS	+= -DVSF_BUILD_SSL
 LDFLAGS	+= -lssl -lcrypto
 endif
-LDFLAGS	+= -Wl,--gc-sections
 
 OBJS	= main.o utility.o prelogin.o ftpcmdio.o postlogin.o privsock.o \
 	tunables.o ftpdataio.o secbuf.o ls.o asus_ext.o \

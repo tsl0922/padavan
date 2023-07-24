@@ -1,7 +1,6 @@
 SRC_NAME=rpcbind-91973cc
 
-CFLAGS += -ffunction-sections -fdata-sections -fvisibility=hidden
-LDFLAGS += -Wl,--gc-sections
+CFLAGS += -fvisibility=hidden
 
 all: config_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)

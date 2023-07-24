@@ -11,11 +11,6 @@ CFLAGS+=-static
 LUAMYCFLAGS+=-static
 endif
 
-CFLAGS  += -ffunction-sections -fdata-sections
-CPPFLAGS += -ffunction-sections -fdata-sections
-LUAMYCFLAGS += -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections
-
 embedded:
 	make -C $(LUA) a MYCFLAGS='$(LUAMYCFLAGS)'
 	$(CC) $(CFLAGS) -c -o md5.o md5c.c

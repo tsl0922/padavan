@@ -3,8 +3,6 @@ SRC_URL=https://mirrors.edge.kernel.org/pub/linux/kernel/people/tytso/e2fsprogs/
 
 THISDIR = $(shell pwd)
 
-CFLAGS += -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections
 CONFIGURE_VARS =
 
 ifneq (,$(findstring musl,$(CROSS_COMPILE)))

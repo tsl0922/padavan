@@ -25,8 +25,6 @@
 
 EXEC     = comgt
 OBJS     = comgt.c
-CFLAGS  := $(CFLAGS) -ffunction-sections -fdata-sections
-LDFLAGS := $(LDFLAGS) -Wl,--gc-sections
 
 all: $(EXEC)
 

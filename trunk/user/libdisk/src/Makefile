@@ -17,7 +17,7 @@ HEADERS := $(shell ls *.h)
 all: libdisk.so test_share
 
 libdisk.so: $(OBJS)
-	$(LD) $(LDFLAGS) -shared -o $@ $^
+	$(LD) -shared -o $@ $^
 
 test_share: test_share.o libdisk.so
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^

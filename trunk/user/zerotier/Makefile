@@ -3,8 +3,7 @@ SRC_URL = https://github.com/zerotier/ZeroTierOne/archive/refs/tags/1.10.6.tar.g
 
 THISDIR = $(shell pwd)
 FLAGS := DEFS=""
-CFLAGS := -Os -ffunction-sections -fdata-sections
-LDFLAGS := -Wl,--gc-sections,--as-needed -static-libstdc++
+LDFLAGS := -static-libstdc++
 
 all: download_test extract_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)

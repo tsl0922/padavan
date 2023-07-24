@@ -22,9 +22,6 @@ CFLAGS += -DHDPARM_MINI
 endif
 LDFLAGS = -s
 
-CFLAGS += -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections
-
 INSTALL = install
 INSTALL_DATA = $(INSTALL) -m 644
 INSTALL_DIR = $(INSTALL) -m 755 -d

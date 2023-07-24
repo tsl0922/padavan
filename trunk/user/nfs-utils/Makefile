@@ -1,8 +1,7 @@
 SRC_NAME=nfs-utils-2.5.4
 SRC_URL=https://www.kernel.org/pub/linux/utils/nfs-utils/2.5.4/$(SRC_NAME).tar.xz
 
-CFLAGS += -ffunction-sections -fdata-sections -fvisibility=hidden -D_LARGEFILE64_SOURCE
-LDFLAGS += -Wl,--gc-sections
+CFLAGS += -fvisibility=hidden -D_LARGEFILE64_SOURCE
 
 all: download_test extract_test config_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
