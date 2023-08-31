@@ -593,8 +593,38 @@ setkernel_tz(void)
 	settimeofday(tvp, &tz);
 }
 
+#if defined (BOARD_K2P)
+static void led_control(int gpio_led, int flag);
+
 void 
 LED_CONTROL(int gpio_led, int flag)
+{
+	switch (gpio_led)
+	{
+		case LED_PWR:
+			led_control(LED_WIFI, !flag);
+			led_control(LED_WAN, 0);
+			break;
+		case LED_WIFI:
+			led_control(LED_PWR, !flag);
+			led_control(LED_WAN, 0);
+			break;
+		case LED_WAN:
+			led_control(LED_PWR, 0);
+			led_control(LED_WIFI, !flag);
+			break;
+		default:
+			break;
+	}
+	led_control(gpio_led, flag);
+}
+
+static void
+led_control(int gpio_led, int flag)
+#else
+void 
+LED_CONTROL(int gpio_led, int flag)
+#endif
 {
 	int front_led_x = 1;
 
