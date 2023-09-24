@@ -541,6 +541,9 @@ do_gcc_core_backend() {
         if [ -n "${CT_CC_GCC_MULTILIB_LIST}" ]; then
             extra_config+=("--with-multilib-list=${CT_CC_GCC_MULTILIB_LIST}")
         fi
+        if [ -n "${CT_CC_GCC_MULTILIB_GENERATOR}" ]; then
+            extra_config+=("--with-multilib-generator=${CT_CC_GCC_MULTILIB_GENERATOR}")
+        fi
     fi
 
     CT_DoLog DEBUG "Extra config passed: '${extra_config[*]}'"
@@ -1049,6 +1052,8 @@ do_gcc_backend() {
     
     if [ "${build_libstdcxx}" = "no" ]; then
         extra_config+=(--disable-libstdcxx)
+    elif [ "${CT_CC_GCC_EXTRA_LIBSTDCXX}" = "y" ]; then
+        extra_config+=(--enable-libstdcxx)
     fi
 
     if [ "${CT_LIBC_PICOLIBC}" = "y" ]; then
@@ -1201,6 +1206,9 @@ do_gcc_backend() {
         extra_config+=("--enable-multiarch")
         if [ -n "${CT_CC_GCC_MULTILIB_LIST}" ]; then
             extra_config+=("--with-multilib-list=${CT_CC_GCC_MULTILIB_LIST}")
+        fi
+        if [ -n "${CT_CC_GCC_MULTILIB_GENERATOR}" ]; then
+            extra_config+=("--with-multilib-generator=${CT_CC_GCC_MULTILIB_GENERATOR}")
         fi
     fi
 
