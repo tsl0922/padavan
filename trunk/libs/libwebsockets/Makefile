@@ -25,6 +25,8 @@ CMAKE_OPTIONS += \
 	-DLWS_WITH_UDP=OFF \
 	-DLWS_WITHOUT_CLIENT=ON
 
+TARGET_CFLAGS += -Wno-error=enum-int-mismatch
+
 $(eval $(call BuildPackage,libwebsockets))
 
 romfs:
