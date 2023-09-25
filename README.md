@@ -8,8 +8,8 @@ This project is based on original rt-n56u with latest mtk 4.4.198 kernel, which 
 - Optimized Makefiles and build scripts, added a toplevel Makefile
 - Added ccache support, may save up to 50%+ build time
 - Upgraded the toolchain and libc:
-  - gcc 12.3.0
-  - musl 1.2.4 / uClibc-ng 1.0.43
+  - gcc 13.2.0
+  - musl 1.2.4
  - OpenWrt style package Makefile
  - Enabled kernel cgroups support
  - Fixed K2P led label names
