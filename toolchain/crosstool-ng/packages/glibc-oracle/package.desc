@@ -1,5 +1,0 @@
-master='glibc'
-repository='git https://github.com/oracle/glibc.git'
-origin='Oracle'
-src_release='n'
-src_devel='y'

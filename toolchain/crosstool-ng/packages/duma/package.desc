@@ -1,5 +1,0 @@
-repository='git https://github.com/johnsonjh/duma'
-mirrors='https://github.com/johnsonjh/duma/archive/refs/tags'
-archive_filename='VERSION_@{version}'
-archive_dirname='@{pkg_name}-VERSION_@{version}'
-archive_formats='.tar.gz .zip'

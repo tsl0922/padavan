@@ -1,7 +1,0 @@
-repository='git https://gitlab.inria.fr/mpc/mpc.git'
-bootstrap='autoreconf -i'
-mirrors='https://www.multiprecision.org/downloads $(CT_Mirrors GNU mpc)'
-relevantpattern='*.*|.'
-archive_formats='.tar.gz'
-signature_format='packed/.sig'
-milestones='1.1.0'

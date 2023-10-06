@@ -21,17 +21,20 @@ jobs:
             libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget libc-dev-bin
       - name: Build
         run: |
-          make CT_TARGET=${{ matrix.target }}
-          cd crosstool-ng/toolchain-mipsel
-          tar cJf ../${{ matrix.target }}.tar.xz *
+          make CT_TARGET=${CT_TARGET} CT_VERSION=${CT_VERSION}
+          cd crosstool-ng-${CT_VERSION}/toolchain-mipsel
+          tar cJf ../../${CT_TARGET}.tar.xz *
+        env:
+          CT_TARGET: ${{ matrix.target }}
+          CT_VERSION: 1.26.0
         working-directory: toolchain
       - uses: actions/upload-artifact@v3
         with:
           name: toolchain
-          path: toolchain/crosstool-ng/${{ matrix.target }}.tar.xz
+          path: toolchain/${{ matrix.target }}.tar.xz
       - uses: svenstaro/upload-release-action@2.2.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: toolchain/crosstool-ng/${{ matrix.target }}.tar.xz
+          file: toolchain/${{ matrix.target }}.tar.xz
           tag: toolchain
           overwrite: true
