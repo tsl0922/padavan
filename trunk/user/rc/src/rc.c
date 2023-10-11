@@ -680,7 +680,6 @@ LED_CONTROL(int gpio_led, int flag)
 	if (flag != LED_OFF && !nvram_get_int("led_front_t"))
 		flag = LED_OFF;
 
-	logmessage(LOGNAME, "LED_CONTROL: %s=%d", led_to_name(gpio_led), flag);
 	gpio_led_set(gpio_led, flag);
 }
 
