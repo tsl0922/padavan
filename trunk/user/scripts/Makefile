@@ -1,32 +1,33 @@
-THISDIR = $(shell pwd)
-all:
+include $(ROOTDIR)/rules.mk
 
-clean:
+PKG_NAME:=scripts
+
+include $(INCLUDE_DIR)/package.mk
+
+define Build/Prepare
+	$(CP) ./files $(PKG_BUILD_DIR)/
+	mkdir -p $(PKG_BUILD_DIR)/files/usr/share/terminfo
+	tar -xzf ./terminfo.tar.gz -C $(PKG_BUILD_DIR)/files/usr/share
+endef
+
+define Build/Configure
+endef
+
+define Build/Compile
+endef
+
+$(eval $(call BuildPackage,scripts))
 
 romfs:
 	fakeroot ./makedevlinks $(ROMFSDIR)
-	$(ROMFSINST) /sbin/dev_init.sh
-	$(ROMFSINST) /sbin/reset_ss.sh
-	$(ROMFSINST) /sbin/mtd_storage.sh
-	$(ROMFSINST) -p +x $(THISDIR)/copyscripts.sh /usr/bin/copyscripts.sh
-	$(ROMFSINST) -p +x $(THISDIR)/autostart.sh /usr/bin/autostart.sh
-ifeq ($(STORAGE_ENABLED),y)
-	$(ROMFSINST) /sbin/automount.sh
+	$(CP) $(PKG_BUILD_DIR)/files/* $(ROMFSDIR)/
+ifneq ($(STORAGE_ENABLED),y)
+	rm -f $(ROMFSDIR)/sbin/automount.sh
 endif
-ifdef CONFIG_BLK_DEV_SD
-	$(ROMFSINST) /sbin/hddtune.sh
-	$(ROMFSINST) /sbin/spindown.sh
+ifndef CONFIG_BLK_DEV_SD
+	rm -f $(ROMFSDIR)/sbin/hddtune.sh
+	rm -f $(ROMFSDIR)/sbin/spindown.sh
 endif
-ifdef CONFIG_MTD_UBI
-	$(ROMFSINST) /sbin/rwfs2ubi.sh
+ifndef CONFIG_MTD_UBI
+	rm -f $(ROMFSDIR)/sbin/rwfs2ubi.sh
 endif
-	$(ROMFSINST) /etc_ro/protocols
-	$(ROMFSINST) /etc_ro/services
-	$(ROMFSINST) /etc_ro/profile
-	$(ROMFSINST) /etc_ro/shells
-	$(ROMFSINST) /etc_ro/mdev.conf
-	$(ROMFSINST) /etc_ro/banner
-	mkdir -p $(INSTALLDIR)/usr/share/terminfo
-	tar -xzf ./terminfo.tar.gz -C $(INSTALLDIR)/usr/share
-	$(ROMFSINST) /sbin/check_crontab.sh
-	$(ROMFSINST) $(THISDIR)/certs.tgz /etc_ro/certs.tgz
