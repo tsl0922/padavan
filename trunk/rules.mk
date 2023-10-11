@@ -9,6 +9,7 @@ TOOLCHAIN_DIR=$(CONFIG_CROSS_COMPILER_ROOT)
 PKG_CONFIG_LIBDIR=$(STAGING_DIR)/lib/pkgconfig:$(STAGING_DIR)/share/pkgconfig
 
 export TOPDIR PKG_CONFIG_LIBDIR
+export TMP_DIR:=$(TOPDIR)/tmp
 
 CP:=cp -fpR
 LN:=ln -sf
