@@ -32,5 +32,3 @@ $(eval $(call BuildPackage,dnsmasq))
 romfs:
 	$(INSTALL_DIR) $(ROMFSDIR)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/dnsmasq $(ROMFSDIR)/usr/sbin/dnsmasq
-	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
-	$(INSTALL_BIN) ./dnsmasq.sh $(ROMFSDIR)/usr/bin/dnsmasq.sh

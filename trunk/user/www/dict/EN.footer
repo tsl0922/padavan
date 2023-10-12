@@ -296,6 +296,7 @@ DDNS_CheckIP_item0=Use default (from profile)
 DDNS_Period=DDNS Update Period:
 DDNS_Forced=DDNS Forced Update Period:
 DDNS_Verbose=Syslog Verbose Level:
+DHCP_Filter_AAAA=Filter IPv6 AAAA Records:
 DHCP_Verbose=DHCP Server Verbose:
 STB_Isolation=IPTV STB Port(s) Isolation:
 STB_IsolationItem1=Isolation between Router CPU Port
