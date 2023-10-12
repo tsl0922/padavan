@@ -1,42 +1,20 @@
-SRC_NAME = socat-1.7.4.4
-SRC_URL = http://www.dest-unreach.org/socat/download/$(SRC_NAME).tar.bz2
-THISDIR = $(shell pwd)
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=socat
+PKG_VERSION:=1.7.4.4
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.bz2 ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.bz2 $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE_URL:=http://www.dest-unreach.org/socat/download
+PKG_HASH:=fbd42bd2f0e54a3af6d01bdf15385384ab82dbc0e4f1a5e153b3e0be1b6380ac
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar xf $(SRC_NAME).tar.bz2; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+CONFIGURE_ARGS += \
+	--disable-openssl \
+	--disable-readline
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=/usr \
-		--disable-openssl \
-		--disable-readline \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
+$(eval $(call BuildPackage,socat))
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/socat /usr/bin/socat
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/socat $(ROMFSDIR)/usr/bin/socat
