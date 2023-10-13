@@ -1,15 +1,16 @@
-SRC_NAME = dns2tcp
-THISDIR = $(shell pwd)
+include $(ROOTDIR)/rules.mk
 
-all: 
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) CC="$(CC)"
+PKG_NAME:=dns2tcp
+PKG_VERSION:=1.1.0
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) clean ; \
-	fi ; \
-	rm -f config_done
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://codeload.github.com/zfl9/dns2tcp/tar.gz/v$(PKG_VERSION)?
+PKG_HASH:=31eb878583e6b10bd11300be4307a20e4f611709f0ee5b220bd198b203a62840
+
+include $(INCLUDE_DIR)/package.mk
+
+$(eval $(call BuildPackage,dns2tcp))
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/dns2tcp /usr/bin/dns2tcp
-
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/dns2tcp $(ROMFSDIR)/usr/bin/dns2tcp
