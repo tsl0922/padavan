@@ -8,6 +8,28 @@ PKG_JOBS ?= -j$(HOST_NCPU)
 SRC_DIR ?= ./src
 PATCH_DIR ?= ./patches
 
+PKG_BUILD_FLAGS?=
+__unknown_flags=$(filter-out gc-sections no-gc-sections lto no-lto,$(PKG_BUILD_FLAGS))
+ifneq ($(__unknown_flags),)
+  $(error unknown PKG_BUILD_FLAGS: $(__unknown_flags))
+endif
+
+# $1=flagname, $2=default (0/1)
+define pkg_build_flag
+$(if $(filter no-$(1),$(PKG_BUILD_FLAGS)),0,$(if $(filter $(1),$(PKG_BUILD_FLAGS)),1,$(2)))
+endef
+
+ifeq ($(call pkg_build_flag,gc-sections,$(if $(CONFIG_USE_GC_SECTIONS),1,0)),1)
+  TARGET_CFLAGS+= -ffunction-sections -fdata-sections
+  TARGET_CXXFLAGS+= -ffunction-sections -fdata-sections
+  TARGET_LDFLAGS+= -Wl,--gc-sections
+endif
+ifeq ($(call pkg_build_flag,lto,$(if $(CONFIG_USE_LTO),1,0)),1)
+  TARGET_CFLAGS+= -flto=auto -fno-fat-lto-objects
+  TARGET_CXXFLAGS+= -flto=auto -fno-fat-lto-objects
+  TARGET_LDFLAGS+= -flto=auto -fuse-linker-plugin
+endif
+
 include $(INCLUDE_DIR)/download.mk
 include $(INCLUDE_DIR)/unpack.mk
 include $(INCLUDE_DIR)/autotools.mk
