@@ -1,30 +1,16 @@
-SRC_NAME = ipt2socks-1.1.3
-SRC_URL = https://github.com/zfl9/ipt2socks/archive/refs/tags/v1.1.3.tar.gz
-THISDIR = $(shell pwd)
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) CC="$(CC)"
+PKG_NAME:=ipt2socks
+PKG_VERSION:=1.1.3
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://codeload.github.com/zfl9/ipt2socks/tar.gz/v$(PKG_VERSION)?
+PKG_HASH:=5279eb1cb7555cf9292423cc9f672dc43e6e214b3411a6df26a6a1cfa59d88b7
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar zxf $(SRC_NAME).tar.gz ; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
-
-clean:
-	rm -rf $(SRC_NAME)
-	rm -f config_done
+$(eval $(call BuildPackage,ipt2socks))
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/ipt2socks /usr/bin/ipt2socks
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ipt2socks $(ROMFSDIR)/usr/bin/ipt2socks
