@@ -62,7 +62,24 @@ This project is based on original rt-n56u with latest mtk 4.4.198 kernel, which 
   ```
   **Optional:**
   - install [golang](https://go.dev/doc/install) for building go programs
+    ```sh
+    sudo rm -rf /usr/local/go
+    curl -fsSL https://go.dev/dl/go1.20.10.linux-amd64.tar.gz | sudo tar -C /usr/local -xz
+    echo "export PATH=\$PATH:/usr/local/go/bin" | sudo tee /etc/profile.d/go.sh
+    source /etc/profile.d/go.sh
+    go version
+    ```
   - install [nodejs](https://nodejs.org/en/download) for building [AdGuardHome](trunk/user/adguardhome)
+    ```sh
+    sudo apt update
+    sudo apt install -y ca-certificates curl gnupg
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+    sudo apt update
+    sudo apt install -y nodejs
+    node -v
+    ```
 - Clone source code
   ```sh
   git clone https://github.com/tsl0922/padavan.git
