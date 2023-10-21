@@ -1,39 +1,20 @@
-SRC_NAME = smartdns-38.1
-SRC_URL=https://github.com/pymumu/smartdns/archive/refs/tags/Release42.tar.gz
+include $(ROOTDIR)/rules.mk
 
-THISDIR = $(shell pwd)
+PKG_NAME:=smartdns
+PKG_VERSION:=1.2023.43
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=https://www.github.com/pymumu/smartdns.git
+PKG_SOURCE_VERSION:=1ba6ee7cb98b5b6448bc2a2be318eb3518d4de79
+PKG_MIRROR_HASH:=a31c1d79ffb253507a1a8e0bb8e6d93fa65efef22a3cdd098400157187bbfe20
 
-download_test:
-	( if [ ! -f $(THISDIR)/$(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		mkdir $(SRC_NAME); \
-		tar zxf $(SRC_NAME).tar.gz --strip-components=1 -C $(SRC_NAME) ; \
-	fi )
-
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		touch config_done; \
-	fi )
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) clean ; \
-	fi ; \
-	rm -f config_done
+$(eval $(call BuildPackage,smartdns))
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/src/smartdns /usr/bin/smartdns
-	$(ROMFSINST) -p +x $(THISDIR)/smartdns.sh /usr/bin/smartdns.sh
-	$(ROMFSINST) /etc_ro/smartdns_address.conf
-	$(ROMFSINST) /etc_ro/smartdns_blacklist-ip.conf
-	$(ROMFSINST) /etc_ro/smartdns_custom.conf
-	$(ROMFSINST) /etc_ro/smartdns_whitelist-ip.conf
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/smartdns $(ROMFSDIR)/usr/bin/smartdns
+	$(INSTALL_BIN) ./smartdns.sh $(ROMFSDIR)/usr/bin/smartdns.sh
+	$(INSTALL_DIR) $(ROMFSDIR)/etc_ro
+	$(INSTALL_DATA) ./conf/*.conf $(ROMFSDIR)/etc_ro/
