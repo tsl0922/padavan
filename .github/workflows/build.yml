@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         target: [JCG-AC860M]
-        toolchain: [mipsel-linux-musl]
+        toolchain: [mipsel-linux-uclibc]
     steps:
       - uses: actions/checkout@v3
       - uses: hendrikmuhs/ccache-action@v1.2
