@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        target: [JCG-AC860M]
-        toolchain: [mipsel-linux-uclibc]
+        target: [K2P, K2P-NANO, K2P-USB]
+        toolchain: [mipsel-linux-musl]
     steps:
       - uses: actions/checkout@v3
       - uses: hendrikmuhs/ccache-action@v1.2
