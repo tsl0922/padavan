@@ -1,37 +1,24 @@
-SRC_NAME="libiconv-1.16"
+include $(ROOTDIR)/rules.mk
 
-all: config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=libiconv
+PKG_VERSION:=1.17
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+PKG_SOURCE:=libiconv-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=@GNU/libiconv
+PKG_HASH:=8f74213b56238c85a50a5329f77e06198771e70dd9a739779f4c02f65d971313
+PKG_BUILD_DIR:=$(BUILD_DIR)/libiconv-$(PKG_VERSION)
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-shared \
-		--disable-static \
-		--disable-debug-mode \
-		--enable-relocatable \
-		--disable-nls \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD); \
-	)
+include $(INCLUDE_DIR)/package.mk
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) clean ; \
-	fi ; \
-	rm -f config_done
+CONFIGURE_ARGS += \
+	--enable-shared \
+	--disable-static \
+	--disable-debug-mode \
+	--enable-relocatable \
+	--disable-nls
 
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libiconv))
 
 romfs:
-	cp -fP $(DESTDIR)/lib/libiconv.so* $(ROMFSDIR)/lib
-	chmod +x $(ROMFSDIR)/lib/libiconv.so*
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libiconv.so* $(ROMFSDIR)/lib/

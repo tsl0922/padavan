@@ -1,3 +1,0 @@
-reporter_name="dsreed on freenode/#crosstool-ng"
-reporter_url=""
-reporter_comment="Enables experimental support for VFP/NEON hardware floating point."

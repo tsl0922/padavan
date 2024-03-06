@@ -1,47 +1,29 @@
-SRC_NAME=pcre-8.45
-SRC_URL=https://downloads.sourceforge.net/project/pcre/pcre/8.45/pcre-8.45.zip
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=pcre
+PKG_VERSION:=8.45
 
-download_test:
-	( if [ ! -f $(SRC_NAME).zip ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).zip $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).zip
+PKG_SOURCE_URL:=@SF/pcre
+PKG_HASH:=5b709aa45ea3b8bb73052947200ad187f651a2049158fb5bbfed329e4322a977
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		unzip -qq $(SRC_NAME).zip ; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+CONFIGURE_ARGS += \
+	--enable-utf8 \
+	--enable-unicode-properties \
+	--enable-pcre16 \
+	--disable-cpp \
+	--with-match-limit-recursion=16000
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-utf8 \
-		--enable-unicode-properties \
-		--enable-pcre16 \
-		--disable-cpp \
-		--with-match-limit-recursion=16000 \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+define update_pcre_config_prefix
+	$(SED) 's,^\(prefix\|exec_prefix\)=.*,\1=$(STAGING_DIR)/usr,g' $(STAGING_DIR)/bin/pcre-config
+endef
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
+Hooks/Install/Post += update_pcre_config_prefix
 
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,pcre))
 
 romfs:
-	cp -fP $(DESTDIR)/lib/libpcre.so* $(ROMFSDIR)/lib
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libpcre.so* $(ROMFSDIR)/lib/

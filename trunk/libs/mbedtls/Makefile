@@ -1,48 +1,27 @@
-SRC_NAME=mbedtls-2.28.3
-SRC_URL=https://github.com/Mbed-TLS/mbedtls/archive/v2.28.3.tar.gz
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/build
+PKG_NAME:=mbedtls
+PKG_VERSION:=2.28.4
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://codeload.github.com/ARMmbed/mbedtls/tar.gz/v$(PKG_VERSION)?
+PKG_HASH:=578c4dcd15bbff3f5cd56aa07cd4f850fc733634e3d5947be4f7157d5bfd81ac
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar -xf $(SRC_NAME).tar.gz; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/cmake.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
-
-configure:
-	( mkdir -p $(SRC_NAME)/build && cd $(SRC_NAME)/build ; \
-	cmake -DCMAKE_BUILD_TYPE=Release \
-	-DCMAKE_INSTALL_PREFIX=$(STAGEDIR) \
-	-DCMAKE_TOOLCHAIN_FILE=$(CONFIG_CMAKE_TOOLCHAIN_FILE) \
+CMAKE_OPTIONS += \
 	-DUSE_SHARED_MBEDTLS_LIBRARY=ON \
 	-DUSE_STATIC_MBEDTLS_LIBRARY=OFF \
 	-DENABLE_TESTING=OFF \
 	-DENABLE_PROGRAMS=OFF \
 	-DLINK_WITH_PTHREAD=ON \
-	-DENABLE_ZLIB_SUPPORT=ON \
-	.. \
-	)
+	-DENABLE_ZLIB_SUPPORT=ON
 
-clean:
-	rm -rf $(SRC_NAME)/build
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME)/build install DESTDIR=""
+$(eval $(call BuildPackage,mbedtls))
 
 romfs:
-	cp -fP $(DESTDIR)/lib/libmbedcrypto.so* $(ROMFSDIR)/lib
-	cp -fP $(DESTDIR)/lib/libmbedtls.so* $(ROMFSDIR)/lib
-	cp -fP $(DESTDIR)/lib/libmbedx509.so* $(ROMFSDIR)/lib
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libmbedcrypto.so* $(ROMFSDIR)/lib/
+	$(CP) $(PKG_INSTALL_DIR)/lib/libmbedtls.so* $(ROMFSDIR)/lib/
+	$(CP) $(PKG_INSTALL_DIR)/lib/libmbedx509.so* $(ROMFSDIR)/lib/

@@ -1,52 +1,23 @@
-SRC_NAME=rp-l2tp-0.5-rtn
+include $(ROOTDIR)/rules.mk
 
-CFLAGS   =-O2 -fomit-frame-pointer -pipe -Wall -Wno-trigraphs -Wno-pointer-sign -Wno-strict-aliasing -I$(KERNEL_HEADERS_PATH)
-CFLAGS  +=-DPPPOL2TP_V1
-CFLAGS  += -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections
+PKG_NAME:=rp-l2tp
+PKG_VERSION:=0.5-rtn
 
-all: config_test build
+include $(INCLUDE_DIR)/package.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+SRC_DIR=./rp-l2tp-0.5-rtn
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=/usr \
-		--sysconfdir=/etc \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+CONFIGURE_ARGS += --sysconfdir=/etc
+TARGET_CFLAGS += \
+	-I$(KERNEL_HEADERS_PATH) \
+	-DPPPOL2TP_V1
 
-build:
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
-	rm -f l2tpd
-	rm -f l2tp-control
-	rm -f cmd.so
-	rm -f sync-pppd.so
+$(eval $(call BuildPackage,rp-l2tp))
 
 romfs:
-	cp $(SRC_NAME)/l2tpd .
-	cp $(SRC_NAME)/handlers/l2tp-control .
-	cp $(SRC_NAME)/handlers/cmd.so .
-	cp $(SRC_NAME)/handlers/sync-pppd.so .
-	$(STRIP) l2tpd
-	$(STRIP) l2tp-control
-	$(STRIP) cmd.so
-	$(STRIP) sync-pppd.so
-	mkdir -p $(INSTALLDIR)/usr/lib/l2tp
-	$(ROMFSINST) /usr/sbin/l2tpd
-	$(ROMFSINST) /usr/sbin/l2tp-control
-	$(ROMFSINST) /usr/lib/l2tp/cmd.so
-	$(ROMFSINST) /usr/lib/l2tp/sync-pppd.so
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/l2tpd $(ROMFSDIR)/usr/sbin/l2tpd
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/handlers/l2tp-control $(ROMFSDIR)/usr/sbin/l2tp-control
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/lib/l2tp
+	$(CP) $(PKG_BUILD_DIR)/handlers/cmd.so $(ROMFSDIR)/usr/lib/l2tp/
+	$(CP) $(PKG_BUILD_DIR)/handlers/sync-pppd.so $(ROMFSDIR)/usr/lib/l2tp/

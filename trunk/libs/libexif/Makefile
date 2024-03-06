@@ -1,47 +1,20 @@
-SRC_NAME=libexif-0.6.21
-SRC_URL=https://sourceforge.net/projects/libexif/files/libexif/0.6.21/libexif-0.6.21.tar.bz2
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=libexif
+PKG_VERSION:=0.6.24
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.bz2 ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.bz2 $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE_URL:=https://github.com/libexif/libexif/releases/download/v$(PKG_VERSION)
+PKG_HASH:=d47564c433b733d83b6704c70477e0a4067811d184ec565258ac563d8223f6ae
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar jxf $(SRC_NAME).tar.bz2; \
-		patch -d $(SRC_NAME) -p1 -i ../no-doc-test_update-gettext.patch ; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+CONFIGURE_ARGS += \
+	--enable-static \
+	--disable-shared \
+	--disable-nls \
+	--disable-docs
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-static \
-		--disable-shared \
-		--disable-nls \
-		--disable-docs \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libexif))
 
 romfs:
-

@@ -42,7 +42,7 @@ PLATS= aix ansi bsd freebsd generic linux macosx mingw posix solaris
 
 # What to install.
 TO_BIN= lua luac
-TO_INC= lua.h luaconf.h lualib.h lauxlib.h ../etc/lua.hpp lnum_config.h
+TO_INC= lua.h luaconf.h lualib.h lauxlib.h ../etc/lua.hpp
 TO_LIB= liblua.a liblua.so.$R
 TO_MAN= lua.1 luac.1
 
@@ -63,7 +63,7 @@ install: dummy
 	cd src && $(INSTALL_EXEC) $(TO_BIN) $(INSTALL_BIN)
 	cd src && $(INSTALL_DATA) $(TO_INC) $(INSTALL_INC)
 	cd src && $(INSTALL_DATA) $(TO_LIB) $(INSTALL_LIB)
-	ln -s liblua.so.$R $(INSTALL_LIB)/liblua.so
+	ln -sf liblua.so.$R $(INSTALL_LIB)/liblua.so
 	cd doc && $(INSTALL_DATA) $(TO_MAN) $(INSTALL_MAN)
 
 ranlib:

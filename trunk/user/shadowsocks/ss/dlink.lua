@@ -7,7 +7,6 @@ require 'nixio'
 local cjson = require "cjson"
 -- these global functions are accessed all the time by the event handler
 -- so caching them is worth the effort
-local luci = luci
 local tinsert = table.insert
 local ssub, slen, schar, sbyte, sformat, sgsub = string.sub, string.len, string.char, string.byte, string.format, string.gsub
 local b64decode = nixio.bin.b64decode

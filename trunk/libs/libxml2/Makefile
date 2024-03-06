@@ -1,73 +1,47 @@
-SRC_NAME=libxml2-2.9.9
-SRC_URL=http://xmlsoft.org/sources/$(SRC_NAME).tar.gz
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=libxml2
+PKG_VERSION:=2.11.4
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_SOURCE_URL:=@GNOME/libxml2/$(basename $(PKG_VERSION))
+PKG_HASH:=737e1d7f8ab3f139729ca13a2494fd17bf30ddb4b7a427cf336252cab57f57f7
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar zxf $(SRC_NAME).tar.gz ; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi ) 
+CONFIGURE_ARGS += \
+	--enable-static \
+	--disable-shared \
+	$(if $(CONFIG_IPV6),--enable-ipv6,--disable-ipv6) \
+	--without-catalog \
+	--without-debug \
+	--without-docbook \
+	--without-ftp \
+	--without-http \
+	--without-legacy \
+	--without-lzma \
+	--without-pattern \
+	--without-push \
+	--without-python \
+	--without-readline \
+	--without-regexps \
+	--without-iconv \
+	--without-iso8859x \
+	--with-c14n \
+	--with-html \
+	--with-output \
+	--with-reader \
+	--with-sax1 \
+	--with-schemas \
+	--with-threads \
+	--with-tree \
+	--with-valid \
+	--with-writer \
+	--with-xinclude \
+	--with-xpath \
+	--with-xptr \
+	--with-zlib=$(STAGING_DIR)
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-static \
-		--disable-shared \
-		$(if $(CONFIG_IPV6),--enable-ipv6,--disable-ipv6) \
-		--without-catalog \
-		--without-debug \
-		--without-docbook \
-		--without-ftp \
-		--without-http \
-		--without-legacy \
-		--without-lzma \
-		--without-pattern \
-		--without-push \
-		--without-python \
-		--without-readline \
-		--without-regexps \
-		--without-iconv \
-		--without-iso8859x \
-		--with-c14n \
-		--with-html \
-		--with-output \
-		--with-reader \
-		--with-sax1 \
-		--with-schemas \
-		--with-threads \
-		--with-tree \
-		--with-valid \
-		--with-writer \
-		--with-xinclude \
-		--with-xpath \
-		--with-xptr \
-		--with-zlib=$(STAGEDIR) \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libxml2))
 
 romfs:
-

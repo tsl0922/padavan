@@ -1,45 +1,20 @@
-SRC_NAME=libuv-v1.44.2
-SRC_URL=https://dist.libuv.org/dist/v1.44.2/libuv-v1.44.2.tar.gz
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=libuv
+PKG_VERSION:=1.45.0
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-v$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=http://dist.libuv.org/dist/v$(PKG_VERSION)/
+PKG_HASH:=f5b07f65a1e8166e47983a7ed1f42fae0bee08f7458142170c37332fc676a748
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-v$(PKG_VERSION)
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar -xf $(SRC_NAME).tar.gz ; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/cmake.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+CMAKE_OPTIONS += -DBUILD_TESTING=OFF
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./autogen.sh ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--disable-static \
-		--enable-shared \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libuv))
 
 romfs:
-	cp -fP $(DESTDIR)/lib/libuv.so* $(ROMFSDIR)/lib
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libuv.so* $(ROMFSDIR)/lib/

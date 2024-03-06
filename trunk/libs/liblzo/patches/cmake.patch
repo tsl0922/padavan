@@ -1,0 +1,13 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -60,10 +60,6 @@ if(ENABLE_SHARED AND WIN32)
+     cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR) # needed for WINDOWS_EXPORT_ALL_SYMBOLS
+ endif()
+ 
+-# install directories
+-if(NOT CMAKE_INSTALL_PREFIX)
+-    message(FATAL_ERROR "ERROR: CMAKE_INSTALL_PREFIX is not defined.")
+-endif()
+ include(FindPkgConfig QUIET)
+ include(GNUInstallDirs)
+ 

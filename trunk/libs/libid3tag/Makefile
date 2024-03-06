@@ -1,37 +1,22 @@
-SRC_NAME=libid3tag-0.15.1b
+include $(ROOTDIR)/rules.mk
 
-all: config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=libid3tag
+PKG_VERSION:=0.15.1b
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi ) 
+include $(INCLUDE_DIR)/package.mk
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--disable-debugging \
-		--disable-profiling \
-		$(if $(LIBS_BUILD_SHARED),--disable-static,--enable-static) \
-		$(if $(LIBS_BUILD_SHARED),--enable-shared,--disable-shared) \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+SRC_DIR=./libid3tag-0.15.1b
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
+CONFIGURE_ARGS += \
+	--disable-debugging \
+	--disable-profiling \
+	$(if $(LIBS_BUILD_SHARED),--disable-static,--enable-static) \
+	$(if $(LIBS_BUILD_SHARED),--enable-shared,--disable-shared)
 
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libid3tag))
 
 romfs:
 ifeq ($(LIBS_BUILD_SHARED),y)
-	cp -fP $(DESTDIR)/lib/libid3tag.so* $(ROMFSDIR)/lib ;
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libid3tag.so* $(ROMFSDIR)/lib/
 endif

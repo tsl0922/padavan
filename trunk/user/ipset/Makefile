@@ -1,41 +1,27 @@
-SRC_NAME=ipset-7.11
+include $(ROOTDIR)/rules.mk
 
-THISDIR = $(shell pwd)
+PKG_NAME:=ipset
+PKG_VERSION:=7.11
 
-all: config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
-	$(MAKE) -j$(HOST_NCPU) modules -C $(SRC_NAME)
+PKG_FIXUP:=autoreconf
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./autogen.sh ; \
-	PKG_CONFIG_PATH=$(STAGEDIR)/lib/pkgconfig \
-	./configure \
-		--prefix= \
-		--enable-static \
-		--disable-shared \
-		libmnl_CFLAGS="-I$(STAGEDIR)/include" \
-		libmnl_LIBS="-L$(STAGEDIR)/lib -lmnl" \
-		--with-kmod=yes \
-		--with-kbuild=$(ROOTDIR)/$(LINUXDIR) \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+SRC_DIR=./ipset-7.11
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) modules_clean ; \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
+CONFIGURE_ARGS += \
+	--enable-static \
+	--disable-shared \
+	--with-kmod=yes \
+	--with-kbuild=$(ROOTDIR)/$(LINUXDIR)
+
+define Build/Compile
+	$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) $(MAKE_FLAGS)
+	$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) $(MAKE_FLAGS) LDFLAGS= modules
+endef
+
+$(eval $(call BuildPackage,ipset))
 
 romfs:
-	$(ROMFSINST) $(THISDIR)/$(SRC_NAME)/src/ipset /sbin/ipset
-
+	$(INSTALL_DIR) $(ROMFSDIR)/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/ipset $(ROMFSDIR)/sbin/ipset

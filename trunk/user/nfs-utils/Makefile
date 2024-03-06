@@ -1,10 +1,20 @@
-SRC_NAME=nfs-utils-1.2.8
+SRC_NAME=nfs-utils-2.5.4
+SRC_URL=https://www.kernel.org/pub/linux/utils/nfs-utils/2.5.4/$(SRC_NAME).tar.xz
 
-CFLAGS += -ffunction-sections -fdata-sections -fvisibility=hidden
-LDFLAGS += -Wl,--gc-sections
+CFLAGS += -fvisibility=hidden -D_LARGEFILE64_SOURCE
 
-all: config_test
+all: download_test extract_test config_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+
+download_test:
+	( if [ ! -f $(SRC_NAME).tar.xz ]; then \
+		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.xz $(SRC_URL); \
+	fi )
+
+extract_test:
+	( if [ ! -d $(SRC_NAME) ]; then \
+		tar xJf $(SRC_NAME).tar.xz; \
+	fi )
 
 config_test:
 	( if [ -f ./config_done ]; then \
@@ -15,12 +25,12 @@ config_test:
 
 configure:
 	( cd $(SRC_NAME) && \
-	./autogen.sh ; \
+	autoreconf -fi ; \
 	knfsd_cv_bsd_signals=no \
 	PKG_CONFIG_PATH=$(STAGEDIR)/lib/pkgconfig \
 	./configure \
 		--prefix=/ \
-		--disable-ipv6 \
+		$(if $(CONFIG_IPV6),--enable-ipv6,--disable-ipv6) \
 		--disable-mount \
 		--disable-libmount \
 		--disable-mountconfig \
@@ -33,7 +43,6 @@ configure:
 		--without-gssglue \
 		--without-krb5 \
 		--without-tcp-wrappers \
-		LIBS="-ltirpc" \
 		--host=$(HOST_TARGET) \
 		--build=$(HOST_BUILD) ; \
 	)

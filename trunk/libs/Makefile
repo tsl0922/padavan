@@ -241,5 +241,5 @@ clean: $(patsubst %,%_clean,$(dir_y) $(dir_n) $(dir_))
 %_clean:
 	@echo "\033[37;41m CLEAN \033[0m\033[37;44m   $(@:_clean=)   \033[0m"
 	$(MAKE) -C $(@:_clean=) clean
-	rm -f $(DESTDIR)/.installed_$(dir) || true
+	rm -f $(DESTDIR)/.installed_$(@:_clean=)
 

@@ -38,21 +38,20 @@ struct ethertypeent {
 
 /* Open ethertype data base files and mark them as staying open even
    after a later search if STAY_OPEN is non-zero.  */
-extern void setethertypeent(int __stay_open) __THROW;
+extern void setethertypeent(int __stay_open);
 
 /* Close ethertype data base files and clear `stay open' flag.  */
-extern void endethertypeent(void) __THROW;
+extern void endethertypeent(void);
 
 /* Get next entry from ethertype data base file.  Open data base if
    necessary.  */
-extern struct ethertypeent *getethertypeent(void) __THROW;
+extern struct ethertypeent *getethertypeent(void);
 
 /* Return entry from ethertype data base for network with NAME.  */
-extern struct ethertypeent *getethertypebyname(__const char *__name)
-    __THROW;
+extern struct ethertypeent *getethertypebyname(__const char *__name);
 
 /* Return entry from ethertype data base which number is PROTO.  */
-extern struct ethertypeent *getethertypebynumber(int __ethertype) __THROW;
+extern struct ethertypeent *getethertypebynumber(int __ethertype);
 
 
 #endif				/* ethernetdb.h */

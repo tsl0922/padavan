@@ -1,3 +1,4 @@
+board.mk
 802.1x/rt2860apd
 dns2tcp/dns2tcp/dns2tcp
 dropbear/dropbearmulti
@@ -11,6 +12,7 @@ mtd_write/mtd_write
 networkmap/networkmap
 nvram/nvram
 pppoe/pppoe-discovery
+pppoe-relay/pppoe-relay
 ralinkiappd/ralinkiappd
 rc/rc
 resolveip/resolveip

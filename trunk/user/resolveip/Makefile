@@ -3,8 +3,7 @@ EXEC = resolveip
 OBJS = resolveip.o 
 
 # If you want to debug daemon, add following line
-CFLAGS += -I./ -DDBG -DSYSLOG -ffunction-sections -fdata-sections -fvisibility=hidden
-LDFLAGS += -Wl,--gc-sections
+CFLAGS += -I./ -DDBG -DSYSLOG -fvisibility=hidden
 #-DSYSLOG
 $(EXEC): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)

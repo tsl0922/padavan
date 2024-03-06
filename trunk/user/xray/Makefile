@@ -1,29 +1,30 @@
-SRC_NAME := xray-1.7.5
-SRC_URL := https://github.com/XTLS/Xray-core/archive/refs/tags/v1.7.5.tar.gz
+include $(ROOTDIR)/rules.mk
 
-THISDIR = $(shell pwd)
+PKG_NAME:=xray
+PKG_VERSION:=1.7.5
 
-all: download_test extract_test build
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://codeload.github.com/XTLS/Xray-core/tar.gz/v$(PKG_VERSION)?
+PKG_HASH:=a5fc936136a57a463bf9a895d068fdfa895b168ae6093c58a10208e098b6b2d3
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
+PKG_BUILD_DIR:=$(BUILD_DIR)/Xray-core-$(PKG_VERSION)
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		mkdir -p $(SRC_NAME); \
-		tar xf $(SRC_NAME).tar.gz -C $(SRC_NAME) --strip-components=1; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-build:
-	( cd $(SRC_NAME)/main; \
-	GOOS=linux GOARCH=mipsle CGO_ENABLED=0 go build -o $(THISDIR)/xray -trimpath -ldflags "-s -w -buildid="; \
+define Build/Configure
+endef
+
+define Build/Compile
+	(cd $(PKG_BUILD_DIR); \
+		GOOS=linux GOARCH=mipsle CGO_ENABLED=0 \
+		go build -v -o xray \
+		-trimpath -ldflags "-s -w -buildid=" \
+		./main; \
 	)
+endef
 
-clean:
-	rm -rf $(SRC_NAME)
-	rm -f xray
+$(eval $(call BuildPackage,xray))
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/xray /usr/bin/xray
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/xray $(ROMFSDIR)/usr/bin/xray

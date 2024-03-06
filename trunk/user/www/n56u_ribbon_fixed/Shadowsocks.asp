@@ -42,7 +42,6 @@
 			init_itoggle('ss_watchcat');
 			init_itoggle('ss_update_chnroute');
 			init_itoggle('ss_update_gfwlist');
-			init_itoggle('ss_turn');
 			init_itoggle('socks5_aenable');
 			init_itoggle('ss_schedule_enable', change_on);
 			$j("#tab_ss_cfg, #tab_ss_add, #tab_ss_dlink, #tab_ss_ssl, #tab_ss_cli, #tab_ss_log, #tab_ss_help").click(
@@ -2468,36 +2467,6 @@ setTimeout('document.getElementById("btn_ctime").style.display="none";',1000);
 																		<% nvram_match_x("", "ss_watchcat", "0", "checked"); %>>
 																	<#checkbox_No#>
 															</div>
-														</td>
-													</tr>
-													<!--  <tr> <th>启用自动切换</th>
-<td>
-<div class="main_itoggle">
-<div id="ss_turn_on_of">
-<input type="checkbox" id="ss_turn_fake" <% nvram_match_x("", "ss_turn", "1", "value=1 checked"); %><% nvram_match_x("", "ss_turn", "0", "value=0"); %>>
-</div>
-</div>
-<div style="position: absolute; margin-left: -10000px;">
-<input type="radio" value="1" name="ss_turn" id="ss_turn_1" <% nvram_match_x("", "ss_turn", "1", "checked"); %>><#checkbox_Yes#>
-<input type="radio" value="0" name="ss_turn" id="ss_turn_0" <% nvram_match_x("", "ss_turn", "0", "checked"); %>><#checkbox_No#>
-</div>
-</td>
-</tr>
--->
-													<tr>
-														<th width="50%">自动切换检查周期(秒)</th>
-														<td>
-															<input type="text" class="input" size="15" name="ss_turn_s"
-																style="width: 200px"
-																value="<% nvram_get_x("","ss_turn_s"); %>" />
-														</td>
-													</tr>
-													<tr>
-														<th width="50%">切换检查超时时间(秒)</th>
-														<td>
-															<input type="text" class="input" size="15" name="ss_turn_ss"
-																style="width: 200px"
-																value="<% nvram_get_x("", "ss_turn_ss"); %>">
 														</td>
 													</tr>
 													<!--

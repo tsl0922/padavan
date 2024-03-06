@@ -107,8 +107,8 @@ mkdir -p $ROOTDIR/images
 ln -sf vendors/Ralink/config.arch config.arch
 cp -fL "$kernel_cf" "$kernel_tf"
 cp -fL "$busybox_cf" "$busybox_tf"
-cp -fL "$board_mk" "$ROOTDIR/user/shared/board.mk"
-cp -fL "$board_h" "$ROOTDIR/user/shared/include/ralink_board.h"
+cp -fL "$board_mk" "$ROOTDIR/user/board.mk"
+cp -fL "$board_h" "$ROOTDIR/user/shared/src/include/ralink_board.h"
 ############################# SMP #####################################
 if [ -n "$CONFIG_SMP" ] ; then
 	func_enable_busybox_param "CONFIG_FEATURE_TOP_SMP_CPU"

@@ -1,7 +1,6 @@
 SRC_NAME = transmission-3.00
 SRC_URL = https://github.com/transmission/transmission/releases/download/3.00/transmission-3.00.tar.xz
-CFLAGS   += -O2 -ffunction-sections -fdata-sections -fvisibility=hidden -D_LARGEFILE64_SOURCE -D_LFS64_LARGEFILE -Wno-implicit-fallthrough
-LDFLAGS  += -Wl,--gc-sections
+CFLAGS   += -fvisibility=hidden -D_LARGEFILE64_SOURCE -D_LFS64_LARGEFILE -Wno-implicit-fallthrough
 
 THISDIR = $(shell pwd)
 
@@ -59,12 +58,7 @@ clean:
 	rm -rf install
 
 romfs:
-ifeq ($(CONFIG_FIRMWARE_INCLUDE_TRANSMISSION_WEB_CONTROL),y)
-	mkdir -p $(INSTALLDIR)/usr/share/transmission
-	cp -rf $(THISDIR)/transmission-control/web $(INSTALLDIR)/usr/share/transmission
-else
 	cp -rf $(THISDIR)/install/usr/share/transmission $(INSTALLDIR)/usr/share
 	rm -f $(INSTALLDIR)/usr/share/transmission/web/LICENSE
-endif
 	$(ROMFSINST) $(THISDIR)/install/usr/bin/transmission-daemon /usr/bin/transmission-daemon
 	$(ROMFSINST) -p +x /usr/bin/transmission.sh

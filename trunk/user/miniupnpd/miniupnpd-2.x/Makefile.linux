@@ -38,12 +38,9 @@ STRIP ?= strip
 PKG_CONFIG ?= pkg-config
 CP = cp
 
-CFLAGS += -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections
-
-LDLIBS  = $(IPTABLESPATH)/libiptc/.libs/libip4tc.a
+LDLIBS  = -lip4tc
 ifeq ($(ENABLE_IPV6),1)
-LDLIBS += $(IPTABLESPATH)/libiptc/.libs/libip6tc.a
+LDLIBS += -lip6tc
 ifndef DISABLE_NFNETLINK
 CFLAGS += -DUSE_LIBNFNETLINK
 LDLIBS += $(STAGEDIR)/lib/libnfnetlink.a

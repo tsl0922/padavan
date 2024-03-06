@@ -1,3 +1,0 @@
-menu "Debug facilities"
-source "config/gen/debug.in"
-endmenu

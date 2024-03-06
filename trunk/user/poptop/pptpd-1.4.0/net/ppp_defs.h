@@ -7,4 +7,12 @@
 #include <asm/types.h>
 #include <linux/ppp_defs.h>
 
+#ifndef __P
+#ifdef __STDC__
+#define __P(x)	x
+#else
+#define __P(x)	()
+#endif
+#endif
+
 #endif /* net/ppp_defs.h */

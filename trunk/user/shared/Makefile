@@ -1,24 +1,12 @@
-ifndef ROOTDIR
-ROOTDIR=../..
-endif
+include $(ROOTDIR)/rules.mk
 
-include boards.mk
-include cflags.mk
+PKG_NAME:=shared
+PKG_INSTALL:=1
 
-CFLAGS += -fPIC
-CFLAGS += -Wall -I. -I./include -I$(ROOTDIR)/$(LINUXDIR)/include/nvram
+include $(INCLUDE_DIR)/package.mk
 
-LDFLAGS += -L.
-
-OBJS := shutils.o netutils.o rtutils.o defaults.o nvram_linux.o notify_rc.o bin_sem_asus.o flash_mtd.o pids.o gpioutils.o
-
-all: libshared.so
-
-libshared.so: $(OBJS)
-	$(LD) -shared -o $@ $^
+$(eval $(call BuildPackage,shared))
 
 romfs:
-	$(ROMFSINST) -S /lib/libshared.so
-
-clean:
-	rm -f *.o libshared.so
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_BUILD_DIR)/libshared.so $(ROMFSDIR)/lib/

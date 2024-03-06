@@ -1,49 +1,25 @@
-SRC_NAME=libusb-1.0.23
-SRC_URL=https://github.com/libusb/libusb/releases/download/v1.0.23/libusb-1.0.23.tar.bz2
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=libusb
+PKG_VERSION:=1.0.23
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.bz2 ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.bz2 $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE_URL:=\
+  https://github.com/libusb/libusb/releases/download/v$(PKG_VERSION) \
+  @SF/$(PKG_NAME)
+PKG_HASH:=db11c06e958a82dac52cf3c65cb4dd2c3f339c8a988665110e0d24d19312ad8d
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar jxf $(SRC_NAME).tar.bz2; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+CONFIGURE_ARGS += \
+	--disable-static \
+	--disable-log \
+	--disable-udev \
+	--disable-examples-build \
+	--disable-tests-build
 
-configure:
-	( cd $(SRC_NAME) ; \
-	ac_cv_lib_rt_clock_gettime=no \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--disable-static \
-		--disable-log \
-		--disable-udev \
-		--disable-examples-build \
-		--disable-tests-build \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libusb))
 
 romfs:
-	cp -fP $(DESTDIR)/lib/libusb-1.0.so* $(ROMFSDIR)/lib
-
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libusb-1.0.so* $(ROMFSDIR)/lib/

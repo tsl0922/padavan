@@ -1,46 +1,22 @@
-SRC_NAME=lzo-2.10
-SRC_URL=http://www.oberhumer.com/opensource/lzo/download/$(SRC_NAME).tar.gz
+include $(ROOTDIR)/rules.mk
 
-CFLAGS += -O2
+PKG_NAME:=lzo
+PKG_VERSION:=2.10
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=http://www.oberhumer.com/opensource/lzo/download/
+PKG_HASH:=c0f892943208266f9b6543b3ae308fab6284c5c90e627931446fb49b4221a072
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
+CMAKE_BINARY_SUBDIR:=build
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar zxf $(SRC_NAME).tar.gz; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/cmake.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+CMAKE_OPTIONS += \
+	-DENABLE_STATIC=ON \
+	-DENABLE_SHARED=OFF \
+	-DBUILD_TESTING=OFF
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-static \
-		--disable-shared \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR="" ;
+$(eval $(call BuildPackage,lzo))
 
 romfs:
-

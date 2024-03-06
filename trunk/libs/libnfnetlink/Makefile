@@ -1,33 +1,20 @@
-SRC_NAME=libnfnetlink-1.0.x
+include $(ROOTDIR)/rules.mk
 
-all: config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=libnfnetlink
+PKG_VERSION:=1.0.2
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE_URL:= \
+	http://www.netfilter.org/projects/libnfnetlink/files/ \
+	ftp://ftp.netfilter.org/pub/libnfnetlink/
+PKG_HASH:=b064c7c3d426efb4786e60a8e6859b82ee2f2c5e49ffeea640cfe4fe33cbc376
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-static \
-		--disable-shared \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+include $(INCLUDE_DIR)/package.mk
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
+CONFIGURE_ARGS += \
+	--enable-static \
+	--disable-shared
 
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libmnl))
 
 romfs:
-

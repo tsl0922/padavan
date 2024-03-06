@@ -4,7 +4,7 @@ SRC_URL = https://github.com/hanwckf/dogcom/archive/v1.6.2-pdv.tar.gz
 THISDIR = $(shell pwd)
 
 all: download_test extract_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) CC=$(CONFIG_CROSS_COMPILER_ROOT)/bin/mipsel-linux-uclibc-gcc
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) CC="$(CC)"
 	
 download_test:
 	( if [ ! -f $(SRC_NAME).tar.gz ]; then \

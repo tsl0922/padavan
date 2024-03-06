@@ -4,7 +4,7 @@ endif
 
 ROMFS_DIR = $(ROOTDIR)/romfs
 
-include $(ROOTDIR)/user/shared/boards.mk
+include $(BOARD_CONFIG)
 
 PROJECT_HOME_URL="https:\/\/bitbucket.org\/padavan\/rt-n56u\/"
 PROJECT_HOME_URL_MOD="https:\/\/github.com\/tsl0922\/padavan\/"

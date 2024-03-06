@@ -1,43 +1,18 @@
-SRC_NAME=libogg-1.3.3
-SRC_URL=http://downloads.xiph.org/releases/ogg/$(SRC_NAME).tar.xz
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=libogg
+PKG_VERSION:=1.3.3
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.xz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.xz $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_SOURCE_URL:=http://downloads.xiph.org/releases/ogg/
+PKG_HASH:=4f3fc6178a533d392064f14776b23c397ed4b9f48f5de297aba73b643f955c08
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar xJf $(SRC_NAME).tar.xz; \
-		patch -d $(SRC_NAME) -p1 -i ../disable-doc.patch; \
-	fi )
- 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi ) 
+include $(INCLUDE_DIR)/package.mk
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--enable-static \
-		--disable-shared \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
+CONFIGURE_ARGS += \
+	--enable-static \
+	--disable-shared
 
-clean:
-	rm -f config_done
-	rm -rf $(SRC_NAME)
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libogg))
 
 romfs:
-

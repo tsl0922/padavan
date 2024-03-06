@@ -1,36 +1,19 @@
-ifndef ROOTDIR
-ROOTDIR=../..
-endif
+include $(ROOTDIR)/rules.mk
 
-USERDIR = $(ROOTDIR)/user
-SHDIR = $(ROOTDIR)/user/shared
+PKG_NAME:=libdisk
+PKG_INSTALL:=1
 
-include $(SHDIR)/boards.mk
-include $(SHDIR)/cflags.mk
+include $(INCLUDE_DIR)/package.mk
 
-CFLAGS += -fPIC
-CFLAGS += -I. -I$(SHDIR) -I$(SHDIR)/include
+TARGET_CFLAGS += -I$(STAGING_DIR)/include/shared
+TARGET_LDFLAGS += -L$(STAGING_DIR)/lib
 
-LDFLAGS = -L$(SHDIR) -lshared
-
-OBJS = dev_info.o disk_io_tools.o disk_initial.o disk_share.o
-ifdef CONFIG_USB_SUPPORT
-OBJS += usb_info.o
-endif
-
-all: libdisk.so test_share
-
-libdisk.so: $(OBJS) $(SHDIR)/shutils.o
-	$(LD) -shared -o $@ $^
-
-test_share: test_share.o libdisk.so
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+$(eval $(call BuildPackage,libdisk))
 
 romfs:
-	$(ROMFSINST) /lib/libdisk.so
-	if [ "$(CONFIG_FIRMWARE_INCLUDE_SMBD)" = "y" ] || [ "$(CONFIG_FIRMWARE_INCLUDE_FTPD)" = "y" ] ; then \
-		$(ROMFSINST) /sbin/test_share ; \
-	fi;
-
-clean:
-	rm -f *.o libdisk.so test_share
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_BUILD_DIR)/libdisk.so $(ROMFSDIR)/lib/
+ifneq ($(filter y,$(CONFIG_FIRMWARE_INCLUDE_SMBD) $(CONFIG_FIRMWARE_INCLUDE_FTPD)),)
+	$(INSTALL_DIR) $(ROMFSDIR)/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/test_share $(ROMFSDIR)/sbin/test_share
+endif

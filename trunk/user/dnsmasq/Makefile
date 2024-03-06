@@ -1,6 +1,13 @@
-SRC_NAME=dnsmasq-2.89
-SRC_URL=https://thekelleys.org.uk/dnsmasq/$(SRC_NAME).tar.xz
-THISDIR = $(shell pwd)
+include $(ROOTDIR)/rules.mk
+
+PKG_NAME:=dnsmasq
+PKG_VERSION:=2.89
+
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_SOURCE_URL:=https://thekelleys.org.uk/dnsmasq/
+PKG_HASH:=02bd230346cf0b9d5909f5e151df168b2707103785eb616b56685855adebb609
+
+include $(INCLUDE_DIR)/package.mk
 
 COPTS := -DHAVE_BROKEN_RTC -DNO_INOTIFY -DNO_AUTH -DNO_LOOP
 ifndef CONFIG_IPV6
@@ -13,27 +20,15 @@ ifneq ($(CONFIG_FIRMWARE_INCLUDE_IPSET),y)
 COPTS += -DNO_IPSET
 endif
 
-all: download_test extract_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) COPTS="$(COPTS)"
+MAKE_FLAGS := \
+	$(TARGET_CONFIGURE_OPTS) \
+	CFLAGS="$(TARGET_CFLAGS) $(TARGET_CPPFLAGS)" \
+	LDFLAGS="$(TARGET_LDFLAGS)" \
+	COPTS="$(COPTS)" \
+	PREFIX=""
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.xz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.xz $(SRC_URL); \
-	fi )
-
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar xf $(SRC_NAME).tar.xz; \
-		patch -d $(SRC_NAME) -p1 -i ../100-remove-old-runtime-kernel-support.patch; \
-		patch -d $(SRC_NAME) -p1 -i ../200-set-MAX_PROCS-to-4-to-reduce-memory-usage.patch; \
-	fi )
-
-clean:
-	$(MAKE) -C $(SRC_NAME) clean
-	rm -f dnsmasq
+$(eval $(call BuildPackage,dnsmasq))
 
 romfs:
-	cp $(SRC_NAME)/src/dnsmasq .
-	$(STRIP) dnsmasq
-	$(ROMFSINST) /usr/sbin/dnsmasq
-	$(ROMFSINST) -p +x $(THISDIR)/dnsmasq.sh /usr/bin/dnsmasq.sh
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/dnsmasq $(ROMFSDIR)/usr/sbin/dnsmasq

@@ -7,6 +7,9 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        target: [mipsel-linux-uclibc, mipsel-linux-musl]
     steps:
       - uses: actions/checkout@v3
       - name: Prepare
@@ -18,16 +21,20 @@ jobs:
             libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget libc-dev-bin
       - name: Build
         run: |
-          make toolchain/build
-          cd toolchain-mipsel/toolchain-4.4.x
-          tar cJf ../mipsel-linux-uclibc-gcc10.tar.xz *
+          make CT_TARGET=${CT_TARGET} CT_VERSION=${CT_VERSION}
+          cd crosstool-ng-${CT_VERSION}/toolchain-mipsel
+          tar cJf ../../${CT_TARGET}.tar.xz *
+        env:
+          CT_TARGET: ${{ matrix.target }}
+          CT_VERSION: 1.26.0
+        working-directory: toolchain
       - uses: actions/upload-artifact@v3
         with:
           name: toolchain
-          path: toolchain-mipsel/mipsel-linux-uclibc-gcc10.tar.xz
+          path: toolchain/${{ matrix.target }}.tar.xz
       - uses: svenstaro/upload-release-action@2.2.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: toolchain-mipsel/mipsel-linux-uclibc-gcc10.tar.xz
+          file: toolchain/${{ matrix.target }}.tar.xz
           tag: toolchain
           overwrite: true

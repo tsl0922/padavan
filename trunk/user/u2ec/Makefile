@@ -1,45 +1,14 @@
-#
-# U2EC Makefile
-#
-# Copyright (C) 2008 ASUSTeK Corporation
-#
-#
+include $(ROOTDIR)/rules.mk
 
-TOP := $(shell pwd)/..
-SRCBASE := $(TOP)/..
-INSTALLDIR := $(ROOTDIR)/romfs
+PKG_NAME:=u2ec
 
-PROGS	= u2ec
-OBJS	= usbsock.o testusb.o
-DEBUG	= n
+include $(INCLUDE_DIR)/package.mk
 
-ifeq ($(DEBUG),y)
-	DEBFLAGS = -O -g -DU2EC_DEBUG
-	DEBFLAGS += -DPDEBUG_SENDSECV
-	DEBFLAGS += -DPDEBUG_DECODE
-	OBJS += debug.o decode.o
-else
-	DEBFLAGS = -s
-endif
+TARGET_CFLAGS += -I$(STAGING_DIR)/include/shared
+TARGET_LDFLAGS += -L$(STAGING_DIR)/lib
 
-CFLAGS += -DSUPPORT_LPRng
-CFLAGS += -I$(TOP)/shared
-CFLAGS += -Wall -I.
-CFLAGS += $(DEBFLAGS)
-CFLAGS += -ffunction-sections -fdata-sections
-
-LDFLAGS += -lpthread
-LDFLAGS += -L$(TOP)/shared -lshared
-LDFLAGS += -lusb
-LDFLAGS += -Wl,--gc-sections
-
-all: $(PROGS)
-
-$(PROGS): $(OBJS)
-	$(CC) -o $(PROGS) $(OBJS) $(CFLAGS) $(LDFLAGS)
+$(eval $(call BuildPackage,u2ec))
 
 romfs:
-	$(ROMFSINST) /usr/sbin/$(PROGS)
-
-clean:
-	rm -f $(PROGS) *.o *~
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/u2ec $(ROMFSDIR)/usr/sbin/u2ec

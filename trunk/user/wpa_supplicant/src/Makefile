@@ -1,12 +1,18 @@
-SUBDIRS=ap common crypto drivers eapol_auth eapol_supp eap_common eap_peer eap_server l2_packet p2p pae radius rsn_supp tls utils wps
-SUBDIRS += fst
+SRC_NAME=wpa_supplicant
 
 all:
-	for d in $(SUBDIRS); do [ -d $$d ] && $(MAKE) -C $$d; done
+	cp -f $(SRC_NAME)/.config.def $(SRC_NAME)/.config
+ifeq ($(CONFIG_FIRMWARE_INCLUDE_EAP_PEAP),y)
+	echo CONFIG_EAP_TTLS=y >> $(SRC_NAME)/.config
+	echo CONFIG_EAP_PEAP=y >> $(SRC_NAME)/.config
+	echo CONFIG_EAP_MSCHAPV2=y >> $(SRC_NAME)/.config
+else ifeq (,$(wildcard $(STAGEDIR)/lib/pkgconfig/openssl.pc))
+	echo CONFIG_TLS=internal >> $(SRC_NAME)/.config
+	echo CONFIG_CRYPTO=internal >> $(SRC_NAME)/.config
+	echo CONFIG_INTERNAL_LIBTOMMATH=y >> $(SRC_NAME)/.config
+	echo CONFIG_INTERNAL_RC4=y >> $(SRC_NAME)/.config
+endif
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 
 clean:
-	for d in $(SUBDIRS); do [ -d $$d ] && $(MAKE) -C $$d clean; done
-	rm -f *~
-
-install:
-	for d in $(SUBDIRS); do [ -d $$d ] && $(MAKE) -C $$d install; done
+	$(MAKE) -C $(SRC_NAME) clean

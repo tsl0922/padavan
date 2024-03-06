@@ -1,5 +1,0 @@
-master='binutils'
-repository='git https://github.com/oracle/binutils-gdb.git'
-origin='Oracle'
-src_release='n'
-src_devel='y'

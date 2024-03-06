@@ -14,7 +14,14 @@ UCLINUX_BUILD_USER=1
 include $(PROJECT_CONFIG)
 include $(ARCH_CONFIG)
 
+CFLAGS  += -ffunction-sections -fdata-sections
+CPPFLAGS += -ffunction-sections -fdata-sections
+LDFLAGS += -Wl,--gc-sections
+
 INSTALLDIR = $(ROOTDIR)/romfs
+
+BOARD_CONFIG = $(ROOTDIR)/user/boards.mk
+CFLAGS_CONFIG = $(ROOTDIR)/user/cflags.mk
 
 FS_EXT_ENABLED=n
 FS_FAT_ENABLED=n
@@ -99,10 +106,9 @@ dir_y						+= iptables
 ifneq ($(CONFIG_WITHOUT_KERNEL),y)
 dir_$(CONFIG_FIRMWARE_INCLUDE_IPSET)		+= ipset
 endif
-dir_y						+= poptop
 dir_y						+= ebtables
 dir_y						+= iproute2
-dir_y						+= wireless_tools
+dir_y						+= wireless-tools
 dir_y						+= shared
 dir_$(STORAGE_ENABLED)				+= libdisk
 dir_y						+= nvram
@@ -126,6 +132,8 @@ dir_y						+= 802.1x
 dir_y						+= wpa_supplicant
 dir_y						+= pppd
 dir_y						+= pppoe
+dir_y						+= pppoe-relay
+dir_y						+= poptop
 dir_y						+= xl2tpd
 dir_$(CONFIG_FIRMWARE_INCLUDE_RPL2TP)		+= rp-l2tp
 dir_y						+= lldt
@@ -140,7 +148,9 @@ dir_$(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS)	        += dns2tcp
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS),y)
 dir_$(CONFIG_FIRMWARE_INCLUDE_V2RAY)	        += v2ray
 dir_$(CONFIG_FIRMWARE_INCLUDE_XRAY)	        += xray
+dir_$(CONFIG_FIRMWARE_INCLUDE_SINGBOX)	        += sing-box
 dir_$(CONFIG_FIRMWARE_INCLUDE_TROJAN)	        += trojan
+dir_$(CONFIG_FIRMWARE_INCLUDE_NAIVEPROXY)	        += naiveproxy
 endif
 dir_$(CONFIG_FIRMWARE_INCLUDE_SSOBFS)                      += simple-obfs
 dir_$(CONFIG_FIRMWARE_INCLUDE_ZEROTIER)	                       += zerotier
@@ -172,7 +182,6 @@ dir_$(SAMBA_ENABLED)				+= wsdd2
 dir_$(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS)	+= chnroute
 dir_$(CONFIG_FIRMWARE_INCLUDE_TTYD)		+= ttyd
 dir_$(CONFIG_FIRMWARE_INCLUDE_MSD_LITE)		+= msd_lite
-dir_$(CONFIG_FIRMWARE_INCLUDE_LIBCGROUP) 		+= libcgroup
 dir_$(FRP_ENABLE)				+= frp
 dir_$(SOFTETHERVPN_ENABLE)			+= softethervpn
 dir_$(CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT)         += scutclient

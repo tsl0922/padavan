@@ -1,22 +1,14 @@
-USERDIR = $(ROOTDIR)/user
+include $(ROOTDIR)/rules.mk
 
-CFLAGS += -I. -I$(USERDIR)/shared -I$(USERDIR)/shared/include
-LDFLAGS = -L$(USERDIR)/shared -lshared
+PKG_NAME:=infosvr
 
-OBJS=infosvr.o asus.o
+include $(INCLUDE_DIR)/package.mk
 
-all: infosvr
+TARGET_CFLAGS += -I$(STAGING_DIR)/include/shared
+TARGET_LDFLAGS += -L$(STAGING_DIR)/lib
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $<
-
-infosvr: $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) -o infosvr $(LIBS)
-	$(STRIP) $@
+$(eval $(call BuildPackage,infosvr))
 
 romfs:
-	$(ROMFSINST) /usr/sbin/infosvr
-
-clean:
-	rm -f *.o *~ infosvr
-
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/infosvr $(ROMFSDIR)/usr/sbin/infosvr

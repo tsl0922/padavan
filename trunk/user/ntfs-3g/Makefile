@@ -1,9 +1,6 @@
 SRC_NAME=ntfs-3g_ntfsprogs-2017.3.23
 SRC_URL=https://tuxera.com/opensource/ntfs-3g_ntfsprogs-2017.3.23.tgz
 
-CFLAGS += -O2 -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections
-
 all: download_test extract_test config_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 

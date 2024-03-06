@@ -1,53 +1,24 @@
-SRC_NAME=parted-3.2
-SRC_URL=https://ftp.gnu.org/gnu/parted/$(SRC_NAME).tar.xz 
+include $(ROOTDIR)/rules.mk
 
-CFLAGS += -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections
+PKG_NAME:=parted
+PKG_VERSION:=3.6
 
-THISDIR = $(shell pwd)
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_SOURCE_URL:=http://ftp.gnu.org/gnu/parted/
+PKG_HASH:=3b43dbe33cca0f9a18601ebab56b7852b128ec1a3df3a9b30ccde5e73359e612
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+include $(INCLUDE_DIR)/package.mk
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.xz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.xz $(SRC_URL); \
-	fi )
+CONFIGURE_VARS += LIBS="-liconv"
+CONFIGURE_ARGS += \
+	--without-readline \
+	--disable-shared \
+	--disable-device-mapper \
+	--disable-nls \
+	--disable-debug
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar xJf $(SRC_NAME).tar.xz; \
-		patch -d $(SRC_NAME) -p1 -i ../$(SRC_NAME).patch; \
-	fi )
-
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
-
-configure:
-	( cd $(SRC_NAME) ; \
-	PKG_CONFIG_PATH="$(STAGEDIR)/lib/pkgconfig" \
-	LIBS="-liconv" \
-	./configure \
-		--prefix=/usr \
-		--without-readline \
-		--disable-shared \
-		--disable-device-mapper \
-		--disable-nls \
-		--disable-debug \
-		--host=$(HOST_TARGET) \
-		--build=$(HOST_BUILD) ; \
-	)
-
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
-	fi ; \
-	rm -f config_done
+$(eval $(call BuildPackage,parted))
 
 romfs:
-	$(ROMFSINST) $(THISDIR)/$(SRC_NAME)/parted/parted /sbin/parted
-
+	$(INSTALL_DIR) $(ROMFSDIR)/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/parted/parted $(ROMFSDIR)/sbin/parted

@@ -311,6 +311,7 @@ DDNS_CheckIP_item0=默认
 DDNS_Period=DDNS 更新周期:
 DDNS_Forced=DDNS 强制更新周期:
 DDNS_Verbose=DDNS 日志级别:
+DHCP_Filter_AAAA=过滤 IPv6 AAAA 记录:
 DHCP_Verbose=DHCP 日志级别:
 STB_Isolation=IPTV STB 端口隔离:
 STB_IsolationItem1=隔离路由器和 CPU 端口

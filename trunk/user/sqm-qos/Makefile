@@ -1,10 +1,19 @@
-THISDIR = $(shell pwd)
-all:
+include $(ROOTDIR)/rules.mk
 
-clean:
+PKG_NAME:=sqm-qos
+
+include $(INCLUDE_DIR)/package.mk
+
+define Build/Prepare
+endef
+
+define Build/Configure
+endef
+
+define Build/Compile
+endef
+
+$(eval $(call BuildPackage,sqm-qos))
 
 romfs:
-	$(ROMFSINST)  $(THISDIR)/sqm.conf /etc_ro/sqm.conf
-	chmod -R +x scripts/
-	mkdir -p $(INSTALLDIR)/usr/lib/sqm
-	$(ROMFSINST) $(THISDIR)/scripts/ /usr/lib/sqm
+	$(CP) ./files/* $(ROMFSDIR)/

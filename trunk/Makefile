@@ -58,7 +58,7 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 FIRMWARE_KERNEL_VER="4.4"
 CONFIG_CROSS_COMPILER_PATH = $(CONFIG_CROSS_COMPILER_ROOT)/bin
 CONFIG_CMAKE_TOOLCHAIN_FILE = $(ROOTDIR)/vendors/cmake/cross-mipsel-linux.cmake
-KERNEL_HEADERS_PATH = $(CONFIG_CROSS_COMPILER_ROOT)/mipsel-linux-uclibc/sysroot/usr/include
+KERNEL_HEADERS_PATH = $(realpath $(shell $(CONFIG_CROSS_COMPILER_ROOT)/bin/$(CC) -print-sysroot)/usr/include)
 
 ifeq (config.arch,$(wildcard config.arch))
 ifeq ($(filter %_default, $(MAKECMDGOALS)),)
@@ -166,7 +166,7 @@ ifeq ($(CONFIG_CCACHE),y)
 	@mkdir -p $(CONFIG_CROSS_COMPILER_ROOT)/lib/ccache
 	@for bin in gcc g++ cc c++; do \
 		ln -sf /usr/bin/ccache $(CONFIG_CROSS_COMPILER_ROOT)/lib/ccache/$$bin; \
-		ln -sf /usr/bin/ccache $(CONFIG_CROSS_COMPILER_ROOT)/lib/ccache/mipsel-linux-uclibc-$$bin; \
+		ln -sf /usr/bin/ccache $(CONFIG_CROSS_COMPILER_ROOT)/lib/ccache/$(CROSS_COMPILE)$$bin; \
 	done
 endif
 

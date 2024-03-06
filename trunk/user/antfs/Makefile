@@ -1,19 +1,24 @@
 # source from http://osp.avm.de/fritzbox/fritzbox-7560/source-files-FRITZ.Box_7560-07.11.tar
 # 07.19  from http://osp.avm.de/fritzbox/fritzbox-7590/source-files-FRITZ.Box_7590-07.19.tar.gz
-SRC_NAME = antfs-07.19
+include $(ROOTDIR)/rules.mk
 
-all:
-ifeq ($(CONFIG_WITHOUT_KERNEL),y)
-	@echo "antfs would not build!"
-else
-	$(MAKE) -C $(SRC_NAME)
-	cp -f $(SRC_NAME)/antfs.ko .
-endif
+PKG_NAME:=antfs
+PKG_VERSION:=07.19
+
+include $(INCLUDE_DIR)/package.mk
+
+SRC_DIR=./antfs-07.19
+
+MODULE_CONFIG := CONFIG_ANTFS_FS=m
+MODULE_CONFIG += CONFIG_ANTFS_SYMLINKS=y
+
+define Build/Compile
+	$(MAKE) $(PKG_JOBS) -C $(ROOTDIR)/$(LINUXDIR) \
+		M=$(PKG_BUILD_DIR) \
+		$(MAKE_FLAGS) LDFLAGS= \
+		modules $(MODULE_CONFIG)
+endef
+
+$(eval $(call BuildPackage,antfs))
 
 romfs:
-
-clean:
-	$(MAKE) -C $(SRC_NAME) clean
-	rm -f *.ko
-
-

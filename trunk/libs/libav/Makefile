@@ -1,13 +1,18 @@
-SRC_NAME_NEW = ffmpeg-0.11.x
-SRC_NAME_OLD = ffmpeg-0.6.x
+include $(ROOTDIR)/rules.mk
+
+PKG_NAME:=libav
 
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW),y)
-SRC_NAME = $(SRC_NAME_NEW)
+PKG_VERSION:=0.11
+SRC_DIR = ./ffmpeg-0.11.x
 PARAMS_CONFIG=--disable-swresample
 else
-SRC_NAME = $(SRC_NAME_OLD)
+PKG_VERSION:=0.6
+SRC_DIR = ./ffmpeg-0.6.x
 PARAMS_CONFIG=
 endif
+
+include $(INCLUDE_DIR)/package.mk
 
 PARSERS_CONFIG=--enable-parser=aac --enable-parser=ac3 --enable-parser=mpegaudio
 
@@ -26,82 +31,66 @@ endif
 
 PROTOCOLS_CONFIG=--enable-protocol=file
 
-CFLAGS += -D_LARGEFILE64_SOURCE -D_LFS64_LARGEFILE
+TARGET_CFLAGS += -D_LARGEFILE64_SOURCE -D_LFS64_LARGEFILE
 
-all: config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+CONFIGURE_ARGS = \
+	--prefix=$(STAGING_DIR) \
+	--cross-prefix=$(TARGET_CROSS) \
+	--enable-cross-compile \
+	--arch=$(ARCH) \
+	--target-os=linux \
+	--cc="$(CC)" \
+	--as="$(AS)" \
+	$(if $(LIBS_BUILD_SHARED),--disable-static,--enable-static) \
+	$(if $(LIBS_BUILD_SHARED),--enable-shared,--disable-shared) \
+	--enable-small \
+	--enable-pthreads \
+	--enable-gpl \
+	--enable-zlib \
+	--disable-doc \
+	--disable-debug \
+	--disable-avdevice \
+	--disable-network \
+	--disable-swscale \
+	--disable-swscale-alpha \
+	--disable-ffmpeg \
+	--disable-ffplay \
+	--disable-ffprobe \
+	--disable-ffserver \
+	--disable-hwaccels \
+	--disable-dxva2 \
+	--disable-indevs \
+	--disable-outdevs \
+	--disable-devices \
+	--disable-filters \
+	--disable-encoders \
+	--disable-muxers \
+	--disable-decoders \
+	--disable-demuxers \
+	--disable-parsers \
+	--disable-postproc \
+	--disable-protocols \
+	--disable-bsfs \
+	--disable-everything \
+	$(PARAMS_CONFIG) \
+	$(PROTOCOLS_CONFIG) \
+	$(PARSERS_CONFIG) \
+	$(DECODERS_CONFIG) \
+	$(DEMUXERS_CONFIG)
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi ) 
+define Build/Install
+	$(MAKE) -C $(PKG_BUILD_DIR)/$(MAKE_PATH) \
+		$(MAKE_FLAGS) \
+		DESTDIR= \
+		install
+endef
 
-configure:
-	( cd $(SRC_NAME) ; \
-	./configure \
-		--prefix=$(STAGEDIR) \
-		--cross-prefix=$(CROSS_COMPILE) \
-		--enable-cross-compile \
-		--arch=mips \
-		--target-os=linux \
-		--cc="$(CC)" \
-		--as="$(AS)" \
-		$(if $(LIBS_BUILD_SHARED),--disable-static,--enable-static) \
-		$(if $(LIBS_BUILD_SHARED),--enable-shared,--disable-shared) \
-		--enable-small \
-		--enable-pthreads \
-		--enable-gpl \
-		--enable-zlib \
-		--disable-doc \
-		--disable-debug \
-		--disable-avdevice \
-		--disable-network \
-		--disable-swscale \
-		--disable-swscale-alpha \
-		--disable-ffmpeg \
-		--disable-ffplay \
-		--disable-ffprobe \
-		--disable-ffserver \
-		--disable-hwaccels \
-		--disable-dxva2 \
-		--disable-indevs \
-		--disable-outdevs \
-		--disable-devices \
-		--disable-filters \
-		--disable-encoders \
-		--disable-muxers \
-		--disable-decoders \
-		--disable-demuxers \
-		--disable-parsers \
-		--disable-postproc \
-		--disable-protocols \
-		--disable-bsfs \
-		--disable-everything \
-		$(PARAMS_CONFIG) \
-		$(PROTOCOLS_CONFIG) \
-		$(PARSERS_CONFIG) \
-		$(DECODERS_CONFIG) \
-		$(DEMUXERS_CONFIG) ; \
-	)
-
-clean:
-	if [ -f $(SRC_NAME_NEW)/config.mak ] ; then \
-		$(MAKE) -C $(SRC_NAME_NEW) distclean; \
-	fi ; \
-	if [ -f $(SRC_NAME_OLD)/config.mak ] ; then \
-		$(MAKE) -C $(SRC_NAME_OLD) distclean; \
-	fi ; \
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME) install DESTDIR=""
+$(eval $(call BuildPackage,libav))
 
 romfs:
 ifeq ($(LIBS_BUILD_SHARED),y)
-	cp -fP $(DESTDIR)/lib/libavcodec.so* $(ROMFSDIR)/lib ;
-	cp -fP $(DESTDIR)/lib/libavformat.so* $(ROMFSDIR)/lib ;
-	cp -fP $(DESTDIR)/lib/libavutil.so* $(ROMFSDIR)/lib ;
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libavcodec.so* $(ROMFSDIR)/lib/
+	$(CP) $(PKG_INSTALL_DIR)/lib/libavformat.so* $(ROMFSDIR)/lib/
+	$(CP) $(PKG_INSTALL_DIR)/lib/libavutil.so* $(ROMFSDIR)/lib/
 endif
-

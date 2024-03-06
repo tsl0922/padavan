@@ -1,8 +1,6 @@
 CFLAGS  += -I. -Wmissing-declarations
-CFLAGS  += -ffunction-sections -fdata-sections
 #CFLAGS += -DDEBUG_PACKET -DDEBUG -g3
 LDFLAGS += -Llibubox -lubox
-LDFLAGS += -Wl,--gc-sections
 
 TARGET = uqmi
 SOURCES = main.c dev.c commands.c qmi-message.c

@@ -1,24 +1,20 @@
-VPATH = src
-CFLAGS += -Os -pipe -Wall -Wno-unused
-OS_LAYER = osl-linux.c
+include $(ROOTDIR)/rules.mk
 
-SHDIR = $(ROOTDIR)/user/shared
-USERDIR = $(ROOTDIR)/user
-CFLAGS  += -I. -I$(SHDIR) -I$(SHDIR)/include
-CFLAGS  += $(if $(CONFIG_IPV6),-DUSE_IPV6,)
-CFLAGS  += -ffunction-sections -fdata-sections
+PKG_NAME:=lldt
 
-LDFLAGS += -L$(SHDIR) -lshared
-LDFLAGS += -Wl,--gc-sections
+include $(INCLUDE_DIR)/package.mk
 
-all: lld2d
+TARGET_CFLAGS += \
+	$(if $(CONFIG_IPV6),-DUSE_IPV6,) \
+	-I$(STAGING_DIR)/include/shared
+TARGET_LDFLAGS += -L$(STAGING_DIR)/lib
 
-include src/common.mk
+$(eval $(call BuildPackage,lldt))
 
-depend:
-	$(CC) $(CFLAGS) -M $(DCFILES) >.depend
-
-clear:
-	rm -f *.o lld2d
-
--include .depend
+romfs:
+	$(INSTALL_DIR) $(ROMFSDIR)/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lld2d $(ROMFSDIR)/bin/lld2d
+	$(INSTALL_DIR) $(ROMFSDIR)/etc_ro
+	$(INSTALL_DATA) ./lld2d.conf $(ROMFSDIR)/etc_ro/lld2d.conf
+	$(INSTALL_DATA) ./icon.ico $(ROMFSDIR)/etc_ro/icon.ico
+	$(LN) icon.ico $(ROMFSDIR)/etc_ro/icon.large.ico

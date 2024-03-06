@@ -4,7 +4,7 @@ nvram_ttyd_port="$(nvram get ttyd_port)"
 port=${nvram_ttyd_port:-"7681"}
 
 func_start(){
-	start-stop-daemon -S -b -x ttyd -- -i br0 -p "$port" -t disableReconnect=true -t disableLeaveAlert=true login
+	start-stop-daemon -S -b -x ttyd -- -i br0 -p "$port" -W -t disableReconnect=true -t disableLeaveAlert=true login
 }
 
 func_stop(){

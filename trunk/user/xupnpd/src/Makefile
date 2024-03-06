@@ -2,7 +2,7 @@ LUA      = lua-5.1.4
 #LUA      = lua-5.2.0
 STATIC   = false
 CFLAGS   += -O2 -Wall
-CPPFLAGS += -O2 -fno-exceptions -fno-rtti -I$(LUA) -L$(LUA)
+CPPFLAGS += -O2 -fno-exceptions -fno-rtti -I$(LUA) -L$(LUA) -D_LARGEFILE64_SOURCE
 SRC      = main.cpp soap.cpp mem.cpp mcast.cpp luaxlib.cpp luaxcore.cpp luajson.cpp luajson_parser.cpp
 LUAMYCFLAGS = -DLUA_USE_LINUX
 
@@ -10,11 +10,6 @@ ifeq ($(STATIC),true)
 CFLAGS+=-static
 LUAMYCFLAGS+=-static
 endif
-
-CFLAGS  += -ffunction-sections -fdata-sections
-CPPFLAGS += -ffunction-sections -fdata-sections
-LUAMYCFLAGS += -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections
 
 embedded:
 	make -C $(LUA) a MYCFLAGS='$(LUAMYCFLAGS)'

@@ -1,40 +1,17 @@
-SRC_NAME=zlib-1.2.12
-SRC_URL=http://www.zlib.net/$(SRC_NAME).tar.gz
+include $(ROOTDIR)/rules.mk
 
-all: download_test extract_test config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/build
+PKG_NAME:=zlib
+PKG_VERSION:=1.2.13
 
-download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+PKG_SOURCE_URL:=https://github.com/madler/zlib/releases/download/v$(PKG_VERSION)
+PKG_HASH:=d14c38e313afc35a9a8760dadf26042f51ea0f5d154b0630a31da0540107fb98
 
-extract_test:
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar zxf $(SRC_NAME).tar.gz; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/cmake.mk
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure && touch config_done; \
-	fi )
-
-configure:
-	( mkdir -p $(SRC_NAME)/build && cd $(SRC_NAME)/build ; \
-	cmake -DCMAKE_BUILD_TYPE=Release \
-	-DCMAKE_INSTALL_PREFIX=$(STAGEDIR) \
-	-DCMAKE_TOOLCHAIN_FILE=$(CONFIG_CMAKE_TOOLCHAIN_FILE) \
-	.. \
-	)
-
-clean:
-	rm -rf $(SRC_NAME)/build
-	rm -f config_done
-
-install:
-	$(MAKE) -C $(SRC_NAME)/build install DESTDIR=""
+$(eval $(call BuildPackage,zlib))
 
 romfs:
-	cp -fP $(DESTDIR)/lib/libz.so* $(ROMFSDIR)/lib
+	$(INSTALL_DIR) $(ROMFSDIR)/lib
+	$(CP) $(PKG_INSTALL_DIR)/lib/libz.so* $(ROMFSDIR)/lib/
