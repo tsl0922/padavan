@@ -1,9 +1,9 @@
 ##################################################################
-# Board PID # Board Name       # PRODUCT # Note
+# Board PID     # Board Name       # PRODUCT # Note
 ##################################################################
-# 836PRO    # 836PRO           # MT7621  #
+# JCG-836PRO    # JCG-836PRO       # MT7621  #
 ##################################################################
 
-CFLAGS += -DBOARD_836PRO -DBOARD_MT7615_DBDC
+CFLAGS += -DBOARD_JCG_836PRO -DBOARD_MT7615_DBDC
 BOARD_NUM_USB_PORTS=1
 CONFIG_BOARD_RAM_SIZE=256

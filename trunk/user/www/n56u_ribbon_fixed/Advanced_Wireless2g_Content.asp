@@ -418,7 +418,7 @@ function validate_wlphrase(s, v, obj){
                                             <td>
                                                 <select name="rt_HT_BW" class="input" onChange="return change_common_rt(this, 'WLANConfig11b', 'rt_HT_BW')">
                                                     <option value="0" <% nvram_match_x("","rt_HT_BW", "0","selected"); %>>20 MHz</option>
-                                                    <option value="1" <% nvram_match_x("","rt_HT_BW", "1","selected"); %>>20/40 MHz</option>
+                                                    <option value="1" <% nvram_match_x("","rt_HT_BW", "1","selected"); %>>20/40 MHz (*)</option>
                                                 </select>
                                             </td>
                                         </tr>
@@ -462,7 +462,7 @@ function validate_wlphrase(s, v, obj){
                                                     <option value="open" <% nvram_match_x("", "rt_auth_mode", "open", "selected"); %>>Open System</option>
                                                     <option value="shared" <% nvram_match_x("", "rt_auth_mode", "shared", "selected"); %>>Shared Key</option>
                                                     <option value="psk" <% nvram_double_match_x("", "rt_auth_mode", "psk", "", "rt_wpa_mode", "1", "selected"); %>>WPA-Personal</option>
-                                                    <option value="psk" <% nvram_double_match_x("", "rt_auth_mode", "psk", "", "rt_wpa_mode", "2", "selected"); %>>WPA2-Personal</option>
+                                                    <option value="psk" <% nvram_double_match_x("", "rt_auth_mode", "psk", "", "rt_wpa_mode", "2", "selected"); %>>WPA2-Personal (*)</option>
                                                     <option value="psk" <% nvram_double_match_x("", "rt_auth_mode", "psk", "", "rt_wpa_mode", "0", "selected"); %>>WPA-Auto-Personal</option>
                                                     <option value="wpa" <% nvram_double_match_x("", "rt_auth_mode", "wpa", "", "rt_wpa_mode", "3", "selected"); %>>WPA-Enterprise (Radius)</option>
                                                     <option value="wpa2" <% nvram_match_x("", "rt_auth_mode", "wpa2", "selected"); %>>WPA2-Enterprise (Radius)</option>
@@ -566,13 +566,15 @@ function validate_wlphrase(s, v, obj){
                                             <th><#WIFIRegionCode#></th>
                                             <td>
                                                 <select name="rt_country_code" class="input" onChange="return change_common_rt(this, 'WLANConfig11b', 'rt_country_code')">
-                                                    <option value="US" <% nvram_match_x("", "rt_country_code", "US","selected"); %>>USA (channels 1-11)</option>
-                                                    <option value="TW" <% nvram_match_x("", "rt_country_code", "TW","selected"); %>>Taiwan (channels 1-11)</option>
-                                                    <option value="CN" <% nvram_match_x("", "rt_country_code", "CN","selected"); %>>China (channels 1-13)</option>
-                                                    <option value="JP" <% nvram_match_x("", "rt_country_code", "JP","selected"); %>>Japan (channels 1-13)</option>
                                                     <option value="AU" <% nvram_match_x("", "rt_country_code", "AU","selected"); %>>Australia (channels 1-13)</option>
+                                                    <option value="BY" <% nvram_match_x("", "rt_country_code", "BY","selected"); %>>Belarus (channels 1-13)</option>
+                                                    <option value="CN" <% nvram_match_x("", "rt_country_code", "CN","selected"); %>>China (channels 1-13)</option>
                                                     <option value="GB" <% nvram_match_x("", "rt_country_code", "GB","selected"); %>>Europe (channels 1-13)</option>
+                                                    <option value="JP" <% nvram_match_x("", "rt_country_code", "JP","selected"); %>>Japan (channels 1-13)</option>
                                                     <option value="RU" <% nvram_match_x("", "rt_country_code", "RU","selected"); %>>Russia (channels 1-13)</option>
+                                                    <option value="TW" <% nvram_match_x("", "rt_country_code", "TW","selected"); %>>Taiwan (channels 1-11)</option>
+                                                    <option value="UA" <% nvram_match_x("", "rt_country_code", "UA","selected"); %>>Ukraine (channels 1-13)</option>
+                                                    <option value="US" <% nvram_match_x("", "rt_country_code", "US","selected"); %>>USA (channels 1-11)</option>
                                                     <option value="DB" <% nvram_match_x("", "rt_country_code", "DB","selected"); %>>Debug (all channels)</option>
                                                 </select>
                                             </td>

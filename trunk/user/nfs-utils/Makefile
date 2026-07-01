@@ -1,5 +1,5 @@
-SRC_NAME=nfs-utils-2.5.4
-SRC_URL=https://www.kernel.org/pub/linux/utils/nfs-utils/2.5.4/$(SRC_NAME).tar.xz
+SRC_NAME=nfs-utils-2.6.1
+SRC_URL=https://www.kernel.org/pub/linux/utils/nfs-utils/2.6.1/$(SRC_NAME).tar.xz
 
 CFLAGS += -fvisibility=hidden -D_LARGEFILE64_SOURCE
 
@@ -25,14 +25,13 @@ config_test:
 
 configure:
 	( cd $(SRC_NAME) && \
-	autoreconf -fi ; \
+	./autogen.sh ; \
 	knfsd_cv_bsd_signals=no \
 	PKG_CONFIG_PATH=$(STAGEDIR)/lib/pkgconfig \
 	./configure \
 		--prefix=/ \
 		$(if $(CONFIG_IPV6),--enable-ipv6,--disable-ipv6) \
 		--disable-mount \
-		--disable-libmount \
 		--disable-mountconfig \
 		--disable-nfsdcltrack \
 		--disable-nfsv4 \
@@ -48,13 +47,13 @@ configure:
 	)
 
 clean:
-	if [ -f $(SRC_NAME1)/Makefile ] ; then \
+	if [ -f $(SRC_NAME)/Makefile ] ; then \
 		$(MAKE) -C $(SRC_NAME) distclean ; \
 	fi; \
 	rm -f config_done
 
 romfs:
-	$(ROMFSINST) /usr/bin/nfsd.sh
+	$(ROMFSINST) -p +x /usr/bin/nfsd.sh
 	$(ROMFSINST) $(SRC_NAME)/utils/exportfs/exportfs /sbin/exportfs
 	$(ROMFSINST) $(SRC_NAME)/utils/nfsd/nfsd /sbin/rpc.nfsd
 	$(ROMFSINST) $(SRC_NAME)/utils/mountd/mountd /sbin/rpc.mountd

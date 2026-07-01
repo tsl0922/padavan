@@ -1,0 +1,2056 @@
+--- dnsmasq/src/arp.c
++++ dnsmasq/src/arp.c
+@@ -55,11 +55,13 @@
+ 	  if (arp->addr.addr4.s_addr != ((struct in_addr *)addrp)->s_addr)
+ 	    continue;
+ 	}
++#ifdef HAVE_IPV6
+       else
+ 	{
+ 	  if (!IN6_ARE_ADDR_EQUAL(&arp->addr.addr6, (struct in6_addr *)addrp))
+ 	    continue;
+ 	}
++#endif /* HAVE_IPV6 */
+ 
+       if (arp->status == ARP_EMPTY)
+ 	{
+@@ -96,8 +98,10 @@
+       memcpy(arp->hwaddr, mac, maclen);
+       if (family == AF_INET)
+ 	arp->addr.addr4.s_addr = ((struct in_addr *)addrp)->s_addr;
++#ifdef HAVE_IPV6
+       else
+ 	memcpy(&arp->addr.addr6, addrp, IN6ADDRSZ);
++#endif /* HAVE_IPV6 */
+     }
+   
+   return 1;
+@@ -127,9 +131,11 @@
+ 	      arp->addr.addr4.s_addr != addr->in.sin_addr.s_addr)
+ 	    continue;
+ 	    
++#ifdef HAVE_IPV6
+ 	  if (arp->family == AF_INET6 && 
+ 	      !IN6_ARE_ADDR_EQUAL(&arp->addr.addr6, &addr->in6.sin6_addr))
+ 	    continue;
++#endif /* HAVE_IPV6 */
+ 	  
+ 	  /* Only accept positive entries unless in lazy mode. */
+ 	  if (arp->status != ARP_EMPTY || lazy || updated)
+@@ -192,8 +198,10 @@
+ 
+       if (addr->sa.sa_family == AF_INET)
+ 	arp->addr.addr4.s_addr = addr->in.sin_addr.s_addr;
++#ifdef HAVE_IPV6
+       else
+ 	memcpy(&arp->addr.addr6, &addr->in6.sin6_addr, IN6ADDRSZ);
++#endif /* HAVE_IPV6 */
+     }
+ 	  
+    return 0;
+--- dnsmasq/src/auth.c
++++ dnsmasq/src/auth.c
+@@ -33,8 +33,10 @@
+ 	if  (is_same_net(addr, list->addr.addr4, netmask))
+ 	  return list;
+       }
++#ifdef HAVE_IPV6
+     else if (is_same_net6(&(addr_u->addr6), &list->addr.addr6, list->prefixlen))
+       return list;
++#endif /* HAVE_IPV6 */
+     
+   } while ((list = list->next));
+   
+@@ -189,6 +191,7 @@
+ 		  while (intr->next && strcmp(intr->intr, intr->next->intr) == 0)
+ 		    intr = intr->next;
+ 	      }
++#ifdef HAVE_IPV6
+ 	  else if (flag == F_IPV6)
+ 	    for (intr = daemon->int_names; intr; intr = intr->next)
+ 	      {
+@@ -204,6 +207,7 @@
+ 		  while (intr->next && strcmp(intr->intr, intr->next->intr) == 0)
+ 		    intr = intr->next;
+ 	      }
++#endif /* HAVE_IPV6 */
+ 	  
+ 	  if (intr)
+ 	    {
+@@ -388,8 +392,10 @@
+        if (qtype == T_A)
+ 	 flag = F_IPV4;
+        
++#ifdef HAVE_IPV6
+        if (qtype == T_AAAA)
+ 	 flag = F_IPV6;
++#endif /* HAVE_IPV6 */
+        
+        for (intr = daemon->int_names; intr; intr = intr->next)
+ 	 if ((rc = hostname_issubdomain(name, intr->name)))
+@@ -403,9 +409,11 @@
+ 		 if (((addrlist->flags & ADDRLIST_IPV6)  ? T_AAAA : T_A) == qtype &&
+ 		     (local_query || filter_zone(zone, flag, &addrlist->addr)))
+ 		   {
++#ifdef HAVE_IPV6
+ 		     if (addrlist->flags & ADDRLIST_REVONLY)
+ 		       continue;
+ 
++#endif /* HAVE_IPV6 */
+ 		     found = 1;
+ 		     log_query(F_FORWARD | F_CONFIG | flag, name, &addrlist->addr, NULL, 0);
+ 		     if (add_resource_record(header, limit, &trunc, nameoffset, &ansp, 
+@@ -440,11 +448,13 @@
+ 	      
+ 	      if (peer_addr->sa.sa_family == AF_INET)
+ 		peer_addr->in.sin_port = 0;
++#ifdef HAVE_IPV6
+ 	      else
+ 		{
+ 		  peer_addr->in6.sin6_port = 0; 
+ 		  peer_addr->in6.sin6_scope_id = 0;
+ 		}
++#endif /* HAVE_IPV6 */
+ 	      
+ 	      for (peers = daemon->auth_peers; peers; peers = peers->next)
+ 		if (sockaddr_isequal(peer_addr, &peers->addr))
+@@ -456,8 +466,10 @@
+ 		{
+ 		  if (peer_addr->sa.sa_family == AF_INET)
+ 		    inet_ntop(AF_INET, &peer_addr->in.sin_addr, daemon->addrbuff, ADDRSTRLEN);
++#ifdef HAVE_IPV6
+ 		  else
+ 		    inet_ntop(AF_INET6, &peer_addr->in6.sin6_addr, daemon->addrbuff, ADDRSTRLEN); 
++#endif /* HAVE_IPV6 */
+ 		  
+ 		  my_syslog(LOG_WARNING, _("ignoring zone transfer request from %s"), daemon->addrbuff);
+ 		  return 0;
+@@ -611,6 +623,7 @@
+ 	      sprintf(p, "%u.in-addr.arpa", a & 0xff);
+ 	      
+ 	    }
++#ifdef HAVE_IPV6
+ 	  else
+ 	    {
+ 	      char *p = name;
+@@ -624,6 +637,7 @@
+ 	      sprintf(p, "ip6.arpa");
+ 	      
+ 	    }
++#endif /* HAVE_IPV6 */
+ 	}
+       
+       /* handle NS and SOA in auth section or for explicit queries */
+@@ -764,12 +778,14 @@
+ 					  daemon->auth_ttl, NULL, T_A, C_IN, "4", cut ? intr->name : NULL, &addrlist->addr))
+ 		    anscount++;
+ 		
++#ifdef HAVE_IPV6
+ 		for (addrlist = intr->addr; addrlist; addrlist = addrlist->next) 
+ 		  if ((addrlist->flags & ADDRLIST_IPV6) && 
+ 		      (local_query || filter_zone(zone, F_IPV6, &addrlist->addr)) &&
+ 		      add_resource_record(header, limit, &trunc, -axfroffset, &ansp, 
+ 					  daemon->auth_ttl, NULL, T_AAAA, C_IN, "6", cut ? intr->name : NULL, &addrlist->addr))
+ 		    anscount++;
++#endif /* HAVE_IPV6 */
+ 		
+ 		/* restore config data */
+ 		if (cut)
+@@ -806,11 +822,18 @@
+ 		    {
+ 		      char *cache_name = cache_get_name(crecp);
+ 		      if (!strchr(cache_name, '.') && 
+-			  (local_query || filter_zone(zone, (crecp->flags & (F_IPV6 | F_IPV4)), &(crecp->addr))) &&
+-			  add_resource_record(header, limit, &trunc, -axfroffset, &ansp, 
+-					      daemon->auth_ttl, NULL, (crecp->flags & F_IPV6) ? T_AAAA : T_A, C_IN, 
+-					      (crecp->flags & F_IPV4) ? "4" : "6", cache_name, &crecp->addr))
+-			anscount++;
++			  (local_query || filter_zone(zone, (crecp->flags & (F_IPV6 | F_IPV4)), &(crecp->addr))))
++			{
++			  qtype = T_A;
++#ifdef HAVE_IPV6
++			  if (crecp->flags & F_IPV6)
++			    qtype = T_AAAA;
++#endif /* HAVE_IPV6 */
++			  if (add_resource_record(header, limit, &trunc, -axfroffset, &ansp, 
++						  daemon->auth_ttl, NULL, qtype, C_IN, 
++						  (crecp->flags & F_IPV4) ? "4" : "6", cache_name, &crecp->addr))
++			    anscount++;
++			}
+ 		    }
+ 		  
+ 		  if ((crecp->flags & F_HOSTS) || (((crecp->flags & F_DHCP) && option_bool(OPT_DHCP_FQDN))))
+@@ -819,13 +842,18 @@
+ 		      if (in_zone(zone, name, &cut) && 
+ 			  (local_query || filter_zone(zone, (crecp->flags & (F_IPV6 | F_IPV4)), &(crecp->addr))))
+ 			{
+-			  if (cut)
+-			    *cut = 0;
+-
+-			  if (add_resource_record(header, limit, &trunc, -axfroffset, &ansp, 
+-						  daemon->auth_ttl, NULL, (crecp->flags & F_IPV6) ? T_AAAA : T_A, C_IN, 
+-						  (crecp->flags & F_IPV4) ? "4" : "6", cut ? name : NULL, &crecp->addr))
+-			    anscount++;
++			  qtype = T_A;
++#ifdef HAVE_IPV6
++			  if (crecp->flags & F_IPV6)
++			    qtype = T_AAAA;
++#endif /* HAVE_IPV6 */
++			   if (cut)
++			     *cut = 0;
++
++			   if (add_resource_record(header, limit, &trunc, -axfroffset, &ansp, 
++						   daemon->auth_ttl, NULL, qtype, C_IN, 
++						   (crecp->flags & F_IPV4) ? "4" : "6", cut ? name : NULL, &crecp->addr))
++			     anscount++;
+ 			}
+ 		    }
+ 		}
+--- dnsmasq/src/bpf.c
++++ dnsmasq/src/bpf.c
+@@ -31,7 +31,9 @@
+ #  include <net/if_var.h> 
+ #endif
+ #include <netinet/in_var.h>
+-#include <netinet6/in6_var.h>
++#ifdef HAVE_IPV6
++#  include <netinet6/in6_var.h>
++#endif /* HAVE_IPV6 */
+ 
+ #ifndef SA_SIZE
+ #define SA_SIZE(sa)                                             \
+@@ -119,7 +121,7 @@
+   if (getifaddrs(&head) == -1)
+     return 0;
+ 
+-#if defined(HAVE_BSD_NETWORK)
++#if defined(HAVE_BSD_NETWORK) && defined(HAVE_IPV6)
+   if (family == AF_INET6)
+     fd = socket(PF_INET6, SOCK_DGRAM, 0);
+ #endif
+@@ -150,6 +152,7 @@
+ 	      if (!((*callback)(addr, iface_index, NULL, netmask, broadcast, parm)))
+ 		goto err;
+ 	    }
++#ifdef HAVE_IPV6
+ 	  else if (family == AF_INET6)
+ 	    {
+ 	      struct in6_addr *addr = &((struct sockaddr_in6 *) addrs->ifa_addr)->sin6_addr;
+@@ -216,6 +219,7 @@
+ 				(int) preferred, (int)valid, parm)))
+ 		goto err;	      
+ 	    }
++#endif /* HAVE_IPV6 */
+ 
+ #ifdef HAVE_DHCP6      
+ 	  else if (family == AF_LINK)
+@@ -423,8 +427,10 @@
+ 		 del_family = sa->sa_family;
+ 		 if (del_family == AF_INET)
+ 		   del_addr.addr4 = ((struct sockaddr_in *)sa)->sin_addr;
++#ifdef HAVE_IPV6
+ 		 else if (del_family == AF_INET6)
+ 		   del_addr.addr6 = ((struct sockaddr_in6 *)sa)->sin6_addr;
++#endif /* HAVE_IPV6 */
+ 		 else
+ 		   del_family = 0;
+ 	       }
+--- dnsmasq/src/cache.c
++++ dnsmasq/src/cache.c
+@@ -537,8 +537,11 @@
+   else
+     {
+       int i;
++#ifdef HAVE_IPV6
+       int addrlen = (flags & F_IPV6) ? IN6ADDRSZ : INADDRSZ;
+-
++#else
++      int addrlen = INADDRSZ;
++#endif /* HAVE_IPV6 */
+       for (i = 0; i < hash_size; i++)
+ 	for (crecp = hash_table[i], up = &hash_table[i]; 
+ 	     crecp && ((crecp->flags & F_REVERSE) || !(crecp->flags & F_IMMORTAL));
+@@ -654,9 +657,11 @@
+ 	  if ((flags & F_IPV4) && (new->flags & F_IPV4) &&
+ 	      new->addr.addr4.s_addr == addr->addr4.s_addr)
+ 	    return new;
++#ifdef HAVE_IPV6
+ 	  else if ((flags & F_IPV6) && (new->flags & F_IPV6) &&
+ 		   IN6_ARE_ADDR_EQUAL(&new->addr.addr6, &addr->addr6))
+ 	    return new;
++#endif /* HAVE_IPV6 */
+ 	}
+ 
+       insert_error = 1;
+@@ -1053,7 +1058,11 @@
+ 				time_t now, unsigned int prot)
+ {
+   struct crec *ans;
++#ifdef HAVE_IPV6
+   int addrlen = (prot == F_IPV6) ? IN6ADDRSZ : INADDRSZ;
++#else
++  int addrlen = INADDRSZ;
++#endif /* HAVE_IPV6 */
+   
+   if (crecp) /* iterating */
+     ans = crecp->next;
+@@ -1248,12 +1257,14 @@
+ 	  addrlen = INADDRSZ;
+ 	  domain_suffix = get_domain(addr.addr4);
+ 	}
++#ifdef HAVE_IPV6
+       else if (inet_pton(AF_INET6, token, &addr) > 0)
+ 	{
+ 	  flags = F_HOSTS | F_IMMORTAL | F_FORWARD | F_REVERSE | F_IPV6;
+ 	  addrlen = IN6ADDRSZ;
+ 	  domain_suffix = get_domain6(&addr.addr6);
+ 	}
++#endif /* HAVE_IPV6 */
+       else
+ 	{
+ 	  my_syslog(LOG_ERR, _("bad address at %s line %d"), filename, lineno); 
+@@ -1423,6 +1434,7 @@
+ 	    add_hosts_entry(cache, (union all_addr *)&hr->addr, INADDRSZ, SRC_CONFIG, (struct crec **)daemon->packet, revhashsz);
+ 	  }
+ 
++#ifdef HAVE_IPV6
+ 	if ((hr->flags & HR_6) &&
+ 	    (cache = whine_malloc(SIZEOF_POINTER_CREC)))
+ 	  {
+@@ -1431,6 +1443,7 @@
+ 	    cache->flags = F_HOSTS | F_IMMORTAL | F_FORWARD | F_REVERSE | F_IPV6 | F_NAMEP | F_CONFIG;
+ 	    add_hosts_entry(cache, (union all_addr *)&hr->addr6, IN6ADDRSZ, SRC_CONFIG, (struct crec **)daemon->packet, revhashsz);
+ 	  }
++#endif /* HAVE_IPV6 */
+       }
+ 	
+   if (option_bool(OPT_NO_HOSTS) && !daemon->addn_hosts)
+@@ -1531,11 +1544,13 @@
+   int in_hosts = 0;
+   size_t addrlen = sizeof(struct in_addr);
+ 
++#ifdef HAVE_IPV6
+   if (prot == AF_INET6)
+     {
+       flags = F_IPV6;
+       addrlen = sizeof(struct in6_addr);
+     }
++#endif /* HAVE_IPV6 */
+   
+   inet_ntop(prot, host_address, daemon->addrbuff, ADDRSTRLEN);
+   
+@@ -1863,8 +1878,10 @@
+       a = daemon->addrbuff;
+       if (cache->flags & F_IPV4)
+ 	inet_ntop(AF_INET, &cache->addr, a, ADDRSTRLEN);
++#ifdef HAVE_IPV6
+       else if (cache->flags & F_IPV6)
+ 	inet_ntop(AF_INET6, &cache->addr, a, ADDRSTRLEN);
++#endif /* HAVE_IPV6 */
+     }
+ 
+   if (cache->flags & F_IPV4)
+--- dnsmasq/src/config.h
++++ dnsmasq/src/config.h
+@@ -146,6 +146,7 @@
+ 
+ NO_ID
+    Don't report *.bind CHAOS info to clients, forward such requests upstream instead.
++NO_IPV6
+ NO_TFTP
+ NO_DHCP
+ NO_DHCP6
+@@ -156,8 +157,8 @@
+ NO_LOOP
+ NO_INOTIFY
+    these are available to explicitly disable compile time options which would 
+-   otherwise be enabled automatically or which are enabled  by default 
+-   in the distributed source tree. Building dnsmasq
++   otherwise be enabled automatically (HAVE_IPV6, >2Gb file sizes) or 
++   which are enabled  by default in the distributed source tree. Building dnsmasq
+    with something like "make COPTS=-DNO_SCRIPT" will do the trick.
+ NO_GMP
+    Don't use and link against libgmp, Useful if nettle is built with --enable-mini-gmp.
+@@ -319,9 +320,29 @@
+  
+ #endif
+ 
++/* Decide if we're going to support IPv6 */
++/* We assume that systems which don't have IPv6
++   headers don't have ntop and pton either */
++
++#if defined(INET6_ADDRSTRLEN) && defined(IPV6_V6ONLY)
++#  define HAVE_IPV6
++#  define ADDRSTRLEN INET6_ADDRSTRLEN
++#else
++#  if !defined(INET_ADDRSTRLEN)
++#      define INET_ADDRSTRLEN 16 /* 4*3 + 3 dots + NULL */
++#  endif
++#  undef HAVE_IPV6
++#  define ADDRSTRLEN INET_ADDRSTRLEN
++#endif
++
++
+ /* rules to implement compile-time option dependencies and 
+    the NO_XXX flags */
+ 
++#ifdef NO_IPV6
++#undef HAVE_IPV6
++#endif
++
+ #ifdef NO_TFTP
+ #undef HAVE_TFTP
+ #endif
+@@ -331,7 +352,7 @@
+ #undef HAVE_DHCP6
+ #endif
+ 
+-#if defined(NO_DHCP6)
++#if defined(NO_DHCP6) || !defined(HAVE_IPV6)
+ #undef HAVE_DHCP6
+ #endif
+ 
+@@ -376,6 +397,9 @@
+ #ifdef DNSMASQ_COMPILE_OPTS
+ 
+ static char *compile_opts = 
++#ifndef HAVE_IPV6
++"no-"
++#endif
+ "IPv6 "
+ #ifndef HAVE_GETOPT_LONG
+ "no-"
+--- dnsmasq/src/conntrack.c
++++ dnsmasq/src/conntrack.c
+@@ -36,6 +36,7 @@
+       nfct_set_attr_u8(ct, ATTR_L4PROTO, istcp ? IPPROTO_TCP : IPPROTO_UDP);
+       nfct_set_attr_u16(ct, ATTR_PORT_DST, htons(daemon->port));
+       
++#ifdef HAVE_IPV6
+       if (peer_addr->sa.sa_family == AF_INET6)
+ 	{
+ 	  nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET6);
+@@ -44,6 +45,7 @@
+ 	  nfct_set_attr(ct, ATTR_IPV6_DST, local_addr->addr6.s6_addr);
+ 	}
+       else
++#endif /* HAVE_IPV6 */
+ 	{
+ 	  nfct_set_attr_u8(ct, ATTR_L3PROTO, AF_INET);
+ 	  nfct_set_attr_u32(ct, ATTR_IPV4_SRC, peer_addr->in.sin_addr.s_addr);
+--- dnsmasq/src/dbus.c
++++ dnsmasq/src/dbus.c
+@@ -206,6 +206,9 @@
+ 		}
+ 	    }
+ 
++#ifndef HAVE_IPV6
++	  my_syslog(LOG_WARNING, _("attempt to set an IPv6 server address via DBus - no IPv6 support"));
++#else
+ 	  if (i == sizeof(struct in6_addr))
+ 	    {
+ 	      memcpy(&addr.in6.sin6_addr, p, sizeof(struct in6_addr));
+@@ -220,6 +223,7 @@
+               source_addr.in6.sin6_port = htons(daemon->query_port);
+ 	      skip = 0;
+ 	    }
++#endif /* !HAVE_IPV6 */
+ 	}
+       else
+ 	/* At the end */
+--- dnsmasq/src/dnsmasq.c
++++ dnsmasq/src/dnsmasq.c
+@@ -1909,11 +1909,11 @@
+ 		  indextoname(listener->tcpfd, if_index, intr_name))
+ 		{
+ 		  union all_addr addr;
+-		  
++		  addr.addr4 = tcp_addr.in.sin_addr;
++#ifdef HAVE_IPV6
+ 		  if (tcp_addr.sa.sa_family == AF_INET6)
+ 		    addr.addr6 = tcp_addr.in6.sin6_addr;
+-		  else
+-		    addr.addr4 = tcp_addr.in.sin_addr;
++#endif /* HAVE_IPV6 */
+ 		  
+ 		  for (iface = daemon->interfaces; iface; iface = iface->next)
+ 		    if (iface->index == if_index &&
+--- dnsmasq/src/dnsmasq.h
++++ dnsmasq/src/dnsmasq.h
+@@ -127,7 +127,9 @@
+ #include <net/if_arp.h>
+ #include <netinet/in_systm.h>
+ #include <netinet/ip.h>
++#ifdef HAVE_IPV6
+ #include <netinet/ip6.h>
++#endif /* HAVE_IPV6 */
+ #include <netinet/ip_icmp.h>
+ #include <netinet/tcp.h>
+ #include <sys/uio.h>
+@@ -166,8 +168,6 @@
+ /* daemon is function in the C library.... */
+ #define daemon dnsmasq_daemon
+ 
+-#define ADDRSTRLEN INET6_ADDRSTRLEN
+-
+ /* Async event queue */
+ struct event_desc {
+   int event, data, msg_sz;
+@@ -305,7 +305,9 @@
+ */
+ union all_addr {
+   struct in_addr addr4;
++#ifdef HAVE_IPV6
+   struct in6_addr addr6;
++#endif /* HAVE_IPV6 */
+   struct {
+     union {
+       struct crec *cache;
+@@ -447,7 +449,9 @@
+     struct name_list *next;
+   } *names;
+   struct in_addr addr;
++#ifdef HAVE_IPV6
+   struct in6_addr addr6;
++#endif /* HAVE_IPV6 */
+   struct host_record *next;
+ };
+ 
+@@ -539,7 +543,9 @@
+ union mysockaddr {
+   struct sockaddr sa;
+   struct sockaddr_in in;
++#ifdef HAVE_IPV6
+   struct sockaddr_in6 in6;
++#endif /* HAVE_IPV6 */
+ };
+ 
+ /* bits in flag param to IPv6 callbacks from iface_enumerate() */
+@@ -1023,7 +1029,9 @@
+   char *interface;       /* These two set when domain comes from interface. */
+   struct addrlist *al;
+   struct in_addr start, end;
++#ifdef HAVE_IPV6
+   struct in6_addr start6, end6;
++#endif /* HAVE_IPV6 */
+   int is6, indexed, prefixlen;
+   struct cond_domain *next;
+ }; 
+@@ -1378,7 +1386,9 @@
+ 
+ /* domain.c */
+ char *get_domain(struct in_addr addr);
++#ifdef HAVE_IPV6
+ char *get_domain6(struct in6_addr *addr);
++#endif /* HAVE_IPV6 */
+ int is_name_synthetic(int flags, char *name, union all_addr *addr);
+ int is_rev_synth(int flag, union all_addr *addr, char *name);
+ 
+@@ -1475,9 +1485,11 @@
+ int netmask_length(struct in_addr mask);
+ int is_same_net(struct in_addr a, struct in_addr b, struct in_addr mask);
+ int is_same_net_prefix(struct in_addr a, struct in_addr b, int prefix);
++#ifdef HAVE_IPV6
+ int is_same_net6(struct in6_addr *a, struct in6_addr *b, int prefixlen);
+ u64 addr6part(struct in6_addr *addr);
+ void setaddr6part(struct in6_addr *addr, u64 host);
++#endif /* HAVE_IPV6 */
+ int retry_send(ssize_t rc);
+ void prettyprint_time(char *buf, unsigned int t);
+ int prettyprint_addr(union mysockaddr *addr, char *buf);
+@@ -1549,7 +1561,9 @@
+ int label_exception(int index, int family, union all_addr *addr);
+ int fix_fd(int fd);
+ int tcp_interface(int fd, int af);
++#ifdef HAVE_IPV6
+ int set_ipv6pktinfo(int fd);
++#endif /* HAVE_IPV6 */
+ #ifdef HAVE_DHCP6
+ void join_multicast(int dienow);
+ #endif
+--- dnsmasq/src/domain.c
++++ dnsmasq/src/domain.c
+@@ -20,13 +20,20 @@
+ static struct cond_domain *search_domain(struct in_addr addr, struct cond_domain *c);
+ static int match_domain(struct in_addr addr, struct cond_domain *c);
++#ifdef HAVE_IPV6
+ static struct cond_domain *search_domain6(struct in6_addr *addr, struct cond_domain *c);
+ static int match_domain6(struct in6_addr *addr, struct cond_domain *c);
++#endif /* HAVE_IPV6 */
+ 
+ int is_name_synthetic(int flags, char *name, union all_addr *addrp)
+ {
+   char *p;
+   struct cond_domain *c = NULL;
+-  int prot = (flags & F_IPV6) ? AF_INET6 : AF_INET;
+-  union all_addr addr;
++  int prot = AF_INET;
++
++#ifdef HAVE_IPV6
++  if (flags & F_IPV6)
++    prot = AF_INET6;
++#endif /* HAVE_IPV6 */
++  union all_addr addr;
+ 
+   for (c = daemon->synth_domains; c; c = c->next)
+@@ -79,6 +86,7 @@
+ 		      found = 1;
+ 		    }
+ 		} 
++#ifdef HAVE_IPV6 
+ 	      else
+ 		{
+ 		  u64 index = atoll(tail);
+@@ -92,6 +100,7 @@
+ 		      found = 1;
+ 		    }
+ 		}
++#endif /* HAVE_IPV6 */
+ 	    }
+ 	}
+       else
+@@ -104,8 +113,10 @@
+ 	      if ((c >='0' && c <= '9') || c == '-')
+ 		continue;
+ 	      
++#ifdef HAVE_IPV6
+ 	      if (prot == AF_INET6 && ((c >='A' && c <= 'F') || (c >='a' && c <= 'f'))) 
+ 		continue;
++#endif /* HAVE_IPV6 */
+ 	      
+ 	      break;
+ 	    }
+@@ -115,6 +126,7 @@
+ 	  
+ 	  *p = 0;	
+ 	  
++#ifdef HAVE_IPV6
+ 	  if (prot == AF_INET6 && strstr(tail, "--ffff-") == tail)
+ 	    {
+ 	      /* special hack for v4-mapped. */
+@@ -124,6 +136,7 @@
+ 		  *p = '.';
+ 	    }
+ 	  else
++#endif /* HAVE_IPV6 */
+ 	    {
+ 	      /* swap . or : for - */
+ 	      for (p = tail; *p; p++)
+@@ -131,13 +144,21 @@
+ 		  {
+ 		    if (prot == AF_INET)
+ 		      *p = '.';
++#ifdef HAVE_IPV6
+ 		    else
+ 		      *p = ':';
++#endif /* HAVE_IPV6 */
+ 		  }
+ 	    }
+ 	  
+-	  if (hostname_isequal(c->domain, p+1) && inet_pton(prot, tail, &addr))
+-	    found = (prot == AF_INET) ? match_domain(addr.addr4, c) : match_domain6(&addr.addr6, c);
++	  if (hostname_isequal(c->domain, p+1) && inet_pton(prot, tail, &addr)) {
++	    if (prot == AF_INET)
++		  found = match_domain(addr.addr4, c);
++#ifdef HAVE_IPV6
++	    else
++		  found = match_domain6(&addr.addr6, c);
++#endif /* HAVE_IPV6 */
++	  }
+ 	}
+       
+       /* restore name */
+@@ -192,6 +213,7 @@
+        return 1;
+      }
+ 
++#ifdef HAVE_IPV6
+    if ((flag & F_IPV6) && (c = search_domain6(&addr->addr6, daemon->synth_domains))) 
+      {
+        char *p;
+@@ -229,6 +251,7 @@
+        
+        return 1;
+      }
++#endif /* HAVE_IPV6 */
+    
+    return 0;
+ }
+@@ -271,6 +294,7 @@
+   return daemon->domain_suffix;
+ } 
+ 
++#ifdef HAVE_IPV6
+ static int match_domain6(struct in6_addr *addr, struct cond_domain *c)
+ {
+     
+@@ -318,3 +342,4 @@
+ 
+   return daemon->domain_suffix;
+ } 
++#endif /* HAVE_IPV6 */
+--- dnsmasq/src/domain-match.c
++++ dnsmasq/src/domain-match.c
+@@ -435,8 +435,10 @@
+ 
+ 	if (srv->flags & SERV_ALL_ZEROS)
+ 	  memset(&addr, 0, sizeof(addr));
++#ifdef HAVE_IPV6
+ 	else
+ 	  addr.addr6 = srv->addr;
++#endif /* HAVE_IPV6 */
+ 	
+ 	if (add_resource_record(header, limit, &trunc, sizeof(struct dns_header), &p, daemon->local_ttl, NULL, T_AAAA, C_IN, "6", &addr))
+ 	  anscount++;
+@@ -654,9 +656,12 @@
+     {
+       size_t size;
+       
++#ifdef HAVE_IPV6
+       if (flags & SERV_6ADDR)
+ 	size = sizeof(struct serv_addr6);
+-      else if (flags & SERV_4ADDR)
++      else
++#endif /* HAVE_IPV6 */
++      if (flags & SERV_4ADDR)
+ 	size = sizeof(struct serv_addr4);
+       else
+ 	size = sizeof(struct serv_local);
+@@ -673,8 +678,10 @@
+       if (flags & SERV_4ADDR)
+ 	((struct serv_addr4*)serv)->addr = local_addr->addr4;
+       
++#ifdef HAVE_IPV6
+       if (flags & SERV_6ADDR)
+ 	((struct serv_addr6*)serv)->addr = local_addr->addr6;
++#endif /* HAVE_IPV6 */
+     }
+   else
+     { 
+--- dnsmasq/src/dump.c
++++ dnsmasq/src/dump.c
+@@ -124,8 +124,10 @@
+ 			   union mysockaddr *src, union mysockaddr *dst, int port, int proto)
+ {
+   struct ip ip;
++#ifdef HAVE_IPV6
+   struct ip6_hdr ip6;
+   int family;
++#endif /* HAVE_IPV6 */
+   struct udphdr {
+     u16 uh_sport;               /* source port */
+     u16 uh_dport;               /* destination port */
+@@ -146,6 +148,7 @@
+      a spurious getsockname() call. */
+   udp.uh_sport = udp.uh_dport = htons(port < 0 ? 0 : port);
+   
++#ifdef HAVE_IPV6
+   if (src)
+     family = src->sa.sa_family;
+   else
+@@ -188,6 +191,7 @@
+ 	}
+     }
+   else
++#endif /* HAVE_IPV6 */
+     {
+       iphdr = &ip;
+       ipsz = sizeof(ip);
+--- dnsmasq/src/edns0.c
++++ dnsmasq/src/edns0.c
+@@ -322,14 +322,20 @@
+ 
+ struct subnet_opt {
+   u16 family;
+-  u8 source_netmask, scope_netmask; 
++  u8 source_netmask, scope_netmask;
++#ifdef HAVE_IPV6 
+   u8 addr[IN6ADDRSZ];
++#else
++  u8 addr[INADDRSZ];
++#endif /* HAVE_IPV6 */
+ };
+ 
+ static void *get_addrp(union mysockaddr *addr, const short family) 
+ {
++#ifdef HAVE_IPV6
+   if (family == AF_INET6)
+     return &addr->in6.sin6_addr;
++#endif /* HAVE_IPV6 */
+ 
+   return &addr->in.sin_addr;
+ }
+@@ -346,6 +352,7 @@
+   opt->source_netmask = 0;
+   opt->scope_netmask = 0;
+     
++#ifdef HAVE_IPV6
+   if (source->sa.sa_family == AF_INET6 && daemon->add_subnet6)
+     {
+       opt->source_netmask = daemon->add_subnet6->mask;
+@@ -358,6 +365,7 @@
+       else 
+ 	addrp = &source->in6.sin6_addr;
+     }
++#endif /* HAVE_IPV6 */
+ 
+   if (source->sa.sa_family == AF_INET && daemon->add_subnet4)
+     {
+@@ -372,7 +380,11 @@
+ 	  addrp = &source->in.sin_addr;
+     }
+   
++#ifdef HAVE_IPV6
+   opt->family = htons(sa_family == AF_INET6 ? 2 : 1);
++#else
++  opt->family = htons(1);
++#endif /* HAVE_IPV6 */
+   
+   if (addrp && opt->source_netmask != 0)
+     {
+--- dnsmasq/src/forward.c
++++ dnsmasq/src/forward.c
+@@ -44,7 +44,9 @@
+ #elif defined(IP_SENDSRCADDR)
+     char control[CMSG_SPACE(sizeof(struct in_addr))];
+ #endif
++#ifdef HAVE_IPV6
+     char control6[CMSG_SPACE(sizeof(struct in6_pktinfo))];
++#endif /* HAVE_IPV6 */
+   } control_u;
+   
+   iov[0].iov_base = packet;
+@@ -85,6 +87,7 @@
+ #endif
+ 	}
+       else
++#ifdef HAVE_IPV6
+ 	{
+ 	  struct in6_pktinfo p;
+ 	  p.ipi6_ifindex = iface; /* Need iface for IPv6 to handle link-local addrs */
+@@ -95,6 +98,9 @@
+ 	  cmptr->cmsg_type = daemon->v6pktinfo;
+ 	  cmptr->cmsg_level = IPPROTO_IPV6;
+ 	}
++#else
++      (void)iface; /* eliminate warning */
++#endif /* HAVE_IPV6 */
+     }
+   
+   while (retry_send(sendmsg(fd, &msg, 0)));
+@@ -130,12 +136,14 @@
+ 	type = ntohs(addr->in.sin_port);
+       log_query(flags | F_IPV4, name, (union all_addr *)&addr->in.sin_addr, arg, type);
+     }
++#ifdef HAVE_IPV6
+   else
+     {
+       if (flags & F_SERVER)
+ 	type = ntohs(addr->in6.sin6_port);
+       log_query(flags | F_IPV6, name, (union all_addr *)&addr->in6.sin6_addr, arg, type);
+     }
++#endif /* HAVE_IPV6 */
+ }
+ 
+ static void server_send(struct server *server, int fd,
+@@ -1126,8 +1134,10 @@
+   daemon->srv_save = NULL;
+ 
+   /* Determine the address of the server replying  so that we can mark that as good */
++#ifdef HAVE_IPV6
+   if (serveraddr.sa.sa_family == AF_INET6)
+     serveraddr.in6.sin6_flowinfo = 0;
++#endif /* HAVE_IPV6 */
+   
+   header = (struct dns_header *)daemon->packet;
+ 
+@@ -1504,7 +1514,9 @@
+   struct cmsghdr *cmptr;
+   union {
+     struct cmsghdr align; /* this ensures alignment */
++#ifdef HAVE_IPV6
+     char control6[CMSG_SPACE(sizeof(struct in6_pktinfo))];
++#endif /* HAVE_IPV6 */
+ #if defined(HAVE_LINUX_NETWORK)
+     char control[CMSG_SPACE(sizeof(struct in_pktinfo))];
+ #elif defined(IP_RECVDSTADDR) && defined(HAVE_SOLARIS_NETWORK)
+@@ -1568,6 +1580,7 @@
+       if (source_addr.in.sin_port == 0)
+ 	return;
+     }
++#ifdef HAVE_IPV6
+   else
+     {
+       /* Source-port == 0 is an error, we can't send back to that. */
+@@ -1575,12 +1588,14 @@
+ 	return;
+       source_addr.in6.sin6_flowinfo = 0;
+     }
++#endif /* HAVE_IPV6 */
+   
+   /* We can be configured to only accept queries from at-most-one-hop-away addresses. */
+   if (option_bool(OPT_LOCAL_SERVICE))
+     {
+       struct addrlist *addr;
+ 
++#ifdef HAVE_IPV6
+       if (family == AF_INET6) 
+ 	{
+ 	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
+@@ -1589,6 +1604,7 @@
+ 	      break;
+ 	}
+       else
++#endif /* HAVE_IPV6 */
+ 	{
+ 	  struct in_addr netmask;
+ 	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
+@@ -1658,6 +1674,7 @@
+ 	}
+ #endif
+       
++#ifdef HAVE_IPV6
+       if (family == AF_INET6)
+ 	{
+ 	  for (cmptr = CMSG_FIRSTHDR(&msg); cmptr; cmptr = CMSG_NXTHDR(&msg, cmptr))
+@@ -1673,6 +1690,7 @@
+ 		if_index = p.p->ipi6_ifindex;
+ 	      }
+ 	}
++#endif /* HAVE_IPV6 */
+       
+       /* enforce available interface configuration */
+       
+@@ -2179,9 +2197,11 @@
+     {
+       union all_addr local;
+ 		      
++#ifdef HAVE_IPV6
+       if (local_addr->sa.sa_family == AF_INET6)
+ 	local.addr6 = local_addr->in6.sin6_addr;
+       else
++#endif /* HAVE_IPV6 */
+ 	local.addr4 = local_addr->in.sin_addr;
+       
+       have_mark = get_incoming_mark(&peer_addr, &local, 1, &mark);
+@@ -2193,6 +2213,7 @@
+     {
+       struct addrlist *addr;
+ 
++#ifdef HAVE_IPV6
+       if (peer_addr.sa.sa_family == AF_INET6) 
+ 	{
+ 	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
+@@ -2201,6 +2222,7 @@
+ 	      break;
+ 	}
+       else
++#endif /* HAVE_IPV6 */
+ 	{
+ 	  struct in_addr netmask;
+ 	  for (addr = daemon->interface_addrs; addr; addr = addr->next)
+--- dnsmasq/src/helper.c
++++ dnsmasq/src/helper.c
+@@ -64,7 +64,9 @@
+ #ifdef HAVE_TFTP
+   off_t file_len;
+ #endif
++#ifdef HAVE_IPV6
+   struct in6_addr addr6;
++#endif /* HAVE_IPV6 */
+ #ifdef HAVE_DHCP6
+   int vendorclass_count;
+   unsigned int iaid;
+@@ -307,8 +309,10 @@
+     
+       if (!is6)
+ 	inet_ntop(AF_INET, &data.addr, daemon->addrbuff, ADDRSTRLEN);
++#ifdef HAVE_IPV6
+       else
+ 	inet_ntop(AF_INET6, &data.addr6, daemon->addrbuff, ADDRSTRLEN);
++#endif /* HAVE_IPV6 */
+ 
+ #ifdef HAVE_TFTP
+       /* file length */
+@@ -888,8 +892,10 @@
+ 
+   if ((buf->flags = peer->sa.sa_family) == AF_INET)
+     buf->addr = peer->in.sin_addr;
++#ifdef HAVE_IPV6
+   else
+     buf->addr6 = peer->in6.sin6_addr;
++#endif /* HAVE_IPV6 */
+ 
+   memcpy((unsigned char *)(buf+1), filename, filename_len);
+   
+@@ -911,8 +917,10 @@
+   buf->hwaddr_type =  ARPHRD_ETHER; 
+   if ((buf->flags = family) == AF_INET)
+     buf->addr = addr->addr4;
++#ifdef HAVE_IPV6
+   else
+     buf->addr6 = addr->addr6;
++#endif /* HAVE_IPV6 */
+   
+   memcpy(buf->hwaddr, mac, maclen);
+   
+--- dnsmasq/src/ipset.c
++++ dnsmasq/src/ipset.c
+@@ -100,7 +100,12 @@
+   struct my_nfgenmsg *nfg;
+   struct my_nlattr *nested[2];
+   uint8_t proto;
+-  int addrsz = (af == AF_INET6) ? IN6ADDRSZ : INADDRSZ;
++  int addrsz = INADDRSZ;
++
++#ifdef HAVE_IPV6
++  if (af == AF_INET6)
++    addrsz = IN6ADDRSZ;
++#endif /* HAVE_IPV6 */
+ 
+   if (strlen(setname) >= IPSET_MAXNAMELEN) 
+     {
+@@ -146,9 +151,10 @@
+ {
+   int ret = 0, af = AF_INET;
+ 
++#ifdef HAVE_IPV6
+   if (flags & F_IPV6)
+       af = AF_INET6;
+-
++#endif /* HAVE_IPV6 */
+   ret = new_add_to_ipset(setname, ipaddr, af, remove);
+ 
+   if (ret == -1)
+--- dnsmasq/src/netlink.c
++++ dnsmasq/src/netlink.c
+@@ -67,9 +67,11 @@
+   addr.nl_pid = 0; /* autobind */
+   addr.nl_groups = RTMGRP_IPV4_ROUTE;
+   addr.nl_groups |= RTMGRP_IPV4_IFADDR;  
++#ifdef HAVE_IPV6
+   addr.nl_groups |= RTMGRP_IPV6_ROUTE;
+   addr.nl_groups |= RTMGRP_IPV6_IFADDR;
+ 
++#endif /* HAVE_IPV6 */
+   /* May not be able to have permission to set multicast groups don't die in that case */
+   if ((daemon->netlinkfd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE)) != -1)
+     {
+@@ -250,6 +252,7 @@
+ 		      if (!((*callback)(addr, ifa->ifa_index, label,  netmask, broadcast, parm)))
+ 			callback_ok = 0;
+ 		  }
++#ifdef HAVE_IPV6
+ 		else if (ifa->ifa_family == AF_INET6)
+ 		  {
+ 		    struct in6_addr *addrp = NULL;
+@@ -293,6 +296,7 @@
+ 					(int) preferred, (int)valid, parm)))
+ 			callback_ok = 0;
+ 		  }
++#endif /* HAVE_IPV6 */
+ 	      }
+ 	  }
+ 	else if (h->nlmsg_type == RTM_NEWNEIGH && family == AF_UNSPEC)
+--- dnsmasq/src/network.c
++++ dnsmasq/src/network.c
+@@ -138,11 +138,13 @@
+ 		  tmp->flags |= INAME_USED;
+ 		  ret = match_addr = 1;
+ 		}
++#ifdef HAVE_IPV6
+ 	      else if (family == AF_INET6 &&
+ 		       IN6_ARE_ADDR_EQUAL(&tmp->addr.in6.sin6_addr, 
+ 					  &addr->addr6))
+ 		{
+ 		  tmp->flags |= INAME_USED;
+ 		  ret = match_addr = 1;
+ 		}
++#endif /* HAVE_IPV6 */
+ 	    }          
+@@ -167,9 +169,11 @@
+ 	else if (addr && tmp->addr.sa.sa_family == AF_INET && family == AF_INET &&
+ 		 tmp->addr.in.sin_addr.s_addr == addr->addr4.s_addr)
+ 	  break;
++#ifdef HAVE_IPV6
+ 	else if (addr && tmp->addr.sa.sa_family == AF_INET6 && family == AF_INET6 &&
+ 		 IN6_ARE_ADDR_EQUAL(&tmp->addr.in6.sin6_addr, &addr->addr6))
+ 	  break;
++#endif /* HAVE_IPV6 */
+       
+       if (tmp) 
+ 	{
+@@ -204,8 +208,10 @@
+ 		if (iface->addr.in.sin_addr.s_addr == addr->addr4.s_addr)
+ 		  return 1;
+ 	      }
++#ifdef HAVE_IPV6
+ 	    else if (IN6_ARE_ADDR_EQUAL(&iface->addr.in6.sin6_addr, &addr->addr6))
+ 	      return 1;
++#endif /* HAVE_IPV6 */
+ 	  }
+     }
+   return 0;
+@@ -292,15 +298,19 @@
+ 	      al->addr.addr4 = addr->in.sin_addr;
+ 	      al->flags = 0;
+ 	    }
++#ifdef HAVE_IPV6
+ 	  else
+ 	    {
+ 	      al->addr.addr6 = addr->in6.sin6_addr;
+ 	      al->flags = ADDRLIST_IPV6;
+ 	    } 
++#endif /* HAVE_IPV6 */
+ 	}
+     }
+   
++#ifdef HAVE_IPV6
+   if (addr->sa.sa_family != AF_INET6 || !IN6_IS_ADDR_LINKLOCAL(&addr->in6.sin6_addr))
++#endif /* HAVE_IPV6 */
+     {
+       struct interface_name *int_name;
+       struct addrlist *al;
+@@ -333,6 +343,7 @@
+ 		    }
+ 		}
+ 	      
++#ifdef HAVE_IPV6
+ 	      if (addr->sa.sa_family == AF_INET6 && (name->flags & AUTH6))
+ 		{
+ 		  if (param->spare)
+@@ -352,6 +363,7 @@
+ 		      al->flags = ADDRLIST_IPV6;
+ 		    }
+ 		} 
++#endif /* HAVE_IPV6 */
+ 	    }
+ #endif
+        
+@@ -395,6 +407,7 @@
+ 		  }
+ 	      }
+ 
++#ifdef HAVE_IPV6
+ 	    if (addr->sa.sa_family == AF_INET6 && (int_name->flags & (IN6 | INP6)))
+ 	      {
+ 		struct in6_addr newaddr = addr->in6.sin6_addr;
+@@ -447,6 +460,7 @@
+ 		      }
+ 		  }
+ 	      }
++#endif /* HAVE_IPV6 */
+ 	    
+ 	    if (al)
+ 	      {
+@@ -475,11 +489,13 @@
+ 	    al->addr.addr4 = addr->in.sin_addr;
+ 	    al->flags = 0;
+ 	  }
++#ifdef HAVE_IPV6
+ 	else
+ 	  {
+ 	    al->addr.addr6 =  addr->in6.sin6_addr;
+ 	    al->flags = ADDRLIST_IPV6;
+ 	  }
++#endif /* HAVE_IPV6 */
+ 
+ 	al->prefixlen = prefixlen;
+ 	al->next = cond->al;
+@@ -524,9 +540,11 @@
+       !iface_check(AF_INET, (union all_addr *)&addr->in.sin_addr, label, &auth_dns))
+     return 1;
+ 
++#ifdef HAVE_IPV6
+   if (addr->sa.sa_family == AF_INET6 &&
+       !iface_check(AF_INET6, (union all_addr *)&addr->in6.sin6_addr, label, &auth_dns))
+     return 1;
++#endif /* HAVE_IPV6 */
+     
+ #ifdef HAVE_DHCP
+   /* No DHCP where we're doing auth DNS. */
+@@ -594,6 +612,7 @@
+   return 0;
+ }
+ 
++#ifdef HAVE_IPV6
+ static int iface_allowed_v6(struct in6_addr *local, int prefix, 
+ 			    int scope, int if_index, int flags, 
+ 			    int preferred, int valid, void *vparam)
+@@ -621,6 +640,7 @@
+   
+   return iface_allowed((struct iface_param *)vparam, if_index, NULL, &addr, netmask, prefix, flags);
+ }
++#endif /* HAVE_IPV6 */
+ 
+ static int iface_allowed_v4(struct in_addr local, int if_index, char *label,
+ 			    struct in_addr netmask, struct in_addr broadcast, void *vparam)
+@@ -833,10 +853,12 @@
+ 
+   param.spare = spare;
+   
++#ifdef HAVE_IPV6
+   ret = iface_enumerate(AF_INET6, &param, iface_allowed_v6);
+   if (ret < 0)
+     goto again;
+   else if (ret)
++#endif /* HAVE_IPV6 */
+     {
+       ret = iface_enumerate(AF_INET, &param, iface_allowed_v4);
+       if (ret < 0)
+@@ -945,8 +967,10 @@
+   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1 || !fix_fd(fd))
+     goto err;
+   
++#ifdef HAVE_IPV6
+   if (family == AF_INET6 && setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &opt, sizeof(opt)) == -1)
+     goto err;
++#endif /* HAVE_IPV6 */
+   
+   if ((rc = bind(fd, (struct sockaddr *)addr, sa_len(addr))) == -1)
+     goto err;
+@@ -975,12 +999,15 @@
+ #endif
+ 	}
+     }
++#ifdef HAVE_IPV6
+   else if (!set_ipv6pktinfo(fd))
+     goto err;
++#endif /* HAVE_IPV6 */
+   
+   return fd;
+ }
+ 
++#ifdef HAVE_IPV6
+ int set_ipv6pktinfo(int fd)
+ {
+   int opt = 1;
+@@ -1007,6 +1034,7 @@
+ 
+   return 0;
+ }
++#endif /* HAVE_IPV6 */
+ 
+ 
+ /* Find the interface on which a TCP connection arrived, if possible, or zero otherwise. */
+@@ -1048,6 +1076,7 @@
+ 	      }
+ 	}
+     }
++#ifdef HAVE_IPV6
+   else
+     {
+       /* Only the RFC-2292 API has the ability to find the interface for TCP connections,
+@@ -1079,6 +1108,7 @@
+               }
+ 	}
+     }
++#endif /* HAVE_IPV6 */
+ #endif /* Linux */
+  
+   return if_index;
+@@ -1108,6 +1138,7 @@
+ 	  tftpfd = make_sock(addr, SOCK_DGRAM, dienow);
+ 	  addr->in.sin_port = save;
+ 	}
++#ifdef HAVE_IPV6
+       else
+ 	{
+ 	  short save = addr->in6.sin6_port;
+@@ -1115,6 +1146,7 @@
+ 	  tftpfd = make_sock(addr, SOCK_DGRAM, dienow);
+ 	  addr->in6.sin6_port = save;
+ 	}  
++#endif /* HAVE_IPV6 */
+     }
+ #endif
+ 
+@@ -1136,7 +1168,11 @@
+ void create_wildcard_listeners(void)
+ {
+   union mysockaddr addr;
++#ifdef HAVE_IPV6
+   struct listener *l, *l6;
++#else
++  struct listener *l;
++#endif /* HAVE_IPV6 */
+ 
+   memset(&addr, 0, sizeof(addr));
+ #ifdef HAVE_SOCKADDR_SA_LEN
+@@ -1149,6 +1185,7 @@
+   l = create_listeners(&addr, !!option_bool(OPT_TFTP), 1);
+ 
+   memset(&addr, 0, sizeof(addr));
++#ifdef HAVE_IPV6
+ #ifdef HAVE_SOCKADDR_SA_LEN
+   addr.in6.sin6_len = sizeof(addr.in6);
+ #endif
+@@ -1161,6 +1198,7 @@
+     l->next = l6;
+   else 
+     l = l6;
++#endif /* HAVE_IPV6 */
+ 
+   daemon->listeners = l;
+ }
+@@ -1303,6 +1341,7 @@
+   return 0;
+ }
+ 
++#ifdef HAVE_IPV6
+ #ifdef HAVE_DHCP6
+ void join_multicast(int dienow)      
+ {
+@@ -1363,6 +1402,7 @@
+       }
+ }
+ #endif
++#endif /* HAVE_IPV6 */
+ 
+ int local_bind(int fd, union mysockaddr *addr, char *intname, unsigned int ifindex, int is_tcp)
+ {
+@@ -1373,8 +1413,10 @@
+ 
+   if (addr_copy.sa.sa_family == AF_INET)
+     port = addr_copy.in.sin_port;
++#ifdef HAVE_IPV6
+   else
+     port = addr_copy.in6.sin6_port;
++#endif /* HAVE_IPV6 */
+ 
+   /* cannot set source _port_ for TCP connections. */
+   if (is_tcp)
+@@ -1398,12 +1440,14 @@
+ 	    break;
+ 	  addr_copy.in.sin_port = port;
+ 	}
++#ifdef HAVE_IPV6
+       else
+ 	{
+ 	  if (port == 0 && IN6_IS_ADDR_UNSPECIFIED(&addr_copy.in6.sin6_addr))
+ 	    break;
+ 	  addr_copy.in6.sin6_port = port;
+ 	}
++#endif /* HAVE_IPV6 */
+       
+       if (bind(fd, (struct sockaddr *)&addr_copy, sa_len(&addr_copy)) != -1)
+ 	break;
+@@ -1435,7 +1479,7 @@
+           return setsockopt(fd, IPPROTO_IP, IP_UNICAST_IF, &ifindex_opt, sizeof(ifindex_opt)) == 0;
+         }
+ #endif
+-#if defined (IPV6_UNICAST_IF)
++#if defined(HAVE_IPV6) && defined (IPV6_UNICAST_IF)
+       if (addr_copy.sa.sa_family == AF_INET6)
+         {
+           uint32_t ifindex_opt = htonl(ifindex);
+@@ -1457,8 +1501,10 @@
+ static struct serverfd *allocate_sfd(union mysockaddr *addr, char *intname, unsigned int ifindex)
+ {
+   struct serverfd *sfd;
++#ifdef HAVE_IPV6
+   int errsave;
+   int opt = 1;
++#endif
+   
+   /* when using random ports, servers which would otherwise use
+      the INADDR_ANY/port0 socket have sfd set to NULL, this is 
+@@ -1471,9 +1517,11 @@
+ 	  addr->in.sin_port == htons(0)) 
+ 	return NULL;
+ 
++#ifdef HAVE_IPV6
+       if (addr->sa.sa_family == AF_INET6 &&
+ 	  addr->in6.sin6_port == htons(0)) 
+ 	return NULL;
++#endif /* HAVE_IPV6 */
+     }
+ 
+   /* may have a suitable one already */
+@@ -1494,6 +1542,7 @@
+       return NULL;
+     }
+ 
++#ifdef HAVE_IPV6
+   if ((addr->sa.sa_family == AF_INET6 && setsockopt(sfd->fd, IPPROTO_IPV6, IPV6_V6ONLY, &opt, sizeof(opt)) == -1) ||
+       !local_bind(sfd->fd, addr, intname, ifindex, 0) || !fix_fd(sfd->fd))
+     { 
+@@ -1503,6 +1552,7 @@
+       errno = errsave;
+       return NULL;
+     }
++#endif /* HAVE_IPV6 */
+ 
+   safe_strncpy(sfd->interface, intname, sizeof(sfd->interface)); 
+   sfd->source_addr = *addr;
+@@ -1534,6 +1584,7 @@
+       if ((sfd = allocate_sfd(&addr, "", 0)))
+ 	sfd->preallocated = 1;
+ 
++#ifdef HAVE_IPV6
+       memset(&addr, 0, sizeof(addr));
+       addr.in6.sin6_family = AF_INET6;
+       addr.in6.sin6_addr = in6addr_any;
+@@ -1543,6 +1594,7 @@
+ #endif
+       if ((sfd = allocate_sfd(&addr, "", 0)))
+ 	sfd->preallocated = 1;
++#endif /* HAVE_IPV6 */
+     }
+   
+   for (srv = daemon->servers; srv; srv = srv->next)
+@@ -1772,6 +1824,7 @@
+ 	  source_addr.in.sin_addr.s_addr = INADDR_ANY;
+ 	  source_addr.in.sin_port = htons(daemon->query_port);
+ 	}
++#ifdef HAVE_IPV6
+       else 
+ 	{	
+ 	  int scope_index = 0;
+@@ -1799,6 +1852,10 @@
+ 	  else
+ 	    continue;
+ 	}
++#else /* IPV6 */
++      else
++	  continue;
++#endif /* HAVE_IPV6 */
+ 
+       add_update_server(SERV_FROM_RESOLV, &addr, &source_addr, NULL, NULL, NULL);
+       gotone = 1;
+--- dnsmasq/src/option.c
++++ dnsmasq/src/option.c
+@@ -868,8 +868,10 @@
+ {
+   if (inet_pton(AF_INET, arg, &addr->in.sin_addr) > 0)
+     addr->sa.sa_family = AF_INET;
++#ifdef HAVE_IPV6
+   else if (inet_pton(AF_INET6, arg, &addr->in6.sin6_addr) > 0)
+     addr->sa.sa_family = AF_INET6;
++#endif /* HAVE_IPV6 */
+   else
+     return _("bad address");
+    
+@@ -924,8 +926,10 @@
+ 
+   if (inet_pton(AF_INET, arg, &sdetails->addr->in.sin_addr) > 0)
+       sdetails->addr_type = AF_INET;
++#ifdef HAVE_IPV6
+   else if (inet_pton(AF_INET6, arg, &sdetails->addr->in6.sin6_addr) > 0)
+       sdetails->addr_type = AF_INET6;
++#endif /* HAVE_IPV6 */
+   else 
+     {
+       /* if the argument is neither an IPv4 not an IPv6 address, it might be a
+@@ -1002,6 +1006,7 @@
+ 	  sdetails->source_addr->in.sin_port = htons(sdetails->source_port);
+ 	  if (inet_pton(AF_INET, sdetails->source, &sdetails->source_addr->in.sin_addr) == 0)
+ 	    {
++#ifdef HAVE_IPV6
+ 	      if (inet_pton(AF_INET6, sdetails->source, &sdetails->source_addr->in6.sin6_addr) == 1)
+ 		{
+ 		  sdetails->source_addr->sa.sa_family = AF_INET6;
+@@ -1012,6 +1017,7 @@
+ 		    return _("cannot use IPv4 server address with IPv6 source address");
+ 		}
+ 	      else
++#endif /* HAVE_IPV6 */
+ 		{
+ #if defined(SO_BINDTODEVICE)
+ 		  if (sdetails->interface_opt)
+@@ -1026,6 +1032,7 @@
+ 	    }
+ 	}
+     }
++#ifdef HAVE_IPV6
+   else if (sdetails->addr_type == AF_INET6)
+     {
+       if (sdetails->scope_id && (sdetails->scope_index = if_nametoindex(sdetails->scope_id)) == 0)
+@@ -1072,6 +1079,7 @@
+ 	    }
+ 	}
+     }
++#endif /* HAVE_IPV6 */
+   else if (sdetails->addr_type != AF_LOCAL)
+     return _("bad address");
+   
+@@ -1091,10 +1099,12 @@
+ 	memcpy(&sdetails->addr->in.sin_addr,
+ 		&((struct sockaddr_in *) sdetails->hostinfo->ai_addr)->sin_addr,
+ 		sizeof(sdetails->addr->in.sin_addr));
++#ifdef HAVE_IPV6
+       else if (sdetails->addr_type == AF_INET6)
+ 	memcpy(&sdetails->addr->in6.sin6_addr,
+ 		&((struct sockaddr_in6 *) sdetails->hostinfo->ai_addr)->sin6_addr,
+ 		sizeof(sdetails->addr->in6.sin6_addr));
++#endif /* HAVE_IPV6 */
+ 
+       /* Iterate to the next available address */
+       sdetails->valid = sdetails->hostinfo->ai_next != NULL;
+@@ -1197,6 +1207,7 @@
+   return NULL;
+ }
+ 
++#ifdef HAVE_IPV6
+ static char *domain_rev6(int from_file, char *server, struct in6_addr *addr6, int size)
+ {
+   int i, j;
+@@ -1284,6 +1295,7 @@
+   
+   return NULL;
+ }
++#endif /* HAVE_IPV6 */
+ 
+ #ifdef HAVE_DHCP
+ 
+@@ -2431,8 +2443,10 @@
+ 	  unhide_metas(arg);
+ 	  if (inet_pton(AF_INET, arg, &new->addr.in.sin_addr) > 0)
+ 	    new->addr.sa.sa_family = AF_INET;
++#ifdef HAVE_IPV6
+ 	  else if (inet_pton(AF_INET6, arg, &new->addr.in6.sin6_addr) > 0)
+ 	    new->addr.sa.sa_family = AF_INET6;
++#endif /* HAVE_IPV6 */
+ 	  else
+ 	    {
+ 	      char *fam = split_chr(arg, '/');
+@@ -2442,8 +2456,10 @@
+ 		{
+ 		  if (strcmp(fam, "4") == 0)
+ 		    new->addr.sa.sa_family = AF_INET;
++#ifdef HAVE_IPV6
+ 		  else if (strcmp(fam, "6") == 0)
+ 		    new->addr.sa.sa_family = AF_INET6;
++#endif /* HAVE_IPV6 */
+ 		  else
+ 		  {
+ 		    free(new->name);
+@@ -2514,12 +2530,14 @@
+ 		subnet->prefixlen = (prefixlen == 0) ? 24 : prefixlen;
+ 		subnet->flags = ADDRLIST_LITERAL;
+ 	      }
++#ifdef HAVE_IPV6
+ 	    else if (inet_pton(AF_INET6, arg, &addr.addr6))
+ 	      {
+ 		subnet = opt_malloc(sizeof(struct addrlist));
+ 		subnet->prefixlen = (prefixlen == 0) ? 64 : prefixlen;
+ 		subnet->flags = ADDRLIST_LITERAL | ADDRLIST_IPV6;
+ 	      }
++#endif /* HAVE_IPV6 */
+ 	    else 
+ 	      {
+ 		struct auth_name_list *name =  opt_malloc(sizeof(struct auth_name_list));
+@@ -2531,8 +2549,10 @@
+ 		  {
+ 		    if (prefixlen == 4)
+ 		      name->flags &= ~AUTH6;
++#ifdef HAVE_IPV6
+ 		    else if (prefixlen == 6)
+ 		      name->flags &= ~AUTH4;
++#endif /* HAVE_IPV6 */
+ 		    else
+ 		      ret_err(gen_err);
+ 		  }
+@@ -2647,6 +2667,7 @@
+ 			      }
+ 			  }
+ 		      }
++#ifdef HAVE_IPV6
+ 		    else if (inet_pton(AF_INET6, comma, &new->start6))
+ 		      {
+ 			u64 mask, addrpart = addr6part(&new->start6);
+@@ -2689,6 +2710,7 @@
+ 			      }
+ 			  }
+ 		      }
++#endif /* HAVE_IPV6 */
+ 		    else
+ 		      ret_err_free(gen_err, new);
+ 		  }
+@@ -2706,6 +2728,7 @@
+ 			else if (!inet_pton(AF_INET, arg, &new->end))
+ 			  ret_err_free(gen_err, new);
+		      }
++#ifdef HAVE_IPV6
+ 		    else if (inet_pton(AF_INET6, comma, &new->start6))
+ 		      {
+ 			new->is6 = 1;
+@@ -2714,6 +2737,7 @@
+ 			else if (!inet_pton(AF_INET6, arg, &new->end6))
+ 			  ret_err_free(gen_err, new);
+ 		      }
++#endif /* HAVE_IPV6 */
+ 		    else if (option == 's')
+ 		      {
+ 			/* subnet from interface. */
+@@ -2905,9 +2929,12 @@
+ 	    ((comma = split_chr(arg, '/')) && !atoi_check(comma, &prefix)))
+ 	  ret_err(gen_err);
+ 
++#ifdef HAVE_IPV6
+ 	if (inet_pton(AF_INET6, arg, &addr.addr6) == 1)
+ 	  is6 = 1;
+-	else if (inet_pton(AF_INET, arg, &addr.addr4) != 1)
++	else
++#endif /* HAVE_IPV6 */
++	 if (inet_pton(AF_INET, arg, &addr.addr4) != 1)
+ 	  ret_err(gen_err);
+ 
+ 	if (!comma)
+@@ -2953,6 +2980,7 @@
+ 	    new->addr.in.sin_len = sizeof(new->addr.in);
+ #endif
+ 	  }
++#ifdef HAVE_IPV6
+ 	else if (arg && inet_pton(AF_INET6, arg, &new->addr.in6.sin6_addr) > 0)
+ 	  {
+ 	    new->addr.sa.sa_family = AF_INET6;
+@@ -2963,6 +2991,7 @@
+ 	    new->addr.in6.sin6_len = sizeof(new->addr.in6);
+ #endif
+ 	  }
++#endif /* HAVE_IPV6 */
+ 	else
+ 	  ret_err_free(gen_err, new);
+ 
+@@ -3045,8 +3074,10 @@
+ 	      flags = SERV_ALL_ZEROS | SERV_LITERAL_ADDRESS;
+ 	    else if (inet_pton(AF_INET, arg, &addr.addr4) > 0)
+ 	      flags = SERV_4ADDR | SERV_LITERAL_ADDRESS;
++#ifdef HAVE_IPV6
+ 	    else if (inet_pton(AF_INET6, arg, &addr.addr6) > 0)
+ 	      flags = SERV_6ADDR | SERV_LITERAL_ADDRESS;
++#endif /* HAVE_IPV6 */
+ 	    else
+ 	      ret_err(_("Bad address in --address"));
+ 	  }
+@@ -3110,7 +3141,9 @@
+ 	char *string;
+ 	int size;
+ 	struct in_addr addr4;
++#ifdef HAVE_IPV6
+ 	struct in6_addr addr6;
++#endif /* HAVE_IPV6 */
+  	
+ 	unhide_metas(arg);
+ 	if (!arg)
+@@ -3129,6 +3162,7 @@
+ 	   if ((string = domain_rev4(servers_only, comma, &addr4, size)))
+ 	      ret_err(string);
+ 	  }
++#ifdef HAVE_IPV6
+ 	else if (inet_pton(AF_INET6, arg, &addr6))
+ 	  {
+ 	     if (size == -1)
+@@ -3137,6 +3171,7 @@
+ 	     if ((string = domain_rev6(servers_only, comma, &addr6, size)))
+ 	      ret_err(string);
+ 	  }
++#endif /* HAVE_IPV6 */
+ 	else
+ 	  ret_err(gen_err);
+ 	
+@@ -4847,8 +4882,10 @@
+ 	  {
+ 	    if (strcmp(comma, "4") == 0)
+ 	      new->flags &= ~IN6;
++#ifdef HAVE_IPV6
+ 	    else if (strcmp(comma, "6") == 0)
+ 	      new->flags &= ~IN4;
++#endif /* HAVE_IPV6 */
+ 	    else
+ 	      ret_err_free(gen_err, new);
+ 	  }
+@@ -5194,11 +5231,13 @@
+ 		new->addr = addr.addr4;
+ 		new->flags |= HR_4;
+ 	      }
++#ifdef HAVE_IPV6
+ 	    else if (inet_pton(AF_INET6, arg, &addr.addr6))
+ 	      {
+ 		new->addr6 = addr.addr6;
+ 		new->flags |= HR_6;
+ 	      }
++#endif /* HAVE_IPV6 */
+ 	    else
+ 	      {
+ 		char *canon = canonicalise_opt(arg);
+@@ -6022,8 +6061,10 @@
+ 	  {
+ 	    if (tmp->source_addr.sa.sa_family == AF_INET)
+ 	      tmp->source_addr.in.sin_port = htons(daemon->query_port);
++#ifdef HAVE_IPV6
+ 	    else if (tmp->source_addr.sa.sa_family == AF_INET6)
+ 	      tmp->source_addr.in6.sin6_port = htons(daemon->query_port);
++#endif /* HAVE_IPV6 */
+ 	  }
+     } 
+   
+@@ -6084,8 +6125,10 @@
+       for(tmp = daemon->if_addrs; tmp; tmp = tmp->next)
+ 	if (tmp->addr.sa.sa_family == AF_INET)
+ 	  tmp->addr.in.sin_port = htons(daemon->port);
++#ifdef HAVE_IPV6
+ 	else if (tmp->addr.sa.sa_family == AF_INET6)
+ 	  tmp->addr.in6.sin6_port = htons(daemon->port);
++#endif /* HAVE_IPV6 */
+     }
+ 	
+   /* create default, if not specified */
+--- dnsmasq/src/rfc1035.c
++++ dnsmasq/src/rfc1035.c
+@@ -188,6 +188,7 @@
+ 
+       return F_IPV4;
+     }
++#ifdef HAVE_IPV6
+   else if (hostname_isequal(penchunk, "ip6") && 
+ 	   (hostname_isequal(lastchunk, "int") || hostname_isequal(lastchunk, "arpa")))
+     {
+@@ -232,6 +233,7 @@
+ 	  return F_IPV6;
+ 	}
+     }
++#endif /* HAVE_IPV6 */
+   
+   return 0;
+ }
+@@ -365,6 +367,7 @@
+     ((ip_addr & 0xFFFFFFFF) == 0xFFFFFFFF)  /* 255.255.255.255/32 (broadcast)*/ ;
+ }
+ 
++#ifdef HAVE_IPV6
+ static int private_net6(struct in6_addr *a, int ban_localhost)
+ {
+   /* Block IPv4-mapped IPv6 addresses in private IPv4 address space */
+@@ -383,6 +386,8 @@
+     ((unsigned char *)a)[0] == 0xfd ||   /* RFC 6303 4.4 */
+     ((u32 *)a)[0] == htonl(0x20010db8); /* RFC 6303 4.6 */
+ }
++#endif /* HAVE_IPV6 */
++
+ 
+ static unsigned char *do_doctor(unsigned char *p, int count, struct dns_header *header, size_t qlen, int *doctored)
+ {
+@@ -781,12 +786,14 @@
+ 	  addrlen = INADDRSZ;
+ 	  flags |= F_IPV4;
+ 	}
++#ifdef HAVE_IPV6
+       else if (qtype == T_AAAA)
+ 	{
+ 	  addrlen = IN6ADDRSZ;
+ 	  flags |= F_IPV6;
+ 	}
++#endif /* HAVE_IPV6 */
+       else if (qtype != T_CNAME &&
+ 	       (qtype == T_SRV || rr_on_list(daemon->cache_rr, qtype) || rr_on_list(daemon->cache_rr, T_ANY)))
+ 	flags |= F_RR;
+       else
+@@ -986,9 +993,11 @@
+ 			  private_net(addr.addr4, !option_bool(OPT_LOCAL_REBIND)))
+ 			return 1;
+ 		      
++#ifdef HAVE_IPV6
+ 		      if ((flags & F_IPV6) &&
+ 			  private_net6(&addr.addr6, !option_bool(OPT_LOCAL_REBIND)))
+ 			return 1;
++#endif /* HAVE_IPV6 */
+ 		    }
+ 		  
+ #ifdef HAVE_IPSET
+@@ -1335,6 +1344,7 @@
+ 		if (!baddrp->is6 && is_same_net_prefix(addr, baddrp->addr.addr4, baddrp->prefix))
+ 		  return 1;
+ 	    }
++#ifdef HAVE_IPV6
+ 	  else if (qtype == T_AAAA)
+ 	    {
+ 	      struct in6_addr addr;
+@@ -1348,6 +1358,7 @@
+ 		if (baddrp->is6 && is_same_net6(&addr, &baddrp->addr.addr6, baddrp->prefix))
+ 		  return 1;
+ 	    }
++#endif /* HAVE_IPV6 */
+ 	}
+       
+       if (!ADD_RDLEN(header, p, qlen, rdlen))
+@@ -1438,12 +1449,14 @@
+   for (; *format; format++)
+     switch (*format)
+       {
++#ifdef HAVE_IPV6
+       case '6':
+         CHECK_LIMIT(IN6ADDRSZ);
+ 	sval = va_arg(ap, char *); 
+ 	memcpy(p, sval, IN6ADDRSZ);
+ 	p += IN6ADDRSZ;
+ 	break;
++#endif /* HAVE_IPV6 */
+ 	
+       case '4':
+         CHECK_LIMIT(INADDRSZ);
+@@ -1769,6 +1782,7 @@
+ 		  while (intr->next && strcmp(intr->intr, intr->next->intr) == 0)
+ 		    intr = intr->next;
+ 	      }
++#ifdef HAVE_IPV6
+ 	  else if (is_arpa == F_IPV6)
+ 	    for (intr = daemon->int_names; intr; intr = intr->next)
+ 	      {
+@@ -1784,6 +1798,7 @@
+ 		  while (intr->next && strcmp(intr->intr, intr->next->intr) == 0)
+ 		    intr = intr->next;
+ 	      }
++#endif /* HAVE_IPV6 */
+ 	  
+ 	  if (intr)
+ 	    {
+@@ -1874,6 +1889,10 @@
+ 	    }
+ 	  else if (option_bool(OPT_BOGUSPRIV) &&
+-		   ((is_arpa == F_IPV6 && private_net6(&addr.addr6, 1)) || (is_arpa == F_IPV4 && private_net(addr.addr4, 1))) &&
++		       (
++#ifdef HAVE_IPV6
++		       (is_arpa == F_IPV6 && private_net6(&addr.addr6, 1)) ||
++#endif /* HAVE_IPV6 */
++		       (is_arpa == F_IPV4 && private_net(addr.addr4, 1))) &&
+ 		   !lookup_domain(name, F_DOMAINSRV, NULL, NULL))
+ 	    {
+ 	      /* if no configured server, not in cache, enabled and private IPV4 address, return NXDOMAIN */
+@@ -1887,9 +1906,16 @@
+ 
+       for (flag = F_IPV4; flag; flag = (flag == F_IPV4) ? F_IPV6 : 0)
+ 	{
+-	  unsigned short type = (flag == F_IPV6) ? T_AAAA : T_A;
++	  unsigned short type = T_A;
+ 	  struct interface_name *intr;
+ 	  
++	      if (flag == F_IPV6)
++#ifdef HAVE_IPV6
++		type = T_AAAA;
++#else
++	        break;
++#endif /* HAVE_IPV6 */
++
+ 	  if (qtype != type && qtype != T_ANY)
+ 	    continue;
+ 	      
+@@ -1911,26 +1937,32 @@
+ 		for (intr = daemon->int_names; intr; intr = intr->next)
+ 		  if (hostname_isequal(name, intr->name))
+ 		    for (addrlist = intr->addr; addrlist; addrlist = addrlist->next)
+-		      if (!(addrlist->flags & ADDRLIST_IPV6) && 
+-			  is_same_net(addrlist->addr.addr4, local_addr, local_netmask))
+-			{
+-			  localise = 1;
+-			  break;
+-			}
++#ifdef HAVE_IPV6
++			  if (!(addrlist->flags & ADDRLIST_IPV6))
++#endif /* HAVE_IPV6 */
++			    if (is_same_net(addrlist->addr.addr4, local_addr, local_netmask))
++			      {
++				localise = 1;
++				break;
++			      }
+ 	      
+ 	      for (intr = daemon->int_names; intr; intr = intr->next)
+ 		if (hostname_isequal(name, intr->name))
+ 		  {
+ 		    for (addrlist = intr->addr; addrlist; addrlist = addrlist->next)
++#ifdef HAVE_IPV6
+ 		      if (((addrlist->flags & ADDRLIST_IPV6) ? T_AAAA : T_A) == type)
++#endif /* HAVE_IPV6 */
+ 			{
+ 			  if (localise && 
+ 			      !is_same_net(addrlist->addr.addr4, local_addr, local_netmask))
+ 			    continue;
+ 			  
++#ifdef HAVE_IPV6
+ 			  if (addrlist->flags & ADDRLIST_REVONLY)
+ 			    continue;
+ 			  
++#endif /* HAVE_IPV6 */
+ 			  ans = 1;	
+ 			  sec_data = 0;
+ 			  gotit = 1;
+@@ -2300,8 +2332,11 @@
+ 	crecp = NULL;
+ 	while ((crecp = cache_find_by_name(crecp, rec->target, now, F_IPV4 | F_IPV6)))
+ 	  {
++#ifdef HAVE_IPV6
+ 	    int type =  crecp->flags & F_IPV4 ? T_A : T_AAAA;
+-
++#else
++	    int type = T_A;
++#endif /* HAVE_IPV6 */
+ 	    if (crecp->flags & F_NEG)
+ 	      continue;
+ 
+--- dnsmasq/src/tables.c
++++ dnsmasq/src/tables.c
+@@ -109,6 +109,7 @@
+  
+   bzero(&addr, sizeof(addr));
+ 
++#ifdef HAVE_IPV6
+   if (flags & F_IPV6) 
+     {
+       addr.pfra_af = AF_INET6;
+@@ -116,6 +117,7 @@
+       memcpy(&(addr.pfra_ip6addr), ipaddr, sizeof(struct in6_addr));
+     } 
+   else 
++#endif /* HAVE_IPV6 */
+     {
+       addr.pfra_af = AF_INET;
+       addr.pfra_net = 0x20;
+--- dnsmasq/src/tftp.c
++++ dnsmasq/src/tftp.c
+@@ -63,11 +63,17 @@
+   struct tftp_prefix *pref;
+   union all_addr addra;
+   int family = listen->addr.sa.sa_family;
++#ifdef HAVE_IPV6
+   /* Can always get recvd interface for IPv6 */
+   int check_dest = !option_bool(OPT_NOWILD) || family == AF_INET6;
++#else
++  int check_dest = !option_bool(OPT_NOWILD);
++#endif /* HAVE_IPV6 */
+   union {
+     struct cmsghdr align; /* this ensures alignment */
++#ifdef HAVE_IPV6
+     char control6[CMSG_SPACE(sizeof(struct in6_pktinfo))];
++#endif /* HAVE_IPV6 */
+ #if defined(HAVE_LINUX_NETWORK)
+     char control[CMSG_SPACE(sizeof(struct in_pktinfo))];
+ #elif defined(HAVE_SOLARIS_NETWORK)
+@@ -177,6 +183,7 @@
+ 	  
+ #endif
+ 
++#ifdef HAVE_IPV6
+       if (family == AF_INET6)
+         {
+           for (cmptr = CMSG_FIRSTHDR(&msg); cmptr; cmptr = CMSG_NXTHDR(&msg, cmptr))
+@@ -192,6 +199,7 @@
+                 if_index = p.p->ipi6_ifindex;
+               }
+         }
++#endif /* HAVE_IPV6 */
+       
+       if (!indextoname(listen->tftpfd, if_index, namebuff))
+ 	return;
+@@ -200,8 +208,10 @@
+       
+       addra.addr4 = addr.in.sin_addr;
+ 
++#ifdef HAVE_IPV6
+       if (family == AF_INET6)
+ 	addra.addr6 = addr.in6.sin6_addr;
++#endif /* HAVE_IPV6 */
+ 
+       if (daemon->tftp_interfaces)
+ 	{
+@@ -295,6 +305,7 @@
+       addr.in.sin_len = sizeof(addr.in);
+ #endif
+     }
++#ifdef HAVE_IPV6
+   else
+     {
+       addr.in6.sin6_port = htons(port);
+@@ -304,6 +315,7 @@
+       addr.in6.sin6_len = sizeof(addr.in6);
+ #endif
+     }
++#endif /* HAVE_IPV6 */
+ 
+   /* May reuse struct transfer from abandoned transfer in single port mode. */
+   if (!transfer && !(transfer = whine_malloc(sizeof(struct tftp_transfer))))
+@@ -346,8 +358,10 @@
+ 		{ 
+ 		  if (family == AF_INET)
+ 		    addr.in.sin_port = htons(port);
++#ifdef HAVE_IPV6
+ 		  else
+ 		    addr.in6.sin6_port = htons(port);
++#endif /* HAVE_IPV6 */
+ 		  
+ 		  continue;
+ 		}
+--- dnsmasq/src/util.c
++++ dnsmasq/src/util.c
+@@ -366,11 +366,13 @@
+ 	  s1->in.sin_addr.s_addr == s2->in.sin_addr.s_addr)
+ 	return 1;
+       
++#ifdef HAVE_IPV6      
+       if (s1->sa.sa_family == AF_INET6 &&
+ 	  s1->in6.sin6_port == s2->in6.sin6_port &&
+ 	  s1->in6.sin6_scope_id == s2->in6.sin6_scope_id &&
+ 	  IN6_ARE_ADDR_EQUAL(&s1->in6.sin6_addr, &s2->in6.sin6_addr))
+ 	return 1;
++#endif /* HAVE_IPV6 */
+     }
+   return 0;
+ }
+@@ -381,9 +383,11 @@
+       s->in.sin_addr.s_addr == 0)
+     return 1;
+   
++#ifdef HAVE_IPV6      
+   if (s->sa.sa_family == AF_INET6 &&
+       IN6_IS_ADDR_UNSPECIFIED(&s->in6.sin6_addr))
+     return 1;
++#endif /* HAVE_IPV6 */
+   
+   return 0;
+ }
+@@ -393,9 +397,11 @@
+ #ifdef HAVE_SOCKADDR_SA_LEN
+   return addr->sa.sa_len;
+ #else
++#ifdef HAVE_IPV6
+   if (addr->sa.sa_family == AF_INET6)
+     return sizeof(addr->in6);
+   else
++#endif /* HAVE_IPV6 */
+     return sizeof(addr->in); 
+ #endif
+ }
+@@ -518,6 +524,7 @@
+ }
+ 
+ 
++#ifdef HAVE_IPV6
+ int is_same_net6(struct in6_addr *a, struct in6_addr *b, int prefixlen)
+ {
+   int pfbytes = prefixlen >> 3;
+@@ -556,12 +563,14 @@
+     }
+ }
+ 
++#endif /* HAVE_IPV6 */
+ 
+ /* returns port number from address */
+ int prettyprint_addr(union mysockaddr *addr, char *buf)
+ {
+   int port = 0;
+   
++#ifdef HAVE_IPV6
+   if (addr->sa.sa_family == AF_INET)
+     {
+       inet_ntop(AF_INET, &addr->in.sin_addr, buf, ADDRSTRLEN);
+@@ -580,6 +589,10 @@
+ 	}
+       port = ntohs(addr->in6.sin6_port);
+     }
++#else
++  strcpy(buf, inet_ntoa(addr->in.sin_addr));
++  port = ntohs(addr->in.sin_port); 
++#endif /* HAVE_IPV6 */
+   
+   return port;
+ }

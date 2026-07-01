@@ -160,9 +160,10 @@ httpd_check_v2()
 }
 #endif
 
-static void
+static int
 refresh_ntp(void)
 {
+	int result = 0;
 	char *svcs[] = { "ntpd", NULL };
 	char *ntp_addr[2], *ntp_server;
 
@@ -181,12 +182,13 @@ refresh_ntp(void)
 		ntp_addr[1] = ntp_addr[0];
 	}
 
-	ntp_server = (ntpc_server_idx) ? ntp_addr[1] : ntp_addr[0];
+	ntp_server = ntp_addr[ntpc_server_idx];
 	ntpc_server_idx = (ntpc_server_idx + 1) % 2;
 
-	eval("/usr/sbin/ntpd", "-qt", "-S", NTPC_DONE_SCRIPT, "-p", ntp_server);
+	result = eval("/usr/sbin/ntpd", "-qt", "-S", NTPC_DONE_SCRIPT, "-p", ntp_server);
 
 	logmessage("NTP Client", "Synchronizing time to %s.", ntp_server);
+	return result;
 }
 
 int
@@ -515,6 +517,12 @@ ntpc_updated_main(int argc, char *argv[])
 	return 0;
 }
 
+int
+ntpc_syncnow_main(int argc, char *argv[])
+{
+	return refresh_ntp();
+}
+
 static void
 watchdog_on_sighup(void)
 {
@@ -660,4 +668,3 @@ watchdog_main(int argc, char *argv[])
 
 	return 0;
 }
-

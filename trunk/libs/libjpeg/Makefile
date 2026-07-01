@@ -1,11 +1,11 @@
 include $(ROOTDIR)/rules.mk
 
 PKG_NAME:=jpeg
-PKG_VERSION:=9c
+PKG_VERSION:=9f
 
 PKG_SOURCE:=jpegsrc.$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://www.ijg.org/files/
-PKG_HASH:=682aee469c3ca857c4c38c37a6edadbfca4b04d42e56613b11590ec6aa4a278d
+PKG_HASH:=04705c110cb2469caa79fb71fba3d7bf834914706e9641a4589485c1f832565b
 
 include $(INCLUDE_DIR)/package.mk
 

@@ -16,7 +16,6 @@ local name = 'shadowsocksr'
 local uciType = 'servers'
 local subscribe_url = {}
 local i = 1
-
 local tfilter_words = io.popen("echo -n `nvram get ss_keyword`")
 local filter_words = tfilter_words:read("*all")
 
@@ -35,7 +34,6 @@ local function base64Decode(text)
 	local mod4 = #text % 4
 	text = text .. string.sub('====', mod4 + 1)
 	local result = b64decode(text)
-	
 	if result then
 		return result:gsub("%z", "")
 	else
@@ -83,7 +81,6 @@ end
 local function UrlDecode(szText)
 	return szText:gsub("+", " "):gsub("%%(%x%x)", get_urldecode)
 end
-
 -- trim
 local function trim(text)
 	if not text or text == "" then
@@ -102,7 +99,6 @@ local function md5(content)
 end
 -- 处理数据
 local function processData(szType, content)
-
 	local result = {
 	type = szType,
 	local_port = 1234,
@@ -172,6 +168,14 @@ local function processData(szType, content)
 			result.quic_key = info.key
 			result.quic_security = info.securty
 		end
+		if info.net == 'httpupgrade' then
+			result.httpupgrade_host = info.host
+			result.httpupgrade_path = info.path
+		end
+		if info.net == 'splithttp' then
+			result.splithttp_host = info.host
+			result.splithttp_path = info.path
+		end
 		if info.security then
 			result.security = info.security
 		end
@@ -209,11 +213,8 @@ local function processData(szType, content)
 				local t = split(v, '=')
 				params[t[1]] = t[2]
 			end
-			
-			
 			result.transport = params.type --vless的传输方式tcp/kcp/ws/http/quic
 			result.network = params.type
-			
 			if result.transport == 'ws' then
 				result.ws_host = params.host
 				result.ws_path = params.path
@@ -244,6 +245,14 @@ local function processData(szType, content)
 				result.quic_key = params.key
 				result.quic_security = params.security
 			end
+			if info.net == 'httpupgrade' then
+			result.httpupgrade_host = info.host
+			result.httpupgrade_path = info.path
+			end
+			if info.net == 'splithttp' then
+			result.splithttp_host = info.host
+			result.splithttp_path = info.path
+			end
 			if params.encryption then
 				result.security = params.encryption --vless security默认none
 			end
@@ -252,14 +261,14 @@ local function processData(szType, content)
 				result.tls_host = params.host
 				result.insecure = 0
 				result.flow = "0"
-			elseif params.security == "xtls" or params.security == "2" then
+			elseif params.security == "reality" or params.security == "2" then
 				result.tls = "2"
 				result.tls_host = params.host
 				result.insecure = 0
-				if params.flow == "xtls-rprx-splice" then
-					result.flow = "2"
-				else
+				if params.flow == "xtls-rprx-vision" then
 					result.flow = "1"
+				else
+					result.flow = "2"
 				end
 			else
 				result.tls = "0"
@@ -355,12 +364,10 @@ local function processData(szType, content)
 				local t = split(v, '=')
 				params[t[1]] = t[2]
 			end
-			
 			if params.sni then
 				-- 未指定peer（sni）默认使用remote addr
 				result.tls_host = params.sni
 			end
-			
 			if params.allowInsecure == "1" then
 				result.insecure = "1"
 			else
@@ -405,14 +412,12 @@ local function check_filer(result)
 		end
 	end
 end
-
---local execute = function()
+	--local execute = function()
 	-- exec
 	local add, del = 0, 0
 	do
 		for k, url in ipairs(subscribe_url) do
 			local raw = wget(url)
-			
 			if #raw > 0 then
 				local nodes, szType
 				local groupHash = md5(url)
@@ -437,7 +442,7 @@ end
 						tinsert(servers, setmetatable(server, { __index = extra }))
 					end
 					nodes = servers
-				-- SS SIP008 直接使用 Json 格式
+					-- SS SIP008 直接使用 Json 格式
 					local info = cjson.decode(raw)
 				elseif info then
 					nodes = info.servers or info
@@ -499,7 +504,6 @@ end
 			log("更新失败，没有可用的节点信息")
 			return
 		end
-		
 		local add, del = 0, 0
 		for line in io.lines("/tmp/dlinkold.txt") do
 		newline = line
@@ -523,7 +527,6 @@ end
 					end
 					log('忽略手动添加的节点: ' .. old.alias)
 				end
-	
 			end
 		end
 		local ssrindext = io.popen('dbus list ssconf_basic_|grep _json_ | cut -d "=" -f1|cut -d "_" -f4|sort -rn|head -n1')
@@ -533,7 +536,6 @@ end
 		else
 		ssrindex = tonumber(ssrindex) + 1
 		end
-
 		for k, v in ipairs(nodeResult) do
 			for kk, vv in ipairs(v) do
 				if not vv._ignore then				
@@ -547,5 +549,3 @@ end
 		log('新增节点数量: ' .. add, '删除节点数量: ' .. del)
 		log('订阅更新成功')
 		end
-
-

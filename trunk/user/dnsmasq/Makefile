@@ -1,11 +1,11 @@
 include $(ROOTDIR)/rules.mk
 
 PKG_NAME:=dnsmasq
-PKG_VERSION:=2.89
+PKG_VERSION:=2.90
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://thekelleys.org.uk/dnsmasq/
-PKG_HASH:=02bd230346cf0b9d5909f5e151df168b2707103785eb616b56685855adebb609
+PKG_HASH:=8e50309bd837bfec9649a812e066c09b6988b73d749b7d293c06c57d46a109e4
 
 include $(INCLUDE_DIR)/package.mk
 

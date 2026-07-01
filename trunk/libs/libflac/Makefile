@@ -1,11 +1,11 @@
 include $(ROOTDIR)/rules.mk
 
 PKG_NAME:=flac
-PKG_VERSION:=1.3.4
+PKG_VERSION:=1.4.3
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://downloads.xiph.org/releases/flac/
-PKG_HASH:=8ff0607e75a322dd7cd6ec48f4f225471404ae2730d0ea945127b1355155e737
+PKG_HASH:=6c58e69cd22348f441b861092b825e591d0b822e106de6eb0ee4d05d27205b70
 
 include $(INCLUDE_DIR)/package.mk
 

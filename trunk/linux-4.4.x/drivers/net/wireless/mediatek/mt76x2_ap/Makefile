@@ -273,9 +273,18 @@ $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/os/linux/cfg80211/cfg80211_util.o
 $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/os/linux/cfg80211/cfg80211.o
 endif
 
+ifeq ($(CONFIG_RT_DEBUG),y)
+	MTDEBUG = y
+else
+	ifeq ($(CONFIG_MT76X2_AP_DEBUG),y)
+		MTDEBUG = y
+	endif
+    $(info 76X2 DEBUG FLAG: $(MTDEBUG) )
+endif
 
+ifeq ($(MTDEBUG),y)
 $(RT_DRV_NAME)-objs += $(RT_DRV_PATH)/common/sys_log.o
-
+endif
 
 ###################
 #  CFLAGS
@@ -386,10 +395,10 @@ ifeq ($(CONFIG_RT_READ_MAC_FROM_MTD),y)
 EXTRA_CFLAGS += -DREAD_MAC_FROM_EEPROM
 endif
 
-
+ifeq ($(MTDEBUG),y)
 EXTRA_CFLAGS += -DDBG -DUAPSD_DEBUG
 #EXTRA_CFLAGS += -DDBG_DIAGNOSE -DDBG_RX_MCS -DDBG_TX_MCS
-
+endif
 
 ifeq ($(CONFIG_RT_ATE),y)
 EXTRA_CFLAGS += -DRALINK_ATE -DCONFIG_RT2880_ATE_CMD_NEW

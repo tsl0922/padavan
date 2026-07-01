@@ -1,4 +1,5 @@
 /* BELL-A040WQ */
+
 #define BOARD_PID		"BELL-A040WQ"
 #define BOARD_NAME		"BELL-A040WQ"
 #define BOARD_DESC		"nokia-sbell A-040W-Q Wireless Router"

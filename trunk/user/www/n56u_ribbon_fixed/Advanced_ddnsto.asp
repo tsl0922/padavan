@@ -48,7 +48,7 @@ function initial(){
 function showmenu(){
 showhide_div('allink', found_app_aliddns());
 showhide_div('zelink', found_app_zerotier());
-showhide_div('wiink', 1);
+showhide_div('wilink', found_app_wireguard());
 }
 
 function fill_status(status_code){
@@ -141,7 +141,7 @@ function done_validating(action){
 								<li class="active">
                                     <a href="Advanced_ddnsto.asp"><#menu5_34_1#></a>
                                 </li>
-								<li id="wiink" style="display:none">
+								<li id="wilink" style="display:none">
                                     <a href="Advanced_wireguard.asp"><#menu5_35_1#></a>
                                 </li>
                             </ul>

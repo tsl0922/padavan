@@ -225,7 +225,7 @@ tunables_load_defaults()
   tunable_delete_failed_uploads = 0;
   tunable_implicit_ssl = 0;
   tunable_ptrace_sandbox = 0;
-  tunable_require_ssl_reuse = 1;
+  tunable_require_ssl_reuse = 0;
   tunable_isolate = 1;
   tunable_isolate_network = 1;
   tunable_ftp_enable = 1;

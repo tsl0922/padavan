@@ -227,12 +227,8 @@ export srctree objtree VPATH
 # then ARCH is assigned, getting whatever value it gets normally, and
 # SUBARCH is subsequently ignored.
 
-SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ -e s/x86_64/x86/ \
-				  -e s/sun4u/sparc64/ \
-				  -e s/arm.*/arm/ -e s/sa110/arm/ \
-				  -e s/s390x/s390/ -e s/parisc64/parisc/ \
-				  -e s/ppc.*/powerpc/ -e s/mips.*/mips/ \
-				  -e s/sh[234].*/sh/ -e s/aarch64.*/arm64/ )
+# Simplified for MIPS: only detect mips variants
+SUBARCH := $(shell uname -m | sed -e s/mips.*/mips/)
 
 # Cross compiling and selecting different set of gcc/bin-utils
 # ---------------------------------------------------------------------------
@@ -254,12 +250,23 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ -e s/x86_64/x86/ \
 # "make" in the configured kernel build directory always uses that.
 # Default value for CROSS_COMPILE is not to prefix executables
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
-ARCH		?= $(SUBARCH)
-CROSS_COMPILE	?= $(CONFIG_CROSS_COMPILE:"%"=%)
+
+# Default to mips for ARCH, optimized for mipsel
+ARCH          ?= mips
+MIPS_ARCH     ?= mips32r2
+MIPS_ABI      ?= 32
+MIPS_ENDIAN   ?= EL
+CROSS_COMPILE ?= $(CONFIG_CROSS_COMPILE:"%"=%)
+
+# Verify toolchain existence for mipsel-linux-musl or mipsel-linux-uclibc
+CC_PATH := $(shell command -v $(CROSS_COMPILE)gcc 2>/dev/null)
+ifneq ($(CC_PATH),)
+  $(info $(shell printf "\033[1;32m===> ⚙️ Using cross-compiler: $(CC_PATH)\033[0m"))
+endif
 
 # Architecture as present in compile.h
-UTS_MACHINE 	:= $(ARCH)
-SRCARCH 	:= $(ARCH)
+UTS_MACHINE   := $(ARCH)
+SRCARCH       := $(ARCH)
 
 # Additional ARCH settings for x86
 ifeq ($(ARCH),i386)
@@ -291,9 +298,9 @@ ifeq ($(ARCH),tilegx)
 endif
 
 # Where to locate arch specific headers
-hdr-arch  := $(SRCARCH)
+hdr-arch       := $(SRCARCH)
 
-KCONFIG_CONFIG	?= .config
+KCONFIG_CONFIG ?= .config
 export KCONFIG_CONFIG
 
 # SHELL used by kbuild
@@ -301,10 +308,10 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
 	  else echo sh; fi ; fi)
 
-HOSTCC       = gcc
-HOSTCXX      = g++
-HOSTCFLAGS   := -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -std=gnu89
-HOSTCXXFLAGS = -O2
+HOSTCC       := gcc
+HOSTCXX      := g++
+HOSTCFLAGS   := -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -std=gnu11
+HOSTCXXFLAGS := -O2
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -353,7 +360,7 @@ OBJDUMP		= $(CROSS_COMPILE)objdump
 AWK		= awk
 GENKSYMS	= scripts/genksyms/genksyms
 INSTALLKERNEL  := installkernel
-DEPMOD		= /sbin/depmod
+DEPMOD          = $(shell command -v depmod 2>/dev/null || echo /sbin/depmod)
 PERL		= perl
 PYTHON		= python
 CHECK		= sparse
@@ -367,7 +374,6 @@ CFLAGS_KERNEL	=
 AFLAGS_KERNEL	=
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage -fno-tree-loop-im
 CFLAGS_KCOV	= -fsanitize-coverage=trace-pc
-
 
 # Use USERINCLUDE when you must reference the UAPI directories only.
 USERINCLUDE    := \
@@ -387,18 +393,33 @@ LINUXINCLUDE    := \
 		-Iinclude \
 		$(USERINCLUDE)
 
-KBUILD_CPPFLAGS := -D__KERNEL__
+KBUILD_CPPFLAGS := -D__KERNEL__ -D__MIPSEL__
 
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
-		   -fno-strict-aliasing -fno-common \
-		   -Werror-implicit-function-declaration \
-		   -Wno-format-security \
-		   -std=gnu89 $(call cc-option,-fno-PIE)
+                 -fno-strict-aliasing -fno-common \
+                 -Werror-implicit-function-declaration \
+                 -Wno-format-security \
+                 -std=gnu99 \
+                 -march=$(MIPS_ARCH) -msoft-float -$(MIPS_ENDIAN) -mabi=$(MIPS_ABI) \
+                 $(call cc-option,-fno-PIE) \
+                 $(call cc-option,-fno-stack-check) \
+                 $(call cc-option,-fconserve-stack)
 
+KBUILD_AFLAGS := -D__ASSEMBLY__ -march=$(MIPS_ARCH) -msoft-float -$(MIPS_ENDIAN) -mabi=$(MIPS_ABI) \
+                 $(call cc-option,-fno-PIE)
 
-KBUILD_AFLAGS_KERNEL :=
-KBUILD_CFLAGS_KERNEL :=
-KBUILD_AFLAGS   := -D__ASSEMBLY__ $(call cc-option,-fno-PIE)
+# musl/uclibc-specific adjustments
+ifneq ($(filter %-musl,$(CROSS_COMPILE)),)
+  KBUILD_CFLAGS += -D__MUSL__
+  KBUILD_CPPFLAGS += -I$(shell $(CC) -print-file-name=include)
+endif
+ifneq ($(filter %-uclibc,$(CROSS_COMPILE)),)
+  KBUILD_CFLAGS += -D__UCLIBC__
+  KBUILD_CPPFLAGS += -I$(shell $(CC) -print-file-name=include)
+endif
+
+KBUILD_AFLAGS_KERNEL  :=
+KBUILD_CFLAGS_KERNEL  :=
 KBUILD_AFLAGS_MODULE  := -DMODULE
 KBUILD_CFLAGS_MODULE  := -DMODULE
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
@@ -703,7 +724,7 @@ ifdef CONFIG_CC_STACKPROTECTOR_STRONG
   stackp-flag := -fstack-protector-strong
   ifeq ($(call cc-option, $(stackp-flag)),)
     $(warning Cannot use CONFIG_CC_STACKPROTECTOR_STRONG: \
-	      -fstack-protector-strong not supported by compiler)
+             -fstack-protector-strong not supported by compiler)
   endif
 else
   # Force off for distro compilers that enable stack protector by default.
@@ -1174,7 +1195,6 @@ modules.builtin: $(vmlinux-dirs:%=%/modules.builtin)
 %/modules.builtin: include/config/auto.conf
 	$(Q)$(MAKE) $(modbuiltin)=$*
 
-
 # Target to prepare building external modules
 PHONY += modules_prepare
 modules_prepare: prepare scripts
@@ -1259,6 +1279,15 @@ vmlinuxclean:
 	$(Q)$(CONFIG_SHELL) $(srctree)/scripts/link-vmlinux.sh clean
 
 clean: archclean vmlinuxclean
+	$(call cmd,rmdirs)
+	$(call cmd,rmfiles)
+	@find $(if $(KBUILD_EXTMOD), $(KBUILD_EXTMOD), .) $(RCS_FIND_IGNORE) \
+		\( -name '*.[oas]' -o -name '*.ko' -o -name '.*.cmd' \
+		-o -name '*.ko.*' -o -name '*.dwo' -o -name '*.su' \
+		-o -name '.*.d' -o -name '.*.tmp' -o -name '*.mod.c' \
+		-o -name '*.symtypes' -o -name 'modules.order' \
+		-o -name modules.builtin -o -name '.tmp_*.o.*' \
+		-o -name '*.ll' -o -name '*.gcno' \) -type f -print | xargs rm -f
 
 # mrproper - Delete all generated files, including .config
 #
@@ -1308,6 +1337,11 @@ board-dirs := $(dir $(wildcard $(srctree)/arch/$(SRCARCH)/configs/*/*_defconfig)
 board-dirs := $(sort $(notdir $(board-dirs:/=)))
 
 help:
+	@echo  'Building for MIPS with $(CROSS_COMPILE)'
+	@echo  '  Ensure $(CROSS_COMPILE)gcc supports -march=$(MIPS_ARCH) -mabi=$(MIPS_ABI)'
+	@echo  '  Use "make -j$(shell nproc 2>/dev/null || echo 1)" to utilize all CPU cores for faster builds'
+	@echo  '  Use "make ARCH=mips CROSS_COMPILE=mipsel-linux-musl- defconfig" for a default MIPS configuration'
+	@echo  ''
 	@echo  'Cleaning targets:'
 	@echo  '  clean		  - Remove most generated files but keep the config and'
 	@echo  '                    enough build support to build external modules'
@@ -1477,6 +1511,20 @@ $(clean-dirs):
 clean:	rm-dirs := $(MODVERDIR)
 clean: rm-files := $(KBUILD_EXTMOD)/Module.symvers
 
+clean: $(clean-dirs)
+	$(call cmd,rmdirs)
+	$(call cmd,rmfiles)
+	@find $(if $(KBUILD_EXTMOD), $(KBUILD_EXTMOD), .) $(RCS_FIND_IGNORE) \
+		\( -name '*.[oas]' -o -name '*.ko' -o -name '.*.cmd' \
+		-o -name '*.ko.*' \
+		-o -name '*.dwo'  \
+		-o -name '*.su'  \
+		-o -name '.*.d' -o -name '.*.tmp' -o -name '*.mod.c' \
+		-o -name '*.symtypes' -o -name 'modules.order' \
+		-o -name modules.builtin -o -name '.tmp_*.o.*' \
+		-o -name '*.ll' \
+		-o -name '*.gcno' \) -type f -print | xargs rm -f
+
 help:
 	@echo  '  Building external modules.'
 	@echo  '  Syntax: make -C path/to/kernel/src M=$$PWD target'
@@ -1492,20 +1540,6 @@ prepare: ;
 scripts: ;
 endif # KBUILD_EXTMOD
 
-clean: $(clean-dirs)
-	$(call cmd,rmdirs)
-	$(call cmd,rmfiles)
-	@find $(if $(KBUILD_EXTMOD), $(KBUILD_EXTMOD), .) $(RCS_FIND_IGNORE) \
-		\( -name '*.[oas]' -o -name '*.ko' -o -name '.*.cmd' \
-		-o -name '*.ko.*' \
-		-o -name '*.dwo'  \
-		-o -name '*.su'  \
-		-o -name '.*.d' -o -name '.*.tmp' -o -name '*.mod.c' \
-		-o -name '*.symtypes' -o -name 'modules.order' \
-		-o -name modules.builtin -o -name '.tmp_*.o.*' \
-		-o -name '*.ll' \
-		-o -name '*.gcno' \) -type f -print | xargs rm -f
-
 # Generate tags for editors
 # ---------------------------------------------------------------------------
 quiet_cmd_tags = GEN     $@
@@ -1520,12 +1554,12 @@ tags TAGS cscope gtags: FORCE
 PHONY += includecheck versioncheck coccicheck namespacecheck export_report
 
 includecheck:
-	find $(srctree)/* $(RCS_FIND_IGNORE) \
+	$(Q)find $(srctree)/* $(RCS_FIND_IGNORE) \
 		-name '*.[hcS]' -type f -print | sort \
 		| xargs $(PERL) -w $(srctree)/scripts/checkincludes.pl
 
 versioncheck:
-	find $(srctree)/* $(RCS_FIND_IGNORE) \
+	$(Q)find $(srctree)/* $(RCS_FIND_IGNORE) \
 		-name '*.[hcS]' -type f -print | sort \
 		| xargs $(PERL) -w $(srctree)/scripts/checkversion.pl
 
@@ -1533,10 +1567,10 @@ coccicheck:
 	$(Q)$(CONFIG_SHELL) $(srctree)/scripts/$@
 
 namespacecheck:
-	$(PERL) $(srctree)/scripts/namespace.pl
+	$(Q)$(PERL) $(srctree)/scripts/namespace.pl
 
 export_report:
-	$(PERL) $(srctree)/scripts/export_report.pl
+	$(Q)$(PERL) $(srctree)/scripts/export_report.pl
 
 endif #ifeq ($(config-targets),1)
 endif #ifeq ($(mixed-targets),1)
@@ -1553,8 +1587,8 @@ else
 CHECKSTACK_ARCH := $(ARCH)
 endif
 checkstack:
-	$(OBJDUMP) -d vmlinux $$(find . -name '*.ko') | \
-	$(PERL) $(src)/scripts/checkstack.pl $(CHECKSTACK_ARCH)
+	$(Q)$(OBJDUMP) -d vmlinux $$(find . -name '*.ko') | \
+	$(Q)$(PERL) $(src)/scripts/checkstack.pl $(CHECKSTACK_ARCH)
 
 kernelrelease:
 	@echo "$(KERNELVERSION)$$($(CONFIG_SHELL) $(srctree)/scripts/setlocalversion $(srctree))"
@@ -1585,12 +1619,12 @@ tools/%: FORCE
 #  build-dir  => directory in kernel source tree to use
 
 ifeq ($(KBUILD_EXTMOD),)
-        build-dir  = $(patsubst %/,%,$(dir $@))
-        target-dir = $(dir $@)
+        build-dir  := $(patsubst %/,%,$(dir $@))
+        target-dir := $(dir $@)
 else
         zap-slash=$(filter-out .,$(patsubst %/,%,$(dir $@)))
-        build-dir  = $(KBUILD_EXTMOD)$(if $(zap-slash),/$(zap-slash))
-        target-dir = $(if $(KBUILD_EXTMOD),$(dir $<),$(dir $@))
+        build-dir  := $(KBUILD_EXTMOD)$(if $(zap-slash),/$(zap-slash))
+        target-dir := $(if $(KBUILD_EXTMOD),$(dir $<),$(dir $@))
 endif
 
 %.s: %.c prepare scripts FORCE
@@ -1623,7 +1657,7 @@ Documentation/: headers_install
 	$(build)=$(build-dir)
 %.ko: prepare scripts FORCE
 	$(cmd_crmodverdir)
-	$(Q)$(MAKE) KBUILD_MODULES=$(if $(CONFIG_MODULES),1)   \
+	$(Q)$(MAKE) KBUILD_MODULES=$(if $(CONFIG_MODULES),1) \
 	$(build)=$(build-dir) $(@:.ko=.o)
 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.modpost
 
@@ -1661,6 +1695,6 @@ endif	# skip-makefile
 PHONY += FORCE
 FORCE:
 
-# Declare the contents of the .PHONY variable as phony.  We keep that
+# Declare the contents of the .PHONY variable as phony. We keep that
 # information in a variable so we can use it in if_changed and friends.
 .PHONY: $(PHONY)

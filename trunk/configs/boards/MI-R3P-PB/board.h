@@ -1,7 +1,7 @@
 /* Xiaomi Mi R3P */
 
-#define BOARD_PID		"MI-R3P"
-#define BOARD_NAME		"MI-R3P"
+#define BOARD_PID		"MI-R3P-PB"
+#define BOARD_NAME		"MI-R3P-PB"
 #define BOARD_DESC		"Xiaomi Mi R3P Wireless Router"
 #define BOARD_VENDOR_NAME	"Beijing Xiaomi Technology Co., Ltd."
 #define BOARD_VENDOR_URL	"http://www.mi.com/"

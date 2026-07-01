@@ -24,6 +24,7 @@ var $j = jQuery.noConflict();
 
 $j(document).ready(function() {
 	init_itoggle('ether_green');
+	init_itoggle('ether_eee');
 });
 
 </script>
@@ -128,7 +129,7 @@ function fill_port_link(oname,ins1g,pid){
 		idx = ether_link_mode(pid);
 	add_option(o, "Auto", "0", idx==0);
 	if (ins1g)
-		add_option(o, "1000 Mbps, Full Duplex: [AN]", "1", idx==1);
+	add_option(o, "1000 Mbps, Full Duplex: [AN]", "1", idx==1);
 	add_option(o, "100 Mbps, Full Duplex: [AN]", "2", idx==2);
 	add_option(o, "100 Mbps, Half Duplex: [AN]", "3", idx==3);
 	add_option(o, "10 Mbps, Full Duplex: [AN]", "4", idx==4);
@@ -252,17 +253,30 @@ function done_validating(action){
                                             </td>
                                         </tr>
                                         <tr id="row_ether_green">
-                                            <th width="50%"><#btn_Enable#> Green Ethernet?</th>
+                                            <th width="50%"><#btn_Enable#><#SwitchGreenEth#></th>
                                             <td>
                                                 <div class="main_itoggle">
                                                     <div id="ether_green_on_of">
                                                         <input type="checkbox" id="ether_green_fake" <% nvram_match_x("", "ether_green", "1", "value=1 checked"); %><% nvram_match_x("", "ether_green", "0", "value=0"); %>>
                                                     </div>
                                                 </div>
-
                                                 <div style="position: absolute; margin-left: -10000px;">
                                                     <input type="radio" value="1" name="ether_green" id="ether_green_1" class="input" <% nvram_match_x("", "ether_green", "1", "checked"); %> /><#checkbox_Yes#>
                                                     <input type="radio" value="0" name="ether_green" id="ether_green_0" class="input" <% nvram_match_x("", "ether_green", "0", "checked"); %> /><#checkbox_No#>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th width="50%"><#btn_Enable#><#SwitchEEE#></th>
+                                            <td>
+                                                <div class="main_itoggle">
+                                                    <div id="ether_eee_on_of">
+                                                        <input type="checkbox" id="ether_eee_fake" <% nvram_match_x("", "ether_eee", "1", "value=1 checked"); %><% nvram_match_x("", "ether_eee", "0", "value=0"); %>>
+                                                    </div>
+                                                </div>
+                                                <div style="position: absolute; margin-left: -10000px;">
+                                                    <input type="radio" value="1" name="ether_eee" id="ether_eee_1" class="input" <% nvram_match_x("", "ether_eee", "1", "checked"); %> /><#checkbox_Yes#>
+                                                    <input type="radio" value="0" name="ether_eee" id="ether_eee_0" class="input" <% nvram_match_x("", "ether_eee", "0", "checked"); %> /><#checkbox_No#>
                                                 </div>
                                             </td>
                                         </tr>

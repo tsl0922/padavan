@@ -7,10 +7,10 @@ Subject: [PATCH] update default host keys path
  default_options.h | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/default_options.h b/default_options.h
+diff --git a/src/default_options.h b/src/default_options.h
 index 5132775..535e77b 100644
---- a/default_options.h
-+++ b/default_options.h
+--- a/src/default_options.h
++++ b/src/default_options.h
 @@ -21,10 +21,10 @@ IMPORTANT: Some options will require "make clean" after changes */
  /* Default hostkey paths - these can be specified on the command line.
   * Homedir is prepended if path begins with ~/

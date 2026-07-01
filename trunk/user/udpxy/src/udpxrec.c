@@ -67,6 +67,24 @@ static volatile sig_atomic_t g_alarm = 0;
 struct udpxrec_opt g_recopt;
 static char g_app_info[ 80 ] = {0};
 
+static void check_mcast_refresh( int msockfd, time_t* last_tm,
+                     const struct in_addr* mifaddr,
+                     const struct in_addr* s_in_addr)
+{
+    time_t now = 0;
+
+    assert( (msockfd > 0) && last_tm && mifaddr );
+    now = time(NULL);
+
+    if( now - *last_tm >= g_recopt.mcast_refresh ) {
+        (void) renew_multicast( msockfd, mifaddr, s_in_addr);
+        *last_tm = now;
+    }
+
+    return;
+}
+
+
 /* handler for signals requestin application exit
  */
 static void
@@ -97,7 +115,7 @@ usage( const char* app, FILE* fp )
     (void) fprintf(fp, "%s\n", g_app_info);
     (void) fprintf(fp, "usage: %s [-v] [-b begin_time] [-e end_time] "
             "[-M maxfilesize] [-p pidfile] [-B bufsizeK] [-n nice_incr] "
-            "[-m mcast_ifc_addr] [-l logfile] "
+            "[-m mcast_ifc_addr] [-l logfile] [ -s ssm_addr ]"
             "-c src_addr:port dstfile\n",
             app );
 
@@ -116,17 +134,30 @@ usage( const char* app, FILE* fp )
             "\t-n : nice value increment [default = %d]\n"
             "\t-m : name or address of multicast interface to read from\n"
             "\t-c : multicast channel to record - ipv4addr:port\n"
+            "\t-s : source address for source specific multicast (SSM)\n"
             "\t-l : write output into the logfile\n"
             "\t-u : seconds to wait before updating on how long till recording starts\n",
             g_recopt.nice_incr );
 
+    (void)fprintf(fp,
+            "\t-i : periodically renew multicast subscription (skip if 0 sec) [default = %d sec]\n",
+            (int)g_recopt.mcast_refresh );
+
     (void) fprintf( fp, "Examples:\n"
-            "  %s -b 15:45.00 -e +2:00.00 -M 1.5Gb -n 2 -B 64K -c 224.0.11.31:5050 "
+            "1.  %s -b 15:45.00 -e +2:00.00 -M 1.5Gb -n 2 -B 64K -c 224.0.11.31:5050 "
             " /opt/video/tv5.mpg \n"
             "\tbegin recording multicast channel 224.0.11.31:5050 at 15:45 today,\n"
             "\tfinish recording in two hours or if destination file size >= 1.5 Gb;\n"
             "\tset socket buffer to 64Kb; increment nice value by 2;\n"
             "\twrite captured video to /opt/video/tv5.mpg\n",
+            g_udpxrec_app );
+    (void) fprintf( fp, "\n"
+            "2.  %s -v -e 14:55.00 -p /var/run/udpxrec.pid -l /videos/test.txt -B 64K -m eth0 -s 87.141.215.251 -c 232.0.10.120:10000 /videos/test2.mpg \n"
+            "\tbegin recording now until 14:55.00 time multicast channel 232.0.10.120:10000 from server 87.141.215.251,\n"
+            "\tinterface eth0 is in subnet where multicast group resides (layer 2)\n"
+            "\tcreate pid file with process id /var/run/udpxrec.pid\n"
+            "\tcreate logfile /videos/test.txt\n"
+            "\twrite captured video to /videos/test2.mpg\n",
             g_udpxrec_app );
     (void) fprintf( fp, "\n  %s\n", UDPXY_COPYRIGHT_NOTICE );
     (void) fprintf( fp, "  %s\n\n", UDPXY_CONTACT );
@@ -242,24 +273,33 @@ calc_buf_settings( ssize_t* bufmsgs, size_t* sock_buflen )
 /* subscribe to the (configured) multicast channel
  */
 static int
-subscribe( int* sockfd, struct in_addr* mcast_inaddr )
+subscribe( int* sockfd, struct in_addr* mcast_inaddr, struct sockaddr_in* s_address )
 {
-    struct sockaddr_in sa;
+    struct sockaddr_in m_address;
     const char* ipaddr = g_recopt.rec_channel;
+    const char* source_ipaddr = g_recopt.ssm_addr;
     size_t rcvbuf_len = 0;
     int rc = 0;
 
-    assert( sockfd && mcast_inaddr );
+    assert( sockfd && mcast_inaddr && s_address );
 
-    if( 1 != inet_aton( ipaddr, &sa.sin_addr ) ) {
+    if (strlen(source_ipaddr) != 0 && 1 != inet_aton( source_ipaddr, &s_address->sin_addr)) {
+        mperror( g_flog, errno,
+                "%s: Invalid source address (SSM) [%s]: inet_aton",
+                __func__, source_ipaddr );
+        return -1;
+    }
+    s_address->sin_family = AF_INET;
+
+    if( 1 != inet_aton( ipaddr, &m_address.sin_addr ) ) {
         mperror( g_flog, errno,
                 "%s: Invalid subscription [%s:%d]: inet_aton",
                 __func__, ipaddr, g_recopt.rec_port );
         return -1;
     }
 
-    sa.sin_family = AF_INET;
-    sa.sin_port = htons( (uint16_t)g_recopt.rec_port );
+    m_address.sin_family = AF_INET;
+    m_address.sin_port = htons( (uint16_t)g_recopt.rec_port );
 
     if( 1 != inet_aton( g_recopt.mcast_addr, mcast_inaddr ) ) {
         mperror( g_flog, errno,
@@ -271,7 +311,7 @@ subscribe( int* sockfd, struct in_addr* mcast_inaddr )
     rc = calc_buf_settings( NULL, &rcvbuf_len );
     if (0 != rc) return rc;
 
-    return setup_mcast_listener( &sa, mcast_inaddr,
+    return setup_mcast_listener( s_address, &m_address, mcast_inaddr,
             sockfd, (g_recopt.nosync_sbuf ? 0 : rcvbuf_len) );
 }
 
@@ -283,6 +323,7 @@ record()
 {
     int rsock = -1, destfd = -1, rc = 0, wtime_sec = 0;
     struct in_addr raddr;
+    struct sockaddr_in saddr;
     struct timeval rtv;
     struct dstream_ctx ds;
     ssize_t nmsgs = 0;
@@ -292,6 +333,7 @@ record()
     sig_atomic_t quit = 0;
     struct rdata_opt ropt;
     int oflags = 0;
+    time_t rfr_tm = time(NULL);
 
     char* data = NULL;
 
@@ -314,7 +356,7 @@ record()
             break;
         }
 
-        rc = subscribe( &rsock, &raddr );
+        rc = subscribe( &rsock, &raddr, &saddr );
         if( 0 != rc ) break;
 
         rtv.tv_sec = RSOCK_TIMEOUT;
@@ -379,6 +421,9 @@ record()
     ropt.buf_tmout = -1;
 
     for( n_total = 0; (0 == rc) && !(quit = must_quit()); ) {
+	if( g_recopt.mcast_refresh > 0 ) {
+            check_mcast_refresh( rsock, &rfr_tm, &raddr, &(saddr.sin_addr));
+        }
         nrcv = read_data( &ds, rsock, data, g_recopt.bufsize, &ropt );
         if( -1 == nrcv ) { rc = ERR_INTERNAL; break; }
 
@@ -393,7 +438,7 @@ record()
 
         if( nrcv > 0 ) {
             if( g_recopt.max_fsize &&
-                ((size_t)(n_total + nrcv) >= g_recopt.max_fsize) ) {
+                ((int64_t)(n_total + nrcv) >= g_recopt.max_fsize) ) {
                 break;
             }
 
@@ -429,7 +474,7 @@ record()
     free_dstream_ctx( &ds );
     if( data ) free( data );
 
-    close_mcast_listener( rsock, &raddr );
+    close_mcast_listener( rsock, &raddr, &saddr.sin_addr );
     if( destfd >= 0 ) (void) close( destfd );
 
     if( quit )
@@ -446,6 +491,7 @@ static int
 verify_channel()
 {
     struct in_addr mcast_inaddr;
+    struct sockaddr_in saddr;
     int sockfd = -1, rc = -1;
     char buf[16];
     ssize_t nrd = -1;
@@ -453,7 +499,7 @@ verify_channel()
 
     static const time_t MSOCK_TMOUT_SEC = 2;
 
-    rc = subscribe( &sockfd, &mcast_inaddr );
+    rc = subscribe( &sockfd, &mcast_inaddr, &saddr );
     do {
         if( rc ) break;
 
@@ -486,7 +532,7 @@ verify_channel()
     } while(0);
 
     if( sockfd >= 0 ) {
-        close_mcast_listener( sockfd, &mcast_inaddr );
+      close_mcast_listener( sockfd, &mcast_inaddr, &saddr.sin_addr );
     }
 
     return rc;
@@ -525,9 +571,10 @@ extern int udpxrec_main( int argc, char* const argv[] );
 int udpxrec_main( int argc, char* const argv[] )
 {
     int rc = 0, ch = 0, custom_log = 0, no_daemon = 0;
-    static const char OPTMASK[] = "vb:e:M:p:B:n:m:l:c:R:u:T";
+    static const char OPTMASK[] = "vb:e:M:p:B:n:m:l:c:s:i:R:u:T";
     time_t now = time(NULL);
     char now_buf[ 32 ] = {0}, sel_buf[ 32 ] = {0}, app_finfo[80] = {0};
+    u_short MIN_MCAST_REFRESH = 0, MAX_MCAST_REFRESH = 0;
 
     extern int optind, optopt;
     extern const char IPv4_ALL[];
@@ -665,6 +712,33 @@ int udpxrec_main( int argc, char* const argv[] )
                                          sizeof( g_recopt.rec_channel ),
                                          &g_recopt.rec_port );
                       if( 0 != rc ) rc = ERR_PARAM;
+                      break;
+
+            case 's':
+                      rc = get_ipv4_address( optarg, g_recopt.ssm_addr, sizeof(g_recopt.ssm_addr) );
+                      if( 0 != rc ) {
+                        (void) fprintf( stderr, "Invalid source address (SSM): [%s]\n",
+                                        optarg );
+                          rc = ERR_PARAM;
+                      }
+                      break;
+
+            case 'i':
+                      g_recopt.mcast_refresh = (u_short)atoi( optarg );
+
+                      MIN_MCAST_REFRESH = 30;
+                      MAX_MCAST_REFRESH = 64000;
+                      if( g_recopt.mcast_refresh &&
+                         (g_recopt.mcast_refresh < MIN_MCAST_REFRESH ||
+                          g_recopt.mcast_refresh > MAX_MCAST_REFRESH )) {
+                            (void) fprintf( stderr,
+                                "Invalid multicast refresh period [%d] seconds, "
+                                "min=[%d] sec, max=[%d] sec\n",
+                                (int)g_recopt.mcast_refresh,
+                                (int)MIN_MCAST_REFRESH, (int)MAX_MCAST_REFRESH );
+                            rc = ERR_PARAM;
+                            break;
+                       }
                       break;
 
             case 'R':

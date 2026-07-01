@@ -503,7 +503,7 @@ static void mt7621_pcie_init(struct mt7621_pci_controller *mpc)
 	for (i = 0; i < 3; i++) {
 		/* PCIe RC reset assert */
 		mt7621_pci_reset_assert(mpc, i);
-
+		msleep(100);
 		/* PCIe EP reset assert */
 		if (gpio_is_valid(mpc->reset_gpio[i]))
 			gpio_set_value(mpc->reset_gpio[i], 0);
@@ -519,7 +519,7 @@ static void mt7621_pcie_init(struct mt7621_pci_controller *mpc)
 		mt7621_pci_bypass_pipe_rst(mpc);
 
 	mt7621_pci_phy_ssc_config(mpc);
-
+	msleep(100);
 	/* PCIe EP reset deassert */
 	for (i = 0; i < 3; i++) {
 		if (gpio_is_valid(mpc->reset_gpio[i]))

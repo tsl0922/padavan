@@ -1,7 +1,8 @@
-SRC_NAME=openvpn-2.5.9
-SRC_URL = https://github.com/OpenVPN/openvpn/archive/refs/tags/v2.5.9.tar.gz
+SRC_NAME=openvpn-2.5.10
+SRC_URL = https://github.com/OpenVPN/openvpn/archive/refs/tags/v2.5.10.tar.gz
 
-CFLAGS += -fvisibility=hidden
+CFLAGS += -ffunction-sections -fdata-sections -fvisibility=hidden
+LDFLAGS += -Wl,--gc-sections
 
 all: download_test extract_test config_test
 	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)

@@ -67,7 +67,7 @@ void foe_clear_entry(struct neighbour *neigh);
 #include "mcast_tbl.h"
 #endif
 
-/*#include "../../../drivers/net/raeth/ra_ioctl.h"*/
+/*#include "../../../drivers/net/ethernet/raeth/ra_ioctl.h"*/
 #if defined(CONFIG_RA_HW_NAT_PPTP_L2TP)
 #include "fast_path.h"
 #endif

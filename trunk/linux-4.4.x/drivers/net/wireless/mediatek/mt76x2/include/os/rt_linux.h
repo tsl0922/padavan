@@ -800,15 +800,17 @@ void linux_pci_unmap_single(void *handle, ra_dma_addr_t dma_addr, size_t size, i
 #define PCI_FREE_CONSISTENT(_pci_dev, _size, _virtual_addr, _physical_addr) \
 	pci_free_consistent(_pci_dev, _size, _virtual_addr, _physical_addr)
 
-#ifdef VENDOR_FEATURE2_SUPPORT
-#define DEV_ALLOC_SKB(_pAd, _Pkt, _length)	\
-	_Pkt = dev_alloc_skb(_length);			\
-	if (_Pkt != NULL) {MEM_DBG_PKT_ALLOC_INC(_Pkt);};
-#else
-
-#define DEV_ALLOC_SKB(_pAd, _Pkt, _length)	\
-	_Pkt = dev_alloc_skb(_length);
-#endif /* VENDOR_FEATURE2_SUPPORT */
+#ifndef NET_SKB_PAD
+#define NET_SKB_PAD	32
+#endif
+#define DEV_ALLOC_SKB(_pAd,_Pkt, _length)		\
+	do {\
+		_Pkt = alloc_skb(_length + NET_SKB_PAD, GFP_ATOMIC);		\
+		if (_Pkt != NULL) {							\
+			skb_reserve(_Pkt, NET_SKB_PAD);		\
+			MEM_DBG_PKT_ALLOC_INC(_Pkt);	\
+		};	\
+	} while (0)
 
 /*#define PCI_MAP_SINGLE(_handle, _ptr, _size, _dir) (ULONG)0 */
 /*#define PCI_UNMAP_SINGLE(_handle, _ptr, _size, _dir) */

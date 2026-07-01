@@ -70,12 +70,13 @@ A specific endpoint to use for data transfers. Only for testing purposes; usuall
 endpoints are determined from the device attributes
 .IP "\fB-M\fP \fB\-\-message-content STRING\fP         " 10
 A bulk message to send as a switching command. Provided as a hexadecimal string
-.IP "\fB-2, -3\fP  \fB\-\-message-content2, \-\-message-content3 STRING\fP         " 10
+.IP "\fB-2\fP  \fB\-\-message-content2 STRING\fP         "
+.IP "\fB-3\fP  \fB\-\-message-content3 STRING\fP         " 10
 Additional bulk messages to send as switching commands. Provided as hexadecimal strings.
 When used with mass storage commands, setting \fB\-\-need-response\fR is
 strongly advised to comply with specifications and to avoid likely errors
-.IP "\fB-w\fP \fB\-\-release-delay NUM\fP         " 10
-After issuing all bulk messages, wait for NUM milliseconds before releasing the interface.
+.IP "\fB-w\fP \fB\-\-release-delay <milliseconds>\fP         " 10
+After issuing all bulk messages, wait for the given time before releasing the interface.
 Required for some modems on older systems (especially after an EJECT message)
 .IP "\fB-n\fP \fB\-\-need-response\fP         " 10
 Obsolete. CSW is always attempted to being read after mass storage transfers. No downside
@@ -147,14 +148,12 @@ Print all settings before running and show libusb debug messages
 Changes the behaviour of the program slightly. A success message including the
 effective target device ID is put out and a syslog notice is issued. Mainly for
 integration with a wrapper script
-.IP "\fB-s\fP \fB\-\-check-success NUM\fP         " 10
-After switching, keep checking for the result up to max. NUM seconds. If target IDs
+.IP "\fB-s\fP \fB\-\-check-success <seconds>\fP         " 10
+After switching, keep checking for the result up to the given time. If target IDs
 or target class were provided, their appearance indicates certain success. Otherwise
 the disconnection of the original device is rated as likely proof
-.IP "\fB-I\fP \fB\-\-no-inquire\fP         " 10
-do not obtain SCSI attributes from device (default is on). For proper identification
-of differing devices the attributes of the storage part provide valuable information.
-This is not needed for devices that are known and supported
+.IP "\fB-I\fP \fB\-\-inquire\fP         " 10
+Obsolete. Formerly obtained SCSI attributes, now ignored
 .IP "\fB-i\fP \fB\-\-interface NUM\fP         " 10
 Select initial USB interface (default: 0). Only for testing purposes
 .IP "\fB-u\fP \fB\-\-configuration NUM\fP         " 10

@@ -352,7 +352,7 @@ function submitInternet(v){
     <td colspan="3"><span id="MANGW4"></span></td>
   </tr>
   <tr>
-    <th>DNS:</th>
+    <th><#DNS#></th>
     <td colspan="3"><span id="WANDNS"></span></td>
   </tr>
   <tr>

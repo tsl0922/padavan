@@ -1,11 +1,11 @@
 include $(ROOTDIR)/rules.mk
 
 PKG_NAME:=util-linux
-PKG_VERSION:=2.33.1
+PKG_VERSION:=2.39.4
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_SOURCE_URL:=@KERNEL/linux/utils/$(PKG_NAME)/v2.33
-PKG_HASH:=c14bd9f3b6e1792b90db87696e87ec643f9d63efa0a424f092a5a6b2f2dbef21
+PKG_SOURCE_URL:=@KERNEL/linux/utils/$(PKG_NAME)/v2.39
+PKG_HASH:=6c4f8723dafd41c39d93ecbf16509fc88c33cd5bd3277880ae5a1d97a014fd0e
 
 PKG_INSTALL:=1
 
@@ -27,6 +27,7 @@ CONFIGURE_ARGS += \
 	--without-btrfs \
 	--without-readline \
 	--enable-libblkid \
+	--enable-blkid \
 	--enable-libuuid \
 	--disable-cal \
 	--disable-fdformat \

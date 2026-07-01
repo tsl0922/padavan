@@ -73,9 +73,12 @@ EXPORT_SYMBOL(avenrun); /* should be removed */
  */
 void get_avenrun(unsigned long *loads, unsigned long offset, int shift)
 {
-	loads[0] = (avenrun[0] + offset) << shift;
-	loads[1] = (avenrun[1] + offset) << shift;
-	loads[2] = (avenrun[2] + offset) << shift;
+	int sum = num_possible_cpus();
+	if (sum == 0) sum = 1;
+	
+	loads[0] = ((avenrun[0] + offset) << shift) / sum;
+	loads[1] = ((avenrun[1] + offset) << shift) / sum;
+	loads[2] = ((avenrun[2] + offset) << shift) / sum;
 }
 
 long calc_load_fold_active(struct rq *this_rq)

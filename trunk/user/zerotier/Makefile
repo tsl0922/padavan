@@ -1,12 +1,13 @@
-SRC_NAME = ZeroTierOne-1.10.6
-SRC_URL = https://github.com/zerotier/ZeroTierOne/archive/refs/tags/1.10.6.tar.gz
+SRC_NAME = ZeroTierOne-1.14.0
+SRC_URL = https://github.com/zerotier/ZeroTierOne/archive/refs/tags/1.14.0.tar.gz
 
 THISDIR = $(shell pwd)
 FLAGS := DEFS=""
 LDFLAGS := -static-libstdc++
 
-all: download_test extract_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+#all: download_test extract_test
+#	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+all: 
 
 download_test:
 	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
@@ -26,7 +27,7 @@ clean:
 	fi ; \
 
 romfs:
-	$(ROMFSINST) $(THISDIR)/$(SRC_NAME)/zerotier-one /usr/bin/zerotier-one
-	$(ROMFSINST) $(THISDIR)/zerotier.sh /usr/bin/zerotier.sh
+	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME) /usr/bin/zerotier-one
+	$(ROMFSINST) -p +x $(THISDIR)/zerotier.sh /usr/bin/zerotier.sh
 	ln -sf zerotier-one $(ROMFSDIR)/usr/bin/zerotier-cli
 	ln -sf zerotier-one $(ROMFSDIR)/usr/bin/zerotier-idtool

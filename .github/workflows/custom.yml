@@ -1,0 +1,243 @@
+# Build TurBoTse's Padavan 4.4 Kernel
+
+name: Custom Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Select router device"
+        required: true
+        type: choice
+        options:
+          - 360-T6M
+          - 360-T6M-PB
+          - B70
+          - BELL-A040WQ
+          - C-Life-XG1
+          - CR660x
+          - DIR-878
+          - DIR-882
+          - EA7500
+          - G-AX1800
+          - G-AX1800-B
+          - GHL
+          - HAR-20S2U1
+          - JCG-836PRO
+          - JCG-AC860M
+          - JCG-Q10Pro
+          - JCG-Q10Pro-PB
+          - JCG-Q11Pro
+          - JCG-Q20
+          - JCG-Q20-PB
+          - JCG-Y2
+          - JDCLOUD-RE-CP-02
+          - JDCLOUD-RE-SP-01B
+          - K2P
+          - K2P-NANO
+          - K2P-USB
+          - KOMI-A8
+          - MI-4
+          - MI-R3G
+          - MI-R3P-PB
+          - MI-R3P-SPI
+          - MI-R3P
+          - MI-R4A
+          - MR2600
+          - MSG1500
+          - MSG1500-Z
+          - NETGEAR-BZV
+          - NETGEAR-R6800
+          - NETGEAR-R7450
+          - NEWIFI
+          - NEWIFI3
+          - QM-B1
+          - R2100
+          - RM2100
+          - RT-AC85P
+          - SIM-AX1800T
+          - TX1801
+          - WDR8620
+          - WRL18M4GD
+          - WE410443-TC
+          - WIA3300-10
+          - WR1200JS
+          - XY-C1
+          - ZTE-E8820S
+          - ZTE-E8820V2
+          - ZTT-RX6000
+        default: K2P
+      toolchain:
+        description: "Select compilation toolchain"
+        required: true
+        type: choice
+        options:
+          - mipsel-linux-musl
+          - mipsel-linux-uclibc
+        default: mipsel-linux-musl
+      cpufreq:
+        description: "Enable CPU Overclocking"
+        type: boolean
+        default: false
+      mt7621_oc:
+        description: "1000Mhz=0x312 1100Mhz=0x362 1120Mhz=0x372 1200Mhz=0x3B2"
+        type: choice
+        options: [ '0x312', '0x362', '0x372', '0x3B2' ]
+      plugins:
+        description: 'Plugin JSON, e.g. {"shadowsocks":"y","xray":"n"}'
+        required: true
+        type: string
+        default: '{"shadowsocks":"y","v2ray":"n","xray":"y","trojan":"y","ssobfs":"y","smartdns":"y","vlmcsd":"y","ttyd":"n","iperf3":"n"}'
+      customization:
+        description: 'Customization JSON'
+        required: true
+        type: string
+        default: '{"lanip":"192.168.2.1","signaccount":"admin","signpassword":"admin","wifi2gssid":"Padavan","wifi2gpsk":"1234567890","wifi5gssid":"Padavan-5G","wifi5gpsk":"1234567890"}'
+      nanoversion:
+        description: "Build Nano Version"
+        type: boolean
+        default: false
+      release:
+        description: "Upload to GitHub Release"
+        type: boolean
+        default: true
+      oldworkflow:
+        description: "Delete Old Workflows"
+        type: boolean
+        default: true
+
+env:
+  FIRMWARE_AUTHOR: TurBoTse
+  TOOLCHAIN: ${{ inputs.toolchain }}
+  TOOLCHAIN_URL: https://github.com/TurBoTse/padavan/releases/download/toolchain/${{ inputs.toolchain }}.tar.xz
+  CONFIGFILE: trunk/configs/templates/${{ inputs.target }}.config
+
+jobs:
+  build:
+    name: Build ${{ inputs.target }}-${{ inputs.toolchain }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+
+    steps:
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 1
+      - uses: hendrikmuhs/ccache-action@main
+        with:
+          key: ${{ inputs.target }}-${{ inputs.toolchain }}
+
+      - uses: actions/setup-go@main
+        with:
+          go-version: '1.24.x'
+          check-latest: true
+          cache: false
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bison flex gperf help2man libtool-bin texinfo python3-docutils autopoint gettext ccache \
+            autoconf automake liblzma-dev libltdl-dev liblzo2-dev jq
+          echo "BUILD_DATE=$(TZ='Asia/Shanghai' date +%Y%m%d)" >> $GITHUB_ENV
+
+      - name: Validate Input JSON
+        run: |
+          jq empty <<< '${{ inputs.plugins }}' || { echo "❌ Invalid plugins JSON"; exit 1; }
+          jq empty <<< '${{ inputs.customization }}' || { echo "❌ Invalid customization JSON"; exit 1; }
+
+      - name: Export Customization & Plugin Flags
+        run: |
+          export_json() {
+            local JSON=$1
+            local PREFIX=$2
+            echo "$JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS='=' read -r k v; do
+              echo "${PREFIX}${k^^}=$v" >> $GITHUB_ENV
+            done
+          }
+
+          export_json '${{ inputs.customization }}' ""
+          if [ "${{ inputs.nanoversion }}" = "true" ]; then
+            echo "⚠️ Nano version — all plugins disabled."
+            echo '${{ inputs.plugins }}' | jq 'with_entries(.value="n")' > plugins_fixed.json
+          else
+            echo '${{ inputs.plugins }}' > plugins_fixed.json
+          fi
+          export_json "$(cat plugins_fixed.json)" "PLUGIN_"
+
+      - name: Apply Configurations
+        run: |
+          chmod +x trunk/custom/scripts/*.sh || true
+          bash trunk/custom/scripts/setip.sh "$LANIP" trunk/user/shared/src/defaults.h trunk/user/www/dict/CN.dict
+          bash trunk/custom/scripts/setaccount.sh "$SIGNACCOUNT" "$SIGNPASSWORD" trunk/user/shared/src/defaults.h
+          bash trunk/custom/scripts/setwifi.sh "$WIFI2GSSID" "$WIFI2GPSK" "$WIFI5GSSID" "$WIFI5GPSK" trunk/user/shared/src/defaults.h
+
+          for key in $(env | grep '^PLUGIN_' | cut -d= -f1); do
+            echo "CONFIG_FIRMWARE_INCLUDE_${key#PLUGIN_}=${!key}" >> "$CONFIGFILE"
+          done
+
+          if [ "${{ inputs.cpufreq }}" = "true" ]; then
+            echo "CONFIG_FIRMWARE_INCLUDE_OC=y" >> "$CONFIGFILE"
+            echo "CONFIG_FIRMWARE_MT7621_OC=${{ inputs.mt7621_oc }}" >> "$CONFIGFILE"
+          fi
+
+      - name: Apply Nano Optimization
+        if: ${{ inputs.nanoversion }}
+        run: |
+          for fs in ANTFS FAT EXFAT EXT2 EXT3 EXT4 XFS FUSE SWAP; do
+            sed -i "s/CONFIG_FIRMWARE_ENABLE_${fs}=y/CONFIG_FIRMWARE_ENABLE_${fs}=n/" "$CONFIGFILE"
+          done
+          modules=(UVC HID SERIAL AUDIO XFRM QOS IMQ IFB NFSD NFSC CIFS NTFS_3G LPRD U2EC TCPDUMP HDPARM PARTED 
+            SMBD WINS SMBD_SYSLOG FTPD RPL2TP EAP_PEAP HTTPS SFTP DROPBEAR DROPBEAR_FAST_CODE OPENSSH OPENVPN SSWAN 
+            OPENSSL_EC OPENSSL_EXE XUPNPD MINIDLNA FIREFLY FFMPEG_NEW TRANSMISSION TRANSMISSION_WEB_CONTROL ARIA 
+            ARIA_WEB_CONTROL CURL SCUTCLIENT GDUT_DRCOM DOGCOM MINIEAP NJIT_CLIENT SOFTETHERVPN_SERVER SOFTETHERVPN_CLIENT 
+            SOFTETHERVPN_CMD VLMCSD TTYD MSD_LITE LRZSZ HTOP NANO IPERF3 DUMP1090 RTL_SDR MTR SOCAT SRELAY MENTOHUST 
+            FRPC FRPS REDSOCKS SHADOWSOCKS XRAY V2RAY TROJAN SSOBFS SINGBOX NAIVEPROXY ADBYBY DNSFORWARDER SMARTDNS 
+            ADGUARDHOME ZEROTIER ALIDDNS DDNSTO ALDRIVER SQM WIREGUARD )
+          for m in "${modules[@]}"; do
+            sed -i "s/CONFIG_FIRMWARE_INCLUDE_${m}=y/CONFIG_FIRMWARE_INCLUDE_${m}=n/" "$CONFIGFILE"
+          done
+
+      - name: Build Firmware
+        run: |
+          make ${{ inputs.target }} TOOLCHAIN=${{ inputs.toolchain }}
+          mkdir -p trunk/output
+          base="${FIRMWARE_AUTHOR}-${{ inputs.target }}-4.4-${{ inputs.toolchain }}"
+          [ "${{ inputs.nanoversion }}" = "true" ] && base="${base}-nano"
+          [ "${{ inputs.cpufreq }}" = "true" ] && base="${base}-cpufreq-${{ inputs.mt7621_oc }}"
+          base="${base}-${BUILD_DATE}"
+          i=1
+          for f in trunk/images/*.trx; do
+            suffix=""
+            [ $i -gt 1 ] && suffix="-$i"
+            mv "$f" "trunk/output/${base}${suffix}.trx"
+            i=$((i+1))
+          done
+
+      - uses: actions/upload-artifact@main
+        with:
+          name: ${{ inputs.target }}-${{ inputs.toolchain }}-${{ env.BUILD_DATE }}
+          path: trunk/output/*.trx
+
+      - uses: softprops/action-gh-release@master
+        if: ${{ inputs.release }}
+        with:
+          tag_name: ${{ env.BUILD_DATE }}
+          name: ${{ env.BUILD_DATE }}
+          body: |
+            Build Summary:
+            - Date: ${{ env.BUILD_DATE }}
+            - Target: ${{ inputs.target }}
+            - Toolchain: ${{ inputs.toolchain }}
+            - Nano: ${{ inputs.nanoversion }}
+            - CPU OC: ${{ inputs.cpufreq }} (${{ inputs.mt7621_oc }})
+            - Plugins: ${{ inputs.plugins }}
+            - Custom: ${{ inputs.customization }}
+          files: trunk/output/*.trx
+
+      - uses: Mattraks/delete-workflow-runs@main
+        if: ${{ inputs.oldworkflow }}
+        with:
+          retain_days: 0
+          keep_minimum_runs: 1

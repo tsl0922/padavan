@@ -28,7 +28,7 @@ OBJS += aidisk.o
 endif
 ifdef CONFIG_RTL8367
 OBJS += switch_rtl8367.o
-CFLAGS += -I$(ROOTDIR)/$(LINUXDIR)/drivers/net/rtl8367
+CFLAGS += -I$(ROOTDIR)/$(LINUXDIR)/drivers/net/ethernet/raeth/rtl8367c
 else
 ifdef CONFIG_RAETH
 OBJS += switch_mtk_esw.o
@@ -36,7 +36,7 @@ CFLAGS += -I$(ROOTDIR)/$(LINUXDIR)/drivers/net/ethernet/raeth
 else
 ifdef CONFIG_RAETH_ESW
 OBJS += switch_mtk_esw.o
-CFLAGS += -I$(ROOTDIR)/$(LINUXDIR)/drivers/net/raeth
+CFLAGS += -I$(ROOTDIR)/$(LINUXDIR)/drivers/net/ethernet/raeth
 endif
 endif
 endif

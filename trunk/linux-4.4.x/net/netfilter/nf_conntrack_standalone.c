@@ -514,7 +514,7 @@ static struct ctl_table nf_ct_sysctl_table[] = {
 		.procname       = "nf_conntrack_buckets",
 		.data           = &init_net.ct.htable_size,
 		.maxlen         = sizeof(unsigned int),
-		.mode           = 0444,
+		.mode           = 0644,
 		.proc_handler   = proc_dointvec,
 	},
 	{

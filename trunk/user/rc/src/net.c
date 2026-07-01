@@ -611,6 +611,7 @@ reload_nat_modules(void)
 	char hnat_param[80];
 	int hwnat_allow = is_hwnat_allow();
 	int hwnat_loaded = is_hwnat_loaded();
+	int ipv6_nat = nvram_get_int("ip6_lan_auto");
 #endif
 
 	if (!get_ap_mode())
@@ -703,6 +704,10 @@ reload_nat_modules(void)
 		else
 		{doSystem("iwpriv %s set hw_nat_register=%d", IFNAME_2G_MAIN, 0);
 		doSystem("iwpriv %s set hw_nat_register=%d", IFNAME_5G_MAIN, 0);}
+		if(ipv6_nat==1)
+		{doSystem("echo 7 1 > /sys/kernel/debug/hnat/hnat_setting");}
+		else
+		{doSystem("echo 7 0 > /sys/kernel/debug/hnat/hnat_setting");}
 #endif
 	}
 
@@ -797,7 +802,7 @@ set_tcp_tweaks(void)
 
 	/* Tweak TCP IPv4 performance */
 	sprintf(tmp, "/proc/sys/net/%s/%s", "ipv4", "tcp_fin_timeout");
-	fput_int(tmp, 40);		// def: 60
+	fput_int(tmp, 30);		// def: 60
 
 	sprintf(tmp, "/proc/sys/net/%s/%s", "ipv4", "tcp_keepalive_intvl");
 	fput_int(tmp, 30);		// def: 75
@@ -818,13 +823,13 @@ set_tcp_tweaks(void)
 	fput_int(tmp, 3);		// def: 5
 
 //	sprintf(tmp, "/proc/sys/net/%s/%s", "ipv4", "tcp_tw_recycle");
-//	fput_int(tmp, 1);
+//	fput_int(tmp, 1);		//def: 1
 
 	sprintf(tmp, "/proc/sys/net/%s/%s", "ipv4", "tcp_tw_reuse");
-	fput_int(tmp, 1);
+	fput_int(tmp, 1);		//def: 1
 
 	sprintf(tmp, "/proc/sys/net/%s/%s", "ipv4", "tcp_rfc1337");
-	fput_int(tmp, 1);
+	fput_int(tmp, 1);		//def: 1
 }
 
 void

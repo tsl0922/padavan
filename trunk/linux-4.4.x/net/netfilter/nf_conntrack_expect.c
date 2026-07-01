@@ -647,7 +647,7 @@ int nf_conntrack_expect_init(void)
 		if (!nf_ct_expect_hsize)
 			nf_ct_expect_hsize = 1;
 	}
-	nf_ct_expect_max = nf_ct_expect_hsize * 4;
+	nf_ct_expect_max = nf_ct_expect_hsize * 1024;
 	nf_ct_expect_cachep = kmem_cache_create("nf_conntrack_expect",
 				sizeof(struct nf_conntrack_expect),
 				0, 0, NULL);

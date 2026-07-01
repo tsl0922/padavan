@@ -1,5 +1,5 @@
 ccflags-y = -Idrivers/net/wireless/mediatek/mt76x3/include \
-		-Idrivers/net/wireless/mediate/mt76x3/ate/include
+		-Idrivers/net/wireless/mediatek/mt76x3/ate/include
 
 DRV_NAME = mt76x3_ap
 RT_WIFI_DIR = ../mt76x3
@@ -926,7 +926,7 @@ endif
 #  CFLAGS
 ##################
 EXTRA_CFLAGS += -DAGGREGATION_SUPPORT -DPIGGYBACK_SUPPORT -DWMM_SUPPORT  -DLINUX \
-               -Wall -Wstrict-prototypes -Wno-trigraphs -Wframe-larger-than=4096 -Werror
+               -Wall -Wstrict-prototypes -Wno-trigraphs -Wframe-larger-than=4096 #-Werror
 #-DDBG_DIAGNOSE -DDBG_RX_MCS -DDBG_TX_MCS
 
 EXTRA_CFLAGS += -DCONFIG_AP_SUPPORT -DSCAN_SUPPORT -DAP_SCAN_SUPPORT

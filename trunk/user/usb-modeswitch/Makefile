@@ -1,5 +1,5 @@
 PROG        = usb_modeswitch
-VERS        = 2.5.2
+VERS        = 2.6.0
 CC          ?= gcc
 CFLAGS     += -I$(STAGEDIR)/include/libusb-1.0
 LIBS        = -lusb-1.0

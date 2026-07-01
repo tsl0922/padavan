@@ -1,41 +1,34 @@
-SRC_NAME1=squashfs-4.3
-SRC_NAME2=xz-5.2.4
+include $(ROOTDIR)/rules.mk
 
-all: config_xz build_xz build_squashfs
+PKG_NAME := squashfs
+PKG_VERSION := 4.7
+PKG_SOURCE := squashfs-tools-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL := https://github.com/plougher/squashfs-tools/archive/refs/tags/$(PKG_VERSION)
+PKG_HASH := f1605ef720aa0b23939a49ef4491f6e734333ccc4bda4324d330da647e105328
+PKG_BUILD_DIR := $(BUILD_DIR)/squashfs-tools-$(PKG_VERSION)
 
-config_xz:
-	( if [ -f ./config_xz_done ]; then \
-		echo "the same configuration"; \
-	else \
-		make configure_xz && touch config_xz_done; \
-	fi )
+include $(INCLUDE_DIR)/package.mk
 
-configure_xz:
-	( cd $(SRC_NAME2) ; \
-	./autogen.sh ; \
-	./configure \
-		--disable-doc \
-		--disable-shared \
-		--disable-werror \
-		--disable-xz \
-		--disable-xzdec \
-		--disable-lzmadec \
-		--disable-lzmainfo \
-		CFLAGS="-std=c99" ; \
-	)
+CONFIGURE_ARGS += \
+	--with-zlib \
+	--with-lzo \
+	--with-lz4 \
+	--with-xz \
+	--with-zstd \
+	--enable-xattr
 
-build_xz:
-	make -j$(HOST_NCPU) -C $(SRC_NAME2)
+define Build/Compile
+	@echo "==> Patching default compression method to xz..."
+	@$(SED) 's|COMP_DEFAULT = gzip|COMP_DEFAULT = xz|g; s|COMP_DEFAULT ?= gzip|COMP_DEFAULT ?= xz|g' \
+		$(PKG_BUILD_DIR)/squashfs-tools/Makefile
 
-build_squashfs:
-	make -j$(HOST_NCPU) -C $(SRC_NAME1) XZUTILSDIR=$(shell pwd)/$(SRC_NAME2) ; \
-	cp $(SRC_NAME1)/mksquashfs ./
-	cp $(SRC_NAME1)/unsquashfs ./
+	@echo "==> Compiling $(PKG_NAME)..."
+	+$(MAKE) -C $(PKG_BUILD_DIR)/squashfs-tools
 
-clean:
-	if [ -f $(SRC_NAME2)/Makefile ] ; then \
-		make -C $(SRC_NAME2) distclean ; \
-	fi
-	make -C $(SRC_NAME1) clean
-	rm -f config_xz_done
-	rm -f mksquashfs unsquashfs
+	@echo "==> Installing $(PKG_NAME) to tools/mksquashfs_xz..."
+	$(INSTALL_DIR) $(ROOTDIR)/tools/mksquashfs_xz
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/squashfs-tools/mksquashfs $(ROOTDIR)/tools/mksquashfs_xz/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/squashfs-tools/unsquashfs $(ROOTDIR)/tools/mksquashfs_xz/
+endef
+
+$(eval $(call BuildPackage,squashfs))

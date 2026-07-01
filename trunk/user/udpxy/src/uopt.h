@@ -88,10 +88,15 @@ struct udpxrec_opt {
     int     rbuf_msgs;      /* max number of messages to save
                                in buffer (-1 = as many as would fit)    */
 
+    u_short mcast_refresh;  /* refresh rate (sec) for multicast
+                               subscription */
+
+
                             /* address of the multicast interface       */
     char    mcast_addr[ IPADDR_STR_SIZE ];
     char    rec_channel[ IPADDR_STR_SIZE ];
     int     rec_port;
+    char    ssm_addr[ IPADDR_STR_SIZE ];
     int     waitupd_sec;    /* update every N seconds while waiting 
                                to start recording */
 

@@ -92,11 +92,9 @@ function initial(){
 function applyRule(){
 	if(validForm()){
 		showLoading();
-		
 		document.form.action_mode.value = " Apply ";
 		document.form.current_page.value = "/Advanced_BasicFirewall_Content.asp";
 		document.form.next_page.value = "";
-		
 		document.form.submit();
 	}
 }
@@ -318,7 +316,7 @@ function done_validating(action){
                                             <th><a class="help_tooltip" href="javascript:void(0);" onmouseover="openTooltip(this,8,1);"><#FirewallConfig_WanLanLog_itemname#></a></th>
                                             <td>
                                                 <select name="fw_log_x" class="input" onchange="return change_common(this, 'FirewallConfig', 'fw_log_x')">
-                                                    <option value="none" <% nvram_match_x("","fw_log_x", "none","selected"); %>><#checkbox_No#></option>
+                                                    <option value="none" <% nvram_match_x("","fw_log_x", "none","selected"); %>><#checkbox_No#> (*)</option>
                                                     <option value="drop" <% nvram_match_x("","fw_log_x", "drop","selected"); %>>Dropped</option>
                                                     <option value="accept" <% nvram_match_x("","fw_log_x", "accept","selected"); %>>Accepted</option>
                                                     <option value="both" <% nvram_match_x("","fw_log_x", "both","selected"); %>>Both</option>

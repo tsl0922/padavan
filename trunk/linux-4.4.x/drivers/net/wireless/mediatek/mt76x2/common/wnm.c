@@ -1392,7 +1392,7 @@ static VOID ReceiveBTMQuery(IN PRTMP_ADAPTER pAd,
 	INT32 Ret;
 	BOOLEAN IsFound = FALSE;
 
-	printk("%s\n", __FUNCTION__);
+	DBGPRINT(RT_DEBUG_OFF, ("%s\n", __func__));
 
 	for (APIndex = 0; APIndex < MAX_MBSSID_NUM(pAd); APIndex++)
 	{
@@ -1507,7 +1507,7 @@ static VOID ReceiveBTMRsp(IN PRTMP_ADAPTER pAd,
 	INT32 Ret;
 	BOOLEAN IsFound = FALSE, Cancelled;
 
-	printk("%s\n", __FUNCTION__);
+	DBGPRINT(RT_DEBUG_ERROR, ("%s\n", __func__));
 
 	for (APIndex = 0; APIndex < MAX_MBSSID_NUM(pAd); APIndex++)
 	{
@@ -1626,7 +1626,7 @@ static VOID SendBTMQueryIndication(
 	BTM_EVENT_DATA *Event = (BTM_EVENT_DATA *)Elem->Msg;
 	PNET_DEV NetDev = pAd->ApCfg.MBSSID[Event->ControlIndex].wdev.if_dev;
 
-	printk("%s\n", __FUNCTION__);
+	DBGPRINT(RT_DEBUG_ERROR, ("%s\n", __func__));
 
 	/* Send BTM query indication to daemon */
 	SendBTMQueryEvent(NetDev,
@@ -1651,7 +1651,7 @@ VOID WaitPeerBTMRspTimeout(
 	INT32 Ret;
 	BOOLEAN Cancelled;
 	
-	printk("%s\n", __FUNCTION__);
+	DBGPRINT(RT_DEBUG_ERROR, ("%s\n", __func__));
 
 	if (!BTMPeerEntry)
 		return;
@@ -1764,7 +1764,7 @@ static VOID SendBTMConfirm(
 	PNET_DEV NetDev = pAd->ApCfg.MBSSID[Event->ControlIndex].wdev.if_dev;
 	INT32 Ret;
 
-	printk("%s\n", __FUNCTION__);
+	DBGPRINT(RT_DEBUG_ERROR, ("%s\n", __func__));
 
 	/* Send BTM confirm to daemon */
 	SendBTMConfirmEvent(NetDev,
@@ -2144,7 +2144,7 @@ VOID WaitPeerWNMNotifyRspTimeout(
 	INT32 Ret;
 	BOOLEAN Cancelled;
 	
-	printk("%s\n", __FUNCTION__);
+	DBGPRINT(RT_DEBUG_ERROR, ("%s\n", __func__));
 
 	if (!WNMNotifyPeerEntry)
 		return;
@@ -2180,7 +2180,7 @@ VOID ReceiveWNMNotifyRsp(IN PRTMP_ADAPTER pAd,
 	INT32 Ret;
 	BOOLEAN IsFound = FALSE, Cancelled;
 
-	printk("%s\n", __FUNCTION__);
+	DBGPRINT(RT_DEBUG_ERROR, ("%s\n", __func__));
 
 	for (APIndex = 0; APIndex < MAX_MBSSID_NUM(pAd); APIndex++)
 	{
@@ -2402,9 +2402,9 @@ VOID SendWNMNotifyConfirm(
 	PWNM_CTRL pWNMCtrl = &pAd->ApCfg.MBSSID[Event->ControlIndex].WNMCtrl;
 	INT32 Ret;
 
-	printk("%s\n", __FUNCTION__);
+	DBGPRINT(RT_DEBUG_ERROR, ("%s: Receive WNM Notify Response Status:%d\n",
+		__func__, Event->u.WNM_NOTIFY_RSP_DATA.WNMNotifyRsp[0]));
 
-	printk("Receive WNM Notify Response Status:%d\n", Event->u.WNM_NOTIFY_RSP_DATA.WNMNotifyRsp[0]);
 	/* Delete BTM peer entry */
 	RTMP_SEM_EVENT_WAIT(&pWNMCtrl->WNMNotifyPeerListLock, Ret);
 	DlListForEachSafe(WNMNotifyPeerEntry, WNMNotifyPeerEntryTmp, &pWNMCtrl->WNMNotifyPeerList, WNM_NOTIFY_PEER_ENTRY, List)

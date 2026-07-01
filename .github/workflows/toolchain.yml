@@ -1,40 +1,41 @@
-name: toolchain
+name: Build Toolchain
 
-on: 
+on:
   workflow_dispatch:
 
 jobs:
   build:
-    name: build
-    runs-on: ubuntu-22.04
+    name: Build ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
     strategy:
+      fail-fast: false
       matrix:
-        target: [mipsel-linux-uclibc, mipsel-linux-musl]
+        target: [mipsel-linux-musl, mipsel-linux-uclibc]
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Prepare
+      - uses: actions/checkout@main
+
+      - name: Install Build Dependencies
         run: |
-          sudo apt update
-          sudo apt install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd \
-            fakeroot kmod cpio git python3-docutils gettext automake autopoint \
-            texinfo build-essential help2man pkg-config zlib1g-dev libgmp3-dev \
-            libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget libc-dev-bin
-      - name: Build
+          sudo apt-get update && sudo apt-get install -y bison flex gperf help2man libtool-bin texinfo
+
+      - name: Build and Package
         run: |
-          make CT_TARGET=${CT_TARGET} CT_VERSION=${CT_VERSION}
-          cd crosstool-ng-${CT_VERSION}/toolchain-mipsel
-          tar cJf ../../${CT_TARGET}.tar.xz *
-        env:
-          CT_TARGET: ${{ matrix.target }}
-          CT_VERSION: 1.26.0
+          make CT_TARGET=${{ matrix.target }}
+          cd "${{ matrix.target }}"
+          tar cJf "../${{ matrix.target }}.tar.xz" .
         working-directory: toolchain
-      - uses: actions/upload-artifact@v3
+
+      - uses: actions/upload-artifact@main
         with:
-          name: toolchain
+          name: ${{ matrix.target }}
           path: toolchain/${{ matrix.target }}.tar.xz
-      - uses: svenstaro/upload-release-action@2.2.0
+
+      - uses: ncipollo/release-action@main
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: toolchain/${{ matrix.target }}.tar.xz
           tag: toolchain
-          overwrite: true
+          artifacts: toolchain/${{ matrix.target }}.tar.xz
+          allowUpdates: true
+          omitBodyDuringUpdate: true

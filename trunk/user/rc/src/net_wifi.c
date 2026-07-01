@@ -689,7 +689,7 @@ reconnect_apcli(const char *ifname_apcli, int force)
 
 	if (get_apcli_sta_auto(is_aband)) {
 		if (is_aband) {
-#if defined (USE_WID_5G) && (USB_WID_5G==7615 || USE_WID_5G==7915)
+#if defined (USE_WID_5G) && (USE_WID_5G==7615 || USE_WID_5G==7915)
 			doSystem("iwpriv %s set %s=%d", ifname_apcli, "ApCliAutoConnect", 3);
 			logmessage(LOGNAME, "Set ApCliAutoConnect to 3");
 #else
@@ -697,7 +697,7 @@ reconnect_apcli(const char *ifname_apcli, int force)
 			logmessage(LOGNAME, "Set ApCliAutoConnect to 1");
 #endif
 		} else {
-#if defined (USE_WID_2G) && (USB_WID_2G==7615 || USE_WID_2G==7915)
+#if defined (USE_WID_2G) && (USE_WID_2G==7615 || USE_WID_2G==7915)
 			doSystem("iwpriv %s set %s=%d", ifname_apcli, "ApCliAutoConnect", 3);
 			logmessage(LOGNAME, "Set ApCliAutoConnect to 3");
 #else
@@ -1127,7 +1127,7 @@ ebtables_filter_guest_ap(const char *wifname, int is_aband, int i_need_dhcp)
 				"INPUT", wifname, "DROP");
 	}
 
-	/* drop forwards between 2.4/5Ghz AP wifs */
+	/* drop forwards between 2.4/5GHz AP wifs */
 #if BOARD_HAS_5G_RADIO
 	if (is_aband) {
 #if defined(USE_RT3352_MII)

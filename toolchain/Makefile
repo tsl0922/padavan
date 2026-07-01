@@ -1,47 +1,42 @@
-TOPDIR        = ${CURDIR}
-CT_VERSION    := 1.26.0
-CT_DIR        := $(TOPDIR)/crosstool-ng-$(CT_VERSION)
-CT_PREFIX     := $(TOPDIR)/toolchain-mipsel
-CT_TARGET     := mipsel-linux-musl
-CT_URL        := https://github.com/crosstool-ng/crosstool-ng/releases/download/crosstool-ng-$(CT_VERSION)/crosstool-ng-$(CT_VERSION).tar.xz
-TOOLCHAIN_URL := https://github.com/tsl0922/padavan/releases/download/toolchain/$(CT_TARGET).tar.xz
+# ============================
+#   Toolchain Build Makefile
+#   Author: TurBoTse
+# ============================
+
+TOPDIR      := $(CURDIR)
+CT_TARGET   ?= $(or $(shell echo $$CT_TARGET), mipsel-linux-musl)
+CT_PREFIX   ?= $(or $(shell echo $$CT_PREFIX), $(TOPDIR)/$(CT_TARGET))
+CT_NG       := ./ct-ng
+
+.PHONY: all build clean distclean
 
 all: build
 
 build:
-	@if [ ! -d $(CT_DIR) ]; then \
-		echo "Downloading crosstool-ng..."; \
-		curl -fSsLo- $(CT_URL) | tar Jx; \
+	@echo "\033[1;32m===> 🔧 Starting toolchain build for:\033[0m \033[1;34m$(CT_TARGET)\033[0m"
+	@for dep in bison flex gperf help2man libtool-bin texinfo; do \
+		command -v $$dep >/dev/null || { echo "\033[1;31m===> ❌ Missing dependency: $$dep\033[0m"; exit 1; }; \
+	done
+	@if [ ! -f .ct-ng-installed ]; then \
+		echo "\033[1;33m===> ⏳ Bootstrapping crosstool-ng...\033[0m"; \
+		./bootstrap && ./configure --enable-local && make || { \
+			echo "\033[1;31m===> ❌ Failed to bootstrap ct-ng. Check dependencies or permissions.\033[0m"; exit 1; }; \
+		touch .ct-ng-installed; \
 	fi
-
-	@echo "Building toolchain..."
-	cp -r $(TOPDIR)/configs/$(CT_TARGET) $(CT_DIR)/samples
-	@(cd $(CT_DIR); \
-		./bootstrap && \
-		./configure --enable-local && \
-		make && \
-		./ct-ng $(CT_TARGET) && \
-		./ct-ng build \
-	)
+	@echo "\033[1;36m===> 📦 Configuring target: $(CT_TARGET)\033[0m"
+	@$(CT_NG) $(CT_TARGET) || { echo "\033[1;31m===> ❌ Failed to configure $(CT_TARGET): $$?\033[0m"; exit 1; }
+	@echo "\033[1;32m===> 🚧 Building toolchain...\033[0m"
+	@$(CT_NG) build CT_JOBS=$(shell nproc) || { echo "\033[1;31m===> ❌ Toolchain build failed: $$?\033[0m"; exit 1; }
+	@echo "\033[1;32m===> ✅ Toolchain build completed at:\033[0m \033[1;34m$(CT_PREFIX)\033[0m"
 
 clean:
-	@if [ -d $(CT_DIR) ]; then \
-		cd $(CT_DIR); \
-		if [ -f ct-ng ]; then ./ct-ng distclean; fi; \
-		if [ -f Makefile ]; then make distclean; fi; \
-	fi
-	@if [ -d $(CT_PREFIX) ]; then rm -rf $(CT_PREFIX); fi
+	@echo "\033[1;36m===> 🧹 Cleaning build artifacts...\033[0m"
+	@if [ -x "$(CT_NG)" ]; then $(CT_NG) distclean || { echo "\033[1;31m===> ❌ Failed to run ct-ng distclean: $$?\033[0m"; exit 1; }; fi
+	@rm -f .ct-ng-installed
+	@echo "\033[1;32m===> ♻️  Clean completed.\033[0m"
 
-download:
-	@if [ ! -d $(CT_PREFIX) ]; then \
-		echo "Downloading toolchain..."; \
-		mkdir -p $(CT_PREFIX); \
-		curl -fSsLo- $(TOOLCHAIN_URL) | tar Jx -C $(CT_PREFIX); \
-	fi
-ifeq ($(CT_TARGET),mipsel-linux-musl)
-	@if [ ! -f $(CT_PREFIX)/$(CT_TARGET)/sysroot/usr/include/sys/queue.h ]; then \
-		echo "Installing sys/queue.h..."; \
-		curl -fSsL -o $(CT_PREFIX)/$(CT_TARGET)/sysroot/usr/include/sys/queue.h \
-			"https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=misc/sys/queue.h;hb=HEAD" ; \
-	fi
-endif
+distclean: clean
+	@echo "\033[1;36m===> 🧹 Removing toolchain and build directory...\033[0m"
+	@if [ -d "$(CT_PREFIX)" ]; then rm -rf "$(CT_PREFIX)"; fi
+	@if [ -d "$(TOPDIR)/.build" ]; then rm -rf "$(TOPDIR)/.build"; fi
+	@echo "\033[1;32m===> ♻️  Distclean completed.\033[0m"

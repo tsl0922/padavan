@@ -51,9 +51,10 @@ TARGET_CXX_NOCACHE:=$(TARGET_CXX)
 ifneq ($(CONFIG_CCACHE),)
   TARGET_CC:= ccache $(TARGET_CC)
   TARGET_CXX:= ccache $(TARGET_CXX)
-  export CCACHE_BASEDIR:=$(TOPDIR)
-  export CCACHE_DIR:=$(if $(call qstrip,$(CONFIG_CCACHE_DIR)),$(call qstrip,$(CONFIG_CCACHE_DIR)),$(TOPDIR)/.ccache)
-  export CCACHE_COMPILERCHECK:=%compiler% -dumpmachine; %compiler% -dumpversion
+  export CCACHE_BASEDIR       := $(CONFIG_CCACHE_DIR)
+  export CCACHE_DIR           := $(CONFIG_CCACHE_DIR)/.ccache
+  export CCACHE_COMPILERCHECK := %compiler% -dumpmachine; %compiler% -dumpversion
+  export CCACHE_SLOPPINESS    := pch_defines,time_macros
 endif
 
 TARGET_CONFIGURE_OPTS = \

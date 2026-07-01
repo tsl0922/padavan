@@ -33,27 +33,27 @@
 #define FIXED_TXMODE_OFDM 	2
 #define FIXED_TXMODE_VHT	3
 
-#define MODE_CCK		0
-#define MODE_OFDM		1
-#define MODE_HTMIX		2
+#define MODE_CCK			0
+#define MODE_OFDM			1
+#define MODE_HTMIX			2
 #define MODE_HTGREENFIELD	3
-#define MODE_VHT		4
-#define MODE_HE		5
-#define MODE_HE_SU		8
-#define MODE_HE_24G		7
-#define MODE_HE_5G		6
+#define MODE_VHT			4
+#define MODE_HE				5
+#define MODE_HE_SU			8
+#define MODE_HE_24G			7
+#define MODE_HE_5G			6
 #define MODE_HE_EXT_SU		9
 #define MODE_HE_TRIG		10
-#define MODE_HE_MU		11
+#define MODE_HE_MU			11
 #define MODE_UNKNOWN		255
 
-#define BW_20			0
-#define BW_40			1
-#define BW_80			2
-#define BW_160			3
-#define BW_10			4
-#define BW_5			5
-#define BW_8080		6
+#define BW_20				0
+#define BW_40				1
+#define BW_80				2
+#define BW_160				3
+#define BW_10				4
+#define BW_5				5
+#define BW_8080				6
 
 #define WDS_DISABLE_MODE	0
 #define WDS_RESTRICT_MODE	1
@@ -234,7 +234,10 @@ typedef struct _PAIR_CHANNEL_FREQ_ENTRY
 #define MTD_PART_NAME_KERNEL	"kernel"
 #define MTD_PART_NAME_RWFS	"RWFS"
 
-#if defined (BOARD_360P2)
+#if defined (BOARD_WE410443_TC)
+#define OFFSET_MAC_GMAC0 	0xFFF0
+#define OFFSET_MAC_GMAC2 	0xFFF6
+#elif defined (BOARD_360P2)
 #define OFFSET_MAC_GMAC0	0xFFE8
 #define OFFSET_MAC_GMAC2	0xFFEE
 #elif defined (CONFIG_RALINK_MT7621)
@@ -247,7 +250,11 @@ typedef struct _PAIR_CHANNEL_FREQ_ENTRY
 #define OFFSET_MAC_ADDR_WSOC	0x0004
 #define OFFSET_MAC_ADDR_INIC	0x8004
 #define OFFSET_PIN_CODE		0x0180
+#if defined (BOARD_RM2100) || defined (BOARD_R2100)
+#define OFFSET_TXBF_PARA	0x81A0
+#else
 #define OFFSET_TXBF_PARA	0x01A0
+#endif
 #define OFFSET_BOOT_VER		0x018A
 #define OFFSET_COUNTRY_CODE	0x0188
 #define OFFSET_REGSPEC_CODE	0x0248

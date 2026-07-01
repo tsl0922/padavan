@@ -1,0 +1,21 @@
+diff -urw libexif-0.6.25-ref/Makefile.am libexif-0.6.25/Makefile.am
+--- libexif-0.6.25-ref/Makefile.am	2024-10-15 15:08:34.000000000 +0300
++++ libexif-0.6.25/Makefile.am	2025-01-23 00:51:55.808091993 +0200
+@@ -6,4 +6,4 @@
+-SUBDIRS = m4m po libexif test doc binary-dist contrib
++SUBDIRS = m4m po libexif binary-dist contrib
+ 
+ EXTRA_DIST = @PACKAGE_TARNAME@.spec README-Win32.txt
+ 
+diff -urw libexif-0.6.25-ref/Makefile.in libexif-0.6.25/Makefile.in
+--- libexif-0.6.25-ref/Makefile.in	2025-01-09 11:40:21.000000000 +0200
++++ libexif-0.6.25/Makefile.in	2025-01-23 00:51:55.808091993 +0200
+@@ -418,7 +418,7 @@
+ top_build_prefix = @top_build_prefix@
+ top_builddir = @top_builddir@
+ top_srcdir = @top_srcdir@
+-SUBDIRS = m4m po libexif test doc binary-dist contrib
++SUBDIRS = m4m po libexif binary-dist contrib
+ EXTRA_DIST = @PACKAGE_TARNAME@.spec README-Win32.txt libexif.pc.in \
+ 	libexif-uninstalled.pc.in SECURITY.md
+ pkgconfigdir = $(libdir)/pkgconfig

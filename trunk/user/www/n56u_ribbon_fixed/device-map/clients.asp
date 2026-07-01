@@ -75,7 +75,7 @@ function prepare_clients(){
 			if(!checkDuplicateName(list_of_BlockedClient[i][0], clients)){
 				k = clients.length;
 				clients[k] = new Array(8);
-				
+
 				clients[k][0] = "*";
 				clients[k][1] = "*";
 				clients[k][2] = list_of_BlockedClient[i][0];
@@ -84,9 +84,9 @@ function prepare_clients(){
 				clients[k][5] = "6";
 				clients[k][6] = "0";
 				clients[k][7] = "b";
-				
+
 				var mac_up = list_of_BlockedClient[i][0].toUpperCase();
-				
+
 				for(j = 0; j < m_dhcp.length; ++j){
 					if (mac_up == m_dhcp[j][0].toUpperCase()){
 						if (m_dhcp[j][2] != null && m_dhcp[j][2].length > 0)
@@ -97,7 +97,7 @@ function prepare_clients(){
 				}
 			}
 		}
-		
+
 		for(i = 0; i < clients.length; ++i){
 			if(!checkDuplicateName(clients[i][2], list_of_BlockedClient)){
 				clients[i][7] = "u";
@@ -117,11 +117,15 @@ function check_full_scan_done(){
 		$("LoadingBar").style.display = "none";
 		$("refresh_list").disabled = false;
 		if (sw_mode == "3") {
-			$j('.popover_top').popover({placement: 'top'});
-			$j('.popover_bottom').popover({placement: 'bottom'});
+			$j(document).ready(function() {
+				$j('.popover_top').popover({placement: 'top'});
+				$j('.popover_bottom').popover({placement: 'bottom'});
+			});
 		}else {
-			$j('.popover_top').popover({placement: 'right'});
-			$j('.popover_bottom').popover({placement: 'right'});
+			$j(document).ready(function() {
+				$j('.popover_top').popover({placement: 'right'});
+				$j('.popover_bottom').popover({placement: 'right'});
+			});
 		}
 	}else{
 		$("LoadingBar").style.display = "block";
@@ -157,7 +161,7 @@ function add_client_row(table, atIndex, client, blocked, j){
 	var macCell = row.insertCell(3);
 	var rssiCell = row.insertCell(4);
 	var blockCell = row.insertCell(5);
-	
+
 	var arpon = <% nvram_get_x("","dhcp_static_arp"); %>;
 	var mdhcp = <% nvram_get_x("","dhcp_static_x"); %>;
 	if (arpon == 1 && mdhcp == 1){
@@ -190,17 +194,33 @@ function show_clients(){
 	var i, j, k;
 	var table1, table2;
 	var addClient, clientType, clientName, clientIP, clientMAC, clientBlock;
-	
+
 	table1 = $('Clients_table');
 	table2 = $('xClients_table');
-	
+
 	while (table1.rows.length > 2)
 		table1.deleteRow(-1);
 	while (table2.rows.length > 2)
 		table2.deleteRow(-1);
-	
+
 	var hasBlocked = false;
 	for(j=0, i=0, k=0; j < clients.length; j++){
+		for(j2=0; j2 < m_dhcp.length && clients[j][0] == "*"; j2++){
+			if (clients[j][2].toUpperCase() == m_dhcp[j2][0].toUpperCase()){
+				if (m_dhcp[j2][2] != "" && m_dhcp[j2][2] != null && m_dhcp[j2][2].length > 0){
+					clients[j][0] = m_dhcp[j2][2];
+					break;
+				}
+			}
+		}
+		for(j3=0; j3 < clients.length && clients[j][0] == "*"; j3++){
+			if (clients[j][2].toUpperCase() == clients[j3][2].toUpperCase()){
+				if (clients[j3][0] != "*" && clients[j3][0] != null && clients[j3][0].length > 0){
+					clients[j][0] = clients[j3][0];
+					break;
+				}
+			}
+		}
 		if(clients[j][7] == "u" || sw_mode == "3"){
 			add_client_row(table1, k+2, clients[j], false, j);
 			k++;
@@ -387,12 +407,12 @@ function networkmap_update(s){
             <th colspan="5" style="text-align: center;"><#ConnectedClient#></th>
         </tr>
         <tr>
-            <th width="8%"><a href="javascript:sort(0)"><#Type#></a></th>
-            <th><a href="javascript:sort(1)"><#Computer_Name#></a></th>
-            <th width="20%"><a href="javascript:sort(2)">IP</a></th>
-            <th width="24%"><a href="javascript:sort(3)">MAC</a></th>
-            <th width="8%" id="col_rssi"><a href="javascript:sort(4)">RSSI</a></th>
-            <th width="0%" id="col_block"></th>
+            <th width="10%"><a href="javascript:sort(0)"><#Type#></a></th>
+            <th id="col_hname" width="35%"><a href="javascript:sort(1)"><#Computer_Name#></a></th>
+            <th width="20%"><a href="javascript:sort(2)"><#IP_Address#></a></th>
+            <th width="24%"><a href="javascript:sort(3)"><#MAC_Address#></a></th>
+            <th id="col_rssi"><a href="javascript:sort(4)"><#Rssi#></a></th>
+            <th id="col_block"></th>
         </tr>
     </thead>
     <tbody>
@@ -406,12 +426,12 @@ function networkmap_update(s){
             <th colspan="5" style="text-align: center;"><#BlockedClient#></th>
         </tr>
         <tr>
-            <th width="8%"><#Type#></th>
-            <th><#Computer_Name#></th>
-            <th width="20%">IP</th>
-            <th width="24%">MAC</th>
-            <th width="8%" id="col_unrssi">RSSI</th>
-            <th width="0%" id="col_unblock"></th>
+            <th width="10%"><#Type#></th>
+            <th id="col_unhname" width="35%"><#Computer_Name#></th>
+            <th width="20%"><#IP_Address#></th>
+            <th width="24%"><#MAC_Address#></th>
+            <th id="col_unrssi"><#Rssi#></th>
+            <th id="col_unblock"></th>
         </tr>
     </thead>
     <tbody>
@@ -439,16 +459,18 @@ function networkmap_update(s){
 
 <script>
 	if (!support_2g_radio() && !support_5g_radio()) {
-		$("col_rssi").width = "0%";
-		$("col_rssi").innerHTML = "";
-		$("col_unrssi").width = "0%";
-		$("col_unrssi").innerText = "";
+		$("col_rssi").width = "10%";
+		$("col_rssi").innerHTML = "<#Rssi#>";
+		$("col_unrssi").width = "10%";
+		$("col_unrssi").innerText = "<#unRssi#>";
 	}
 	if (sw_mode != "3") {
 		if (list_type != "1") {
-			$("col_block").width = "12%";
-			$("col_unblock").width = "12%";
+			$("col_hname").width = "35%";
+			$("col_unhname").width = "35%";
+			$("col_block").width = "10%";
 			$("col_block").innerHTML = "<#Block#>";
+			$("col_unblock").width = "10%";
 			$("col_unblock").innerHTML = "<#unBlock#>";
 		}
 	} else {
@@ -470,6 +492,3 @@ function networkmap_update(s){
 </script>
 </body>
 </html>
-
-
-

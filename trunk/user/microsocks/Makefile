@@ -1,21 +1,16 @@
-SRC_NAME = microsocks
-THISDIR = $(shell pwd)
+include $(ROOTDIR)/rules.mk
 
-all: config_test
-	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+PKG_NAME:=microsocks
+PKG_VERSION:=1.0.4
 
-config_test:
-	( if [ -f ./config_done ]; then \
-		echo "the same configuration"; \
-	else \
-		touch config_done; \
-	fi )
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://codeload.github.com/rofl0r/microsocks/tar.gz/refs/tags/v$(PKG_VERSION)?
+PKG_HASH:=130127a87f55870f18fbe47a64d9b9533020e2900802d36a0f6fd2b074313deb
 
-clean:
-	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) clean ; \
-	fi ; \
-	rm -f config_done
+include $(INCLUDE_DIR)/package.mk
+
+$(eval $(call BuildPackage,microsocks))
 
 romfs:
-	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_NAME)/microsocks /usr/bin/microsocks
+	$(INSTALL_DIR) $(ROMFSDIR)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/microsocks $(ROMFSDIR)/usr/bin/microsocks

@@ -1,12 +1,13 @@
 #!/bin/sh
 
 func_start(){
-	vlmcsd
-	logger -st "vlmcsd" "start"
+	vlmcsd -A 30d -R 30d
+	logger -st "vlmcsd" "KMS Activation server is running."
 }
 
 func_stop(){
 	killall -q vlmcsd
+	logger -st "vlmcsd" "KMS Activation server is stoping."
 }
 
 case "$1" in

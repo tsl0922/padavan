@@ -104,6 +104,9 @@
 
 &pcie {
 	status = "okay";
+	reset-gpios = <&gpio0 19 1>, <&gpio0 4 1>;
+	reset-gpio-names = "pcie0", "pcie1";
+
 };
 
 &xhci {

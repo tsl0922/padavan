@@ -51,6 +51,9 @@
 //config:	  FEATURE_WGET_LONG_OPTIONS is also enabled, the --timeout option
 //config:	  will work in addition to -T.
 //config:
+//config:	  FEATURE_WGET_OPENSSL does implement TLS verification
+//config:	  using the certificates available to OpenSSL.
+//config:
 //config:config FEATURE_WGET_OPENSSL
 //config:	bool "Try to connect to HTTPS using openssl"
 //config:	default y
@@ -65,22 +68,19 @@
 //config:	  If you select "openssl" helper, wget will effectively run:
 //config:	  "openssl s_client -quiet -connect hostname:443
 //config:	  -servername hostname 2>/dev/null" and pipe its data
-//config:	  through it.  (-servername should only be used with FQDNs,
-//config:	  not IP addresses.)
+//config:	  through it. -servername is not used if hostname is numeric.
 //config:	  Note inconvenient API: host resolution is done twice,
 //config:	  and there is no guarantee openssl's idea of IPv6 address
 //config:	  format is the same as ours.
 //config:	  Another problem is that s_client prints debug information
 //config:	  to stderr, and it needs to be suppressed. This means
 //config:	  all error messages get suppressed too.
-//config:	  Also, if the s_client subcommand is not compiled in to
-//config:	  the system's openssl binary (i.e. subcommand fails), or
-//config:	  certain subcommand flags aren't available/supported,
-//config:	  openssl returns exit code 0, making it difficult to
-//config:	  detect a true error/failure.
 //config:	  openssl is also a big binary, often dynamically linked
 //config:	  against ~15 libraries.
 //config:
+//config:	  By default TLS verification is performed, unless
+//config:	  --no-check-certificate option is passed.
+
 //config:config FEATURE_WGET_SSL_HELPER
 //config:	bool "Try to connect to HTTPS using ssl_helper"
 //config:	default y
@@ -106,28 +106,37 @@
 
 //usage:#define wget_trivial_usage
 //usage:	IF_FEATURE_WGET_LONG_OPTIONS(
-//usage:       "[-c|--continue] [-s|--spider] [-q|--quiet] [-O|--output-document FILE]\n"
+//usage:       "[-c|--continue] [--spider] [-q|--quiet] [-O|--output-document FILE]\n"
 //usage:       "	[--header 'header: value'] [-Y|--proxy on/off] [-P DIR]\n"
+//usage:	IF_FEATURE_WGET_OPENSSL(
+//usage:       "	[--no-check-certificate]\n"
+//usage:	)
 /* Since we ignore these opts, we don't show them in --help */
-/* //usage:    "	[--no-check-certificate] [--no-cache]" */
-//usage:       "	[-U|--user-agent AGENT]" IF_FEATURE_WGET_TIMEOUT(" [-T SEC]") " URL..."
+/* //usage:    "	[--no-cache]" */
+//usage:       "	[-S|--server-response] [-U|--user-agent AGENT]" IF_FEATURE_WGET_TIMEOUT(" [-T SEC]") " URL..."
 //usage:	)
 //usage:	IF_NOT_FEATURE_WGET_LONG_OPTIONS(
-//usage:       "[-csq] [-O FILE] [-Y on/off] [-P DIR] [-U AGENT]"
+//usage:       "[-cq] [-O FILE] [-Y on/off] [-P DIR] [-S] [-U AGENT]"
 //usage:			IF_FEATURE_WGET_TIMEOUT(" [-T SEC]") " URL..."
 //usage:	)
 //usage:#define wget_full_usage "\n\n"
 //usage:       "Retrieve files via HTTP or FTP\n"
-//usage:     "\n	-s	Spider mode - only check file existence"
-//usage:     "\n	-c	Continue retrieval of aborted transfer"
-//usage:     "\n	-q	Quiet"
-//usage:     "\n	-P DIR	Save to DIR (default .)"
-//usage:	IF_FEATURE_WGET_TIMEOUT(
-//usage:     "\n	-T SEC	Network read timeout is SEC seconds"
+//usage:	IF_FEATURE_WGET_LONG_OPTIONS(
+//usage:     "\n	--spider	Only check URL existence: $? is 0 if exists"
 //usage:	)
-//usage:     "\n	-O FILE	Save to FILE ('-' for stdout)"
-//usage:     "\n	-U STR	Use STR for User-Agent header"
-//usage:     "\n	-Y	Use proxy ('on' or 'off')"
+//usage:	IF_FEATURE_WGET_OPENSSL(
+//usage:     "\n	--no-check-certificate	Don't validate the server's certificate"
+//usage:	)
+//usage:     "\n	-c		Continue retrieval of aborted transfer"
+//usage:     "\n	-q		Quiet"
+//usage:     "\n	-P DIR		Save to DIR (default .)"
+//usage:     "\n	-S    		Show server response"
+//usage:	IF_FEATURE_WGET_TIMEOUT(
+//usage:     "\n	-T SEC		Network read timeout is SEC seconds"
+//usage:	)
+//usage:     "\n	-O FILE		Save to FILE ('-' for stdout)"
+//usage:     "\n	-U STR		Use STR for User-Agent header"
+//usage:     "\n	-Y on/off	Use proxy"
 
 #include "libbb.h"
 
@@ -143,6 +152,7 @@
 # define SENDFMT(fp, fmt, ...) fprintf(fp, fmt, ##__VA_ARGS__)
 #endif
 
+#define SSL_SUPPORTED (ENABLE_FEATURE_WGET_OPENSSL || ENABLE_FEATURE_WGET_SSL_HELPER)
 
 struct host_info {
 	char *allocated;
@@ -154,7 +164,9 @@ struct host_info {
 };
 static const char P_FTP[] = "ftp";
 static const char P_HTTP[] = "http";
+#if SSL_SUPPORTED
 static const char P_HTTPS[] = "https";
+#endif
 
 #if ENABLE_FEATURE_WGET_LONG_OPTIONS
 /* User-specified headers prevent using our corresponding built-in headers.  */
@@ -232,17 +244,19 @@ struct globals {
 /* Must match option string! */
 enum {
 	WGET_OPT_CONTINUE   = (1 << 0),
-	WGET_OPT_SPIDER     = (1 << 1),
-	WGET_OPT_QUIET      = (1 << 2),
+	WGET_OPT_QUIET      = (1 << 1),
+	WGET_OPT_SERVER_RESPONSE = (1 << 2),
 	WGET_OPT_OUTNAME    = (1 << 3),
 	WGET_OPT_PREFIX     = (1 << 4),
 	WGET_OPT_PROXY      = (1 << 5),
 	WGET_OPT_USER_AGENT = (1 << 6),
 	WGET_OPT_NETWORK_READ_TIMEOUT = (1 << 7),
 	WGET_OPT_RETRIES    = (1 << 8),
-	WGET_OPT_PASSIVE    = (1 << 9),
+	WGET_OPT_nsomething = (1 << 9),
 	WGET_OPT_HEADER     = (1 << 10) * ENABLE_FEATURE_WGET_LONG_OPTIONS,
 	WGET_OPT_POST_DATA  = (1 << 11) * ENABLE_FEATURE_WGET_LONG_OPTIONS,
+	WGET_OPT_SPIDER     = (1 << 12) * ENABLE_FEATURE_WGET_LONG_OPTIONS,
+	WGET_OPT_NO_CHECK_CERT = (1 << 13) * ENABLE_FEATURE_WGET_LONG_OPTIONS,
 };
 
 enum {
@@ -324,15 +338,6 @@ static char *base64enc(const char *str)
 }
 #endif
 
-static char* sanitize_string(char *s)
-{
-	unsigned char *p = (void *) s;
-	while (*p >= ' ')
-		p++;
-	*p = '\0';
-	return s;
-}
-
 #if ENABLE_FEATURE_WGET_TIMEOUT
 static void alarm_handler(int sig UNUSED_PARAM)
 {
@@ -342,6 +347,7 @@ static void alarm_handler(int sig UNUSED_PARAM)
 }
 #endif
 
+#if ENABLE_FEATURE_WGET_OPENSSL
 /*
  * is_ip_address() attempts to verify whether or not a string
  * contains an IPv4 or IPv6 address (vs. an FQDN).  The result
@@ -353,13 +359,17 @@ static void alarm_handler(int sig UNUSED_PARAM)
 static int is_ip_address(const char *string)
 {
 	struct sockaddr_in sa;
-	int result = inet_pton(AF_INET, string, &(sa.sin_addr));
 
-	if (ENABLE_FEATURE_IPV6 && result == 0) {
-		result = inet_pton(AF_INET6, string, &(sa.sin_addr));
+	int result = inet_pton(AF_INET, string, &(sa.sin_addr));
+# if ENABLE_FEATURE_IPV6
+	if (result == 0) {
+		struct sockaddr_in6 sa6;
+		result = inet_pton(AF_INET6, string, &(sa6.sin6_addr));
 	}
-	return (result != 0);
+# endif
+	return (result == 1);
 }
+#endif
 
 static FILE *open_socket(len_and_sockaddr *lsa)
 {
@@ -379,23 +389,52 @@ static FILE *open_socket(len_and_sockaddr *lsa)
 	return fp;
 }
 
+/* We balk at any control chars in other side's messages.
+ * This prevents nasty surprises (e.g. ESC sequences) in "Location:" URLs
+ * and error messages.
+ *
+ * The only exception is tabs, which are converted to (one) space:
+ * HTTP's "headers: <whitespace> values" may have those.
+ */
+static char* sanitize_string(char *s)
+{
+	unsigned char *p = (void *) s;
+	while (*p) {
+		if (*p < ' ') {
+			if (*p != '\t')
+				break;
+			*p = ' ';
+		}
+		p++;
+	}
+	*p = '\0';
+	return s;
+}
 /* Returns '\n' if it was seen, else '\0'. Trims at first '\r' or '\n' */
 /* FIXME: does not respect FEATURE_WGET_TIMEOUT and -T N: */
-static char fgets_and_trim(FILE *fp)
+static char fgets_trim_sanitize(FILE *fp, const char *fmt)
 {
 	char c;
 	char *buf_ptr;
 
-	if (fgets(G.wget_buf, sizeof(G.wget_buf) - 1, fp) == NULL)
+	if (fgets(G.wget_buf, sizeof(G.wget_buf), fp) == NULL)
 		bb_perror_msg_and_die("error getting response");
 
 	buf_ptr = strchrnul(G.wget_buf, '\n');
 	c = *buf_ptr;
+#if 1
+	/* Disallow any control chars: trim at first char < 0x20 */
+	sanitize_string(G.wget_buf);
+#else
 	*buf_ptr = '\0';
 	buf_ptr = strchrnul(G.wget_buf, '\r');
 	*buf_ptr = '\0';
+#endif
 
 	log_io("< %s", G.wget_buf);
+
+	if (fmt && (option_mask32 & WGET_OPT_SERVER_RESPONSE))
+		fprintf(stderr, fmt, G.wget_buf);
 
 	return c;
 }
@@ -407,12 +446,17 @@ static int ftpcmd(const char *s1, const char *s2, FILE *fp)
 		if (!s2)
 			s2 = "";
 		fprintf(fp, "%s%s\r\n", s1, s2);
+		/* With --server-response, wget also shows its ftp commands */
+		if (option_mask32 & WGET_OPT_SERVER_RESPONSE)
+			fprintf(stderr, "--> %s%s\n\n", s1, s2);
 		fflush(fp);
 		log_io("> %s%s", s1, s2);
 	}
 
+	/* Read until "Nxx something" is received */
+	G.wget_buf[3] = 0;
 	do {
-		fgets_and_trim(fp);
+		fgets_trim_sanitize(fp, "%s\n");
 	} while (!isdigit(G.wget_buf[0]) || G.wget_buf[3] != ' ');
 
 	G.wget_buf[3] = '\0';
@@ -436,17 +480,19 @@ static void parse_url(const char *src_url, struct host_info *h)
 		if (strcmp(url, P_FTP) == 0) {
 			h->port = bb_lookup_port(P_FTP, "tcp", 21);
 		} else
+#if SSL_SUPPORTED
 		if (strcmp(url, P_HTTPS) == 0) {
 			h->port = bb_lookup_port(P_HTTPS, "tcp", 443);
 			h->protocol = P_HTTPS;
 		} else
+#endif
 		if (strcmp(url, P_HTTP) == 0) {
  http:
 			h->port = bb_lookup_port(P_HTTP, "tcp", 80);
 			h->protocol = P_HTTP;
 		} else {
 			*p = ':';
-			bb_error_msg_and_die("not an http or ftp url: %s", sanitize_string(url));
+			bb_error_msg_and_die("not an http or ftp url: %s", url);
 		}
 	} else {
 		// GNU wget is user-friendly and falls back to http://
@@ -501,13 +547,13 @@ static void parse_url(const char *src_url, struct host_info *h)
 	 */
 }
 
-static char *gethdr(FILE *fp)
+static char *get_sanitized_hdr(FILE *fp)
 {
 	char *s, *hdrval;
 	int c;
 
 	/* retrieve header line */
-	c = fgets_and_trim(fp);
+	c = fgets_trim_sanitize(fp, "  %s\n");
 
 	/* end of the headers? */
 	if (G.wget_buf[0] == '\0')
@@ -529,7 +575,7 @@ static char *gethdr(FILE *fp)
 
 	/* verify we are at the end of the header name */
 	if (*s != ':')
-		bb_error_msg_and_die("bad header line: %s", sanitize_string(G.wget_buf));
+		bb_error_msg_and_die("bad header line: %s", G.wget_buf);
 
 	/* locate the start of the header value */
 	*s++ = '\0';
@@ -592,7 +638,7 @@ static FILE* prepare_ftp_session(FILE **dfpp, struct host_info *target, len_and_
 	if (ftpcmd("SIZE ", target->path, sfp) == 213) {
 		G.content_len = BB_STRTOOFF(G.wget_buf + 4, NULL, 10);
 		if (G.content_len < 0 || errno) {
-			bb_error_msg_and_die("SIZE value is garbage");
+			bb_error_msg_and_die("bad SIZE value '%s'", G.wget_buf + 4);
 		}
 		G.got_clen = 1;
 	}
@@ -639,7 +685,6 @@ static int spawn_https_helper_openssl(const char *host, unsigned port)
 {
 	char *allocated = NULL;
 	char *servername;
-	char *colon_ptr;
 	int sp[2];
 	int pid;
 	IF_FEATURE_WGET_SSL_HELPER(volatile int child_failed = 0;)
@@ -647,38 +692,19 @@ static int spawn_https_helper_openssl(const char *host, unsigned port)
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sp) != 0)
 		/* Kernel can have AF_UNIX support disabled */
 		bb_perror_msg_and_die("socketpair");
-	/*
-	 * Per RFC 6066 Section 3, the only permitted values in the
-	 * TLS server_name (SNI) field are FQDNs (DNS hostnames).
-	 * IPv4 nor IPv6 addresses are supported, nor is use of an
-	 * alternate port number.
-	 *
-	 * The host argument to spawn_https_helper_openssl() can
-	 * contain things like: test.com, test.com:8080, 1.2.3.4, or
-	 * 1.2.3.4:8888.  The strchr() check determines if the user
-	 * passed something like test.com:8080 or 1.2.3.4:8888.
-	 *
-	 * The rest of the code ensures that servername only gets
-	 * set to the hostname portion, and that the -servername
-	 * argument to openssl s_client is only used if the hostname
-	 * itself is an actual FQDN, not an IPv4/IPv6 address.
-	 */
+
 	if (!strchr(host, ':'))
 		host = allocated = xasprintf("%s:%u", host, port);
 	servername = xstrdup(host);
-	colon_ptr = strrchr(servername, ':');
-	*colon_ptr = '\0';
-
-	if (is_ip_address(servername))
-		servername = NULL;
+	strrchr(servername, ':')[0] = '\0';
 
 	fflush_all();
 	pid = xvfork();
 	if (pid == 0) {
 		/* Child */
-		char *argv[8];
+		char *argv[13];
+		char **argp;
 
-		memset(&argv, 0, sizeof(argv));
 		close(sp[0]);
 		xmove_fd(sp[1], 0);
 		xdup2(0, 1);
@@ -689,16 +715,36 @@ static int spawn_https_helper_openssl(const char *host, unsigned port)
 		 */
 		xmove_fd(2, 3);
 		xopen("/dev/null", O_RDWR);
+		memset(&argv, 0, sizeof(argv));
 		argv[0] = (char*)"openssl";
 		argv[1] = (char*)"s_client";
 		argv[2] = (char*)"-quiet";
 		argv[3] = (char*)"-connect";
 		argv[4] = (char*)host;
-		
-		if (servername) {
-			argv[5] = (char*)"-servername";
-			argv[6] = (char*)servername;
+		/*
+		 * Per RFC 6066 Section 3, the only permitted values in the
+		 * TLS server_name (SNI) field are FQDNs (DNS hostnames).
+		 * IPv4 and IPv6 addresses, port numbers are not allowed.
+		 */
+		argp = &argv[5];
+		if (!is_ip_address(servername)) {
+			*argp++ = (char*)"-servername"; //[5]
+			*argp++ = (char*)servername;    //[6]
 		}
+		if (!(option_mask32 & WGET_OPT_NO_CHECK_CERT)) {
+			/* Abort on bad server certificate */
+			*argp++ = (char*)"-verify";              //[7]
+			*argp++ = (char*)"100";                  //[8]
+			*argp++ = (char*)"-verify_return_error"; //[9]
+			if (!is_ip_address(servername)) {
+				*argp++ = (char*)"-verify_hostname"; //[10]
+				*argp++ = (char*)servername;         //[11]
+			} else {
+				*argp++ = (char*)"-verify_ip"; //[10]
+				*argp++ = (char*)host;         //[11]
+			}
+		}
+		//[12] (or earlier) is NULL terminator
 
 		BB_EXECVP(argv[0], argv);
 		xmove_fd(3, 2);
@@ -731,6 +777,11 @@ static void spawn_https_helper_small(int network_fd)
 {
 	int sp[2];
 	int pid;
+
+	if (!(option_mask32 & WGET_OPT_NO_CHECK_CERT)) {
+		bb_error_msg("note: TLS certificate validation not implemented");
+		option_mask32 |= WGET_OPT_NO_CHECK_CERT;
+	}
 
 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, sp) != 0)
 		/* Kernel can have AF_UNIX support disabled */
@@ -878,11 +929,19 @@ static void NOINLINE retrieve_file_data(FILE *dfp)
 		if (!G.chunked)
 			break;
 
-		fgets_and_trim(dfp); /* Eat empty line */
+		/* Each chunk ends with "\r\n" - eat it */
+		fgets_trim_sanitize(dfp, NULL);
  get_clen:
-		fgets_and_trim(dfp);
+		/* chunk size format is "HEXNUM[;name[=val]]\r\n" */
+		fgets_trim_sanitize(dfp, NULL);
+		errno = 0;
 		G.content_len = STRTOOFF(G.wget_buf, NULL, 16);
-		/* FIXME: error check? */
+		/*
+		 * Had a bug with inputs like "ffffffff0001f400"
+		 * smashing the heap later. Ensure >= 0.
+		 */
+		if (G.content_len < 0 || errno)
+			bb_error_msg_and_die("bad chunk length '%s'", G.wget_buf);
 		if (G.content_len == 0)
 			break; /* all done! */
 		G.got_clen = 1;
@@ -1092,11 +1151,25 @@ static void download_one_url(const char *url)
 
 		fflush(sfp);
 
+/* Tried doing this unconditionally.
+ * Cloudflare and nginx/1.11.5 are shocked to see SHUT_WR on non-HTTPS.
+ */
+#if SSL_SUPPORTED
+		if (target.protocol == P_HTTPS) {
+			/* If we use SSL helper, keeping our end of the socket open for writing
+			 * makes our end (i.e. the same fd!) readable (EAGAIN instead of EOF)
+			 * even after child closes its copy of the fd.
+			 * This helps:
+			 */
+			shutdown(fileno(sfp), SHUT_WR);
+		}
+#endif
+
 		/*
 		 * Retrieve HTTP response line and check for "200" status code.
 		 */
  read_response:
-		fgets_and_trim(sfp);
+		fgets_trim_sanitize(sfp, "  %s\n");
 
 		str = G.wget_buf;
 		str = skip_non_whitespace(str);
@@ -1107,7 +1180,7 @@ static void download_one_url(const char *url)
 		switch (status) {
 		case 0:
 		case 100:
-			while (gethdr(sfp) != NULL)
+			while (get_sanitized_hdr(sfp) != NULL)
 				/* eat all remaining headers */;
 			goto read_response;
 		case 200:
@@ -1155,13 +1228,13 @@ However, in real world it was observed that some web servers
 			/* Partial Content even though we did not ask for it??? */
 			/* fall through */
 		default:
-			bb_error_msg_and_die("server returned error: %s", sanitize_string(G.wget_buf));
+			bb_error_msg_and_die("server returned error: %s", G.wget_buf);
 		}
 
 		/*
 		 * Retrieve HTTP headers.
 		 */
-		while ((str = gethdr(sfp)) != NULL) {
+		while ((str = get_sanitized_hdr(sfp)) != NULL) {
 			static const char keywords[] ALIGN1 =
 				"content-length\0""transfer-encoding\0""location\0";
 			enum {
@@ -1169,7 +1242,7 @@ However, in real world it was observed that some web servers
 			};
 			smalluint key;
 
-			/* gethdr converted "FOO:" string to lowercase */
+			/* get_sanitized_hdr converted "FOO:" string to lowercase */
 
 			/* strip trailing whitespace */
 			char *s = strchrnul(str, '\0') - 1;
@@ -1181,14 +1254,14 @@ However, in real world it was observed that some web servers
 			if (key == KEY_content_length) {
 				G.content_len = BB_STRTOOFF(str, NULL, 10);
 				if (G.content_len < 0 || errno) {
-					bb_error_msg_and_die("content-length %s is garbage", sanitize_string(str));
+					bb_error_msg_and_die("content-length %s is garbage", str);
 				}
 				G.got_clen = 1;
 				continue;
 			}
 			if (key == KEY_transfer_encoding) {
 				if (strcmp(str_tolower(str), "chunked") != 0)
-					bb_error_msg_and_die("transfer encoding '%s' is not supported", sanitize_string(str));
+					bb_error_msg_and_die("transfer encoding '%s' is not supported", str);
 				G.chunked = 1;
 			}
 			if (key == KEY_location && status >= 300) {
@@ -1197,7 +1270,7 @@ However, in real world it was observed that some web servers
 				fclose(sfp);
 				if (str[0] == '/') {
 					free(redirected_path);
-					target.path = redirected_path = xstrdup(str+1);
+					target.path = redirected_path = xstrdup(str + 1);
 					/* lsa stays the same: it's on the same server */
 				} else {
 					parse_url(str, &target);
@@ -1244,7 +1317,7 @@ However, in real world it was observed that some web servers
 		/* It's ftp. Close data connection properly */
 		fclose(dfp);
 		if (ftpcmd(NULL, NULL, sfp) != 226)
-			bb_error_msg_and_die("ftp error: %s", sanitize_string(G.wget_buf + 4));
+			bb_error_msg_and_die("ftp error: %s", G.wget_buf);
 		/* ftpcmd("QUIT", NULL, sfp); - why bother? */
 	}
 	fclose(sfp);
@@ -1264,9 +1337,8 @@ int wget_main(int argc UNUSED_PARAM, char **argv)
 	static const char wget_longopts[] ALIGN1 =
 		/* name, has_arg, val */
 		"continue\0"         No_argument       "c"
-//FIXME: -s isn't --spider, it's --save-headers!
-		"spider\0"           No_argument       "s"
 		"quiet\0"            No_argument       "q"
+		"server-response\0"  No_argument       "S"
 		"output-document\0"  Required_argument "O"
 		"directory-prefix\0" Required_argument "P"
 		"proxy\0"            Required_argument "Y"
@@ -1280,7 +1352,7 @@ int wget_main(int argc UNUSED_PARAM, char **argv)
 		"passive-ftp\0"      No_argument       "\xff"
 		"header\0"           Required_argument "\xfe"
 		"post-data\0"        Required_argument "\xfd"
-		/* Ignored (we don't do ssl) */
+		"spider\0"           No_argument       "\xfd"
 		"no-check-certificate\0" No_argument   "\xfc"
 		/* Ignored (we don't support caching) */
 		"no-cache\0"         No_argument       "\xfb"
@@ -1306,7 +1378,7 @@ int wget_main(int argc UNUSED_PARAM, char **argv)
 	opt_complementary = "-1"
 			IF_FEATURE_WGET_TIMEOUT(":T+")
 			IF_FEATURE_WGET_LONG_OPTIONS(":\xfe::");
-	getopt32(argv, "csqO:P:Y:U:T:" /*ignored:*/ "t:",
+	getopt32(argv, "cqSO:P:Y:U:T:" /*ignored:*/ "t:",
 		&G.fname_out, &G.dir_prefix,
 		&G.proxy_flag, &G.user_agent,
 		IF_FEATURE_WGET_TIMEOUT(&G.timeout_seconds) IF_NOT_FEATURE_WGET_TIMEOUT(NULL),
@@ -1314,6 +1386,15 @@ int wget_main(int argc UNUSED_PARAM, char **argv)
 		IF_FEATURE_WGET_LONG_OPTIONS(, &headers_llist)
 		IF_FEATURE_WGET_LONG_OPTIONS(, &G.post_data)
 	);
+#if 0 /* option bits debug */
+	if (option_mask32 & WGET_OPT_RETRIES) bb_error_msg("-t NUM");
+	if (option_mask32 & WGET_OPT_nsomething) bb_error_msg("-nsomething");
+	if (option_mask32 & WGET_OPT_HEADER) bb_error_msg("--header");
+	if (option_mask32 & WGET_OPT_POST_DATA) bb_error_msg("--post-data");
+	if (option_mask32 & WGET_OPT_SPIDER) bb_error_msg("--spider");
+	if (option_mask32 & WGET_OPT_NO_CHECK_CERT) bb_error_msg("--no-check-certificate");
+	exit(0);
+#endif
 	argv += optind;
 
 #if ENABLE_FEATURE_WGET_LONG_OPTIONS

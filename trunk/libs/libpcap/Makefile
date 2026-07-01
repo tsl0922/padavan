@@ -1,11 +1,11 @@
 include $(ROOTDIR)/rules.mk
 
 PKG_NAME:=libpcap
-PKG_VERSION:=1.9.1
+PKG_VERSION:=1.10.5
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://www.tcpdump.org/release/
-PKG_HASH:=635237637c5b619bcceba91900666b64d56ecb7be63f298f601ec786ce087094
+PKG_HASH:=37ced90a19a302a7f32e458224a00c365c117905c2cd35ac544b6880a81488f0
 
 include $(INCLUDE_DIR)/package.mk
 

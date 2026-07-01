@@ -9,6 +9,13 @@ local server = cjson.decode(servertmp)
 if server.plugin == "simple-obfs" then
 server.plugin = "obfs-local"
 end
+local fast_open = false
+local f = io.popen("uname -r | awk -F '.' '{print $1\".\"$2;}'") -- runs command
+local v = f:read("*a") -- read linux version
+if tonumber(v) > 3.7 then
+  fast_open = true
+end
+
 local ss = {
 	server = server.server,
 	server_port = server.server_port,
@@ -20,7 +27,7 @@ local ss = {
 	plugin = server.plugin,
 	plugin_opts = server.plugin_opts,
 	reuse_port = true,
-	fast_open = false
+	fast_open = fast_open
 }
 
 print(cjson.encode(ss))

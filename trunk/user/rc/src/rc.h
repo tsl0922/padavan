@@ -544,9 +544,16 @@ void update_dlink(void);
 void reset_dlink(void);
 #endif
 #if defined(APP_VLMCSD)
+int is_vlmcsd_run(void);
 void stop_vlmcsd(void);
 void start_vlmcsd(void);
 void restart_vlmcsd(void);
+#endif
+#if defined(APP_IPERF3)
+int is_iperf3_run(void);
+void stop_iperf3(void);
+void start_iperf3(void);
+void restart_iperf3(void);
 #endif
 #if defined(APP_DNSFORWARDER)
 void stop_dnsforwarder(void);
@@ -742,6 +749,7 @@ void ez_event_short(int btn_id);
 void ez_event_long(int btn_id);
 int  is_ntpc_updated(void);
 int  ntpc_updated_main(int argc, char *argv[]);
+int  ntpc_syncnow_main(int argc, char *argv[]);
 int  watchdog_main(int argc, char *argv[]);
 int  start_watchdog(void);
 void notify_watchdog_time(void);

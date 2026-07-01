@@ -51,5 +51,6 @@ mkimage.o: mkimage.c
 
 clean:
 	rm -f *.o mkimage
+	rm -f .depend
 
 

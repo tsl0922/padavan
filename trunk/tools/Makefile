@@ -1,35 +1,32 @@
-# use host target
-CC        = gcc
-GCC       = gcc
-CXX       = g++
-AS        = as
-AR        = ar
-LD        = ld
-NM        = nm
-OBJCOPY   = objcopy
-RANLIB    = ranlib
-STRIP     = strip
-STRIPTOOL = $(STRIP)
-SSTRIP_NAME = ELFkickers-3.1
+# ===============================
+#   Padavan Tools Makefile
+#   Author: TurBoTse
+# ===============================
 
+CC        = gcc
+CXX       = g++
 CFLAGS    = -Wall -O2
 LDFLAGS   =
 
-THISDIR = $(shell pwd)
+# Optional Linux kernel configuration
 -include $(LINUX_CONFIG)
 
+# Tools to build
+SUBDIRS   = lzma mkimage mksquashfs_xz sstrip
+
+# Default target
+.DEFAULT_GOAL := all
+
+.PHONY: all clean $(SUBDIRS)
+
 all:
-	make -C mkimage
-	mkdir -p sstrip
-	make -C $(SSTRIP_NAME)
-	make -C lzma
-	make -C mksquashfs_xz
+	@for dir in $(SUBDIRS); do \
+		echo "\033[1;30;43m BUILD \033[0m \033[1;30;44m $$dir \033[0m"; \
+		$(MAKE) -C $$dir || exit $$?; \
+	done
 
 clean:
-	if [ -f $(SSTRIP_NAME)/Makefile ] ; then \
-		make -C $(SSTRIP_NAME) clean ; \
-	fi ;
-	rm -rf sstrip
-	make -C mkimage clean
-	make -C lzma clean
-	make -C mksquashfs_xz clean
+	@for dir in $(SUBDIRS); do \
+		echo "\033[1;30;42m CLEAN \033[0m \033[1;30;44m $$dir \033[0m"; \
+		$(MAKE) -C $$dir clean || true; \
+	done

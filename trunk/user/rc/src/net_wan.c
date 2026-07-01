@@ -2590,7 +2590,7 @@ int start_udhcpc_wan(char *wan_ifname, int unit, int wait_lease)
 		"-t4",
 		"-T4",
 		NULL,
-		NULL, NULL,	/* -H hostname		*/
+		NULL, NULL,	/* -x hostname:hostname */
 		NULL, NULL,	/* -V vendorclass	*/
 		NULL,		/* -O mtu		*/
 		NULL,		/* -O routes		*/
@@ -2732,4 +2732,3 @@ int stop_udhcpc_viptv(void)
 	snprintf(pidfile, sizeof(pidfile), "/var/run/udhcpc_viptv.pid");
 	return kill_pidfile(pidfile);
 }
-

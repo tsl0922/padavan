@@ -261,7 +261,7 @@ fill_dnsmasq_servers(void)
 	}
 
 	/* fill from user dnsmasq.servers */
-	//load_user_config(fp, storage_dir, "dnsmasq.servers", NULL);
+	load_user_config(fp, storage_dir, "dnsmasq.servers", NULL);
 
 	fclose(fp);
 
@@ -293,14 +293,13 @@ int
 start_dns_dhcpd(int is_ap_mode)
 {
 	FILE *fp;
-	int i_verbose, i_dhcp_enable, is_dhcp_used, is_dns_used, i_filter_aaa;
+	int i_verbose, i_dhcp_enable, is_dhcp_used, is_dns_used;
 	char dhcp_start[32], dhcp_end[32], dns_all[64], dnsv6[40];
-	char *ipaddr, *netmask, *gw, *dns1, *dns2, *dns3, *wins, *domain, *dns6;
+	char *ipaddr, *netmask, *gw, *dns1, *dns2, *dns3, *wins, *domain, *dns6, *dns61;
 	const char *storage_dir = "/etc/storage/dnsmasq";
 
 	i_dhcp_enable = is_dhcpd_enabled(is_ap_mode);
 	i_verbose = nvram_get_int("dhcp_verbose");
-	i_filter_aaa = nvram_get_int("dhcp_filter_aaa");
 
 	ipaddr  = nvram_safe_get("lan_ipaddr");
 	netmask = nvram_safe_get("lan_netmask");
@@ -340,12 +339,32 @@ start_dns_dhcpd(int is_ap_mode)
 		/* listen DNS queries from clients of VPN server */
 		fprintf(fp, "listen-address=%s\n", ipaddr);
 	}
-
+	if (!is_ap_mode && nvram_match("dhcp_filter_aaaa", "1")) {
+		/* Don't include IPv6 addresses in DNS answers */
+		fprintf(fp, "filter-AAAA\n");
+	}
+	if (!is_ap_mode && nvram_match("dhcp_all_servers", "1")) {
+		/* DNS queries for all servers */
+		fprintf(fp, "all-servers\n");
+	}
+	if (!is_ap_mode && nvram_match("dhcp_strict_order", "1")) {
+		/* Name servers strictly in the order listed */
+		fprintf(fp, "strict-order\n");
+	}
+	if (!is_ap_mode && nvram_match("dhcp_stop_dns_rebind", "1")) {
+		/* Stop DNS rebinding and Allows upstream 127.0.0.0/8 responses */
+		fprintf(fp, "rebind-localhost-ok\n" "stop-dns-rebind\n");
+	}
+	if (!is_ap_mode && nvram_match("dhcp_proxy_dnssec", "1")) {
+		/* Proxy DNSSEC validation results from upstream nameservers */
+		fprintf(fp, "proxy-dnssec\n");
+	}
 	if (!is_ap_mode) {
 		is_dns_used = 1;
 		fprintf(fp, "min-port=%d\n", 4096);
 		fprintf(fp, "cache-size=%d\n", DNS_RELAY_CACHE_MAX);
-		fprintf(fp, "dns-forward-max=%d\n", DNS_RELAY_QUERIES_MAX);
+		//remove it for overwrite // simonchen - 2023-2-16
+		//fprintf(fp, "dns-forward-max=%d\n", DNS_RELAY_QUERIES_MAX);
 		fprintf(fp, "addn-hosts=%s/hosts\n", storage_dir);
 		fprintf(fp, "servers-file=%s\n", DNS_SERVERS_FILE);
 		fprintf(fp, "dhcp-hostsfile=%s/dhcp.conf\n", storage_dir);
@@ -415,6 +434,11 @@ start_dns_dhcpd(int is_ap_mode)
 		else if (nvram_get_int("wins_enable"))
 			fprintf(fp, "dhcp-option=tag:%s,%d,%s\n", DHCPD_RANGE_DEF_TAG, 44, ipaddr);
 #endif
+#if defined(APP_VLMCSD)
+		int vlmcsd_mode = nvram_get_int("vlmcsd_enable");
+		if ( vlmcsd_mode == 1)	
+			fprintf(fp, "srv-host=%s.%s,%s,%d\n", "_VLMCS", "_tcp", ipaddr, 1688);
+#endif
 		if (i_verbose == 0 || i_verbose == 2)
 			fprintf(fp, "quiet-dhcp\n");
 		
@@ -467,12 +491,13 @@ start_dns_dhcpd(int is_ap_mode)
 			/* DNS server */
 			memset(dnsv6, 0, sizeof(dnsv6));
 			dns6 = nvram_safe_get("dhcp_dnsv6_x");
-			if (is_valid_ipv6(dns6))
+			if (is_valid_ipv6(dns6)) {
 				strcpy(dnsv6, dns6);
-			else
-				strcpy(dnsv6, "[::]");
-
-			fprintf(fp, "dhcp-option=tag:%s,option6:%d,%s\n", DHCPD_RANGE_DEF_TAG, 23, dnsv6);
+				fprintf(fp, "dhcp-option=tag:%s,option6:%d,%s\n", DHCPD_RANGE_DEF_TAG, 23, dnsv6);
+			} else {
+				// strcpy(dnsv6, "[::]");
+				fprintf(fp, "dhcp-option=tag:%s,option6:%d\n", DHCPD_RANGE_DEF_TAG, 23);
+			}
 			
 			/* DOMAIN search */
 			if (strlen(domain) > 0)
@@ -504,12 +529,8 @@ start_dns_dhcpd(int is_ap_mode)
 	if (is_dns_used)
 		fill_dnsmasq_servers();
 
-	if (is_dns_used || is_dhcp_used) {
-		if (i_filter_aaa == 1)
-			return eval("/usr/sbin/dnsmasq", "--filter-AAAA");
-		else
-			return eval("/usr/sbin/dnsmasq");
-	}
+	if (is_dns_used || is_dhcp_used)
+		return eval("/usr/sbin/dnsmasq");
 
 	return 0;
 }

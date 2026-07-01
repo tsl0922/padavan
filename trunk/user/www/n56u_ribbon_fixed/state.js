@@ -204,11 +204,6 @@ function showSystemInfo(cpu_now,force){
 	else
 		$j('#wifi5_b').removeClass('btn-info');
 
-	if ('<% nvram_get_x("", "sdns_enable"); %>' == '1')
-		$j('#button_script2').addClass('btn-info');
-	else
-		$j('#button_script2').removeClass('btn-info');
-
 	if(parseInt(sysinfo.wifi2.guest) > 0)
 		$j('#wifi2_b_g').addClass('btn-info');
 	else
@@ -230,7 +225,6 @@ var enabled2Gclass = '<% nvram_match_x("","rt_radio_x", "1", "btn-info"); %>';
 var enabled5Gclass = '<% nvram_match_x("","wl_radio_x", "1", "btn-info"); %>';
 var enabledGuest2Gclass = '<% nvram_match_x("","rt_guest_enable", "1", "btn-info"); %>';
 var enabledGuest5Gclass = '<% nvram_match_x("","wl_guest_enable", "1", "btn-info"); %>';
-var enabledBtnCommit = '<% nvram_match_x("","nvram_manual", "0", "display:none;"); %>';
 
 // L3 = The third Level of Menu
 function show_banner(L3){
@@ -241,9 +235,13 @@ function show_banner(L3){
 		style_2g = 'width:114px;';
 		style_5g = 'width:21px;display:none;';
 	}
-	var title_2g = '"2.4G"'
+	var title_2g = '"2.4GHz"'
 	if (!support_2g_radio()) {
 		title_2g = '"N/A" disabled';
+	}
+	var title_5g = '"5GHz"'
+	if (!support_5g_radio()) {
+		title_5g = '"N/A" disabled';
 	}
 
 	// log panel
@@ -353,19 +351,19 @@ function show_banner(L3){
 	bc += '<table class="table table-condensed" style="margin-bottom: 0px">\n';
 	bc += '  <tr>\n';
 	bc += '    <td width="50%" style="border: 0 none;"><#menu5_1#>:</td>\n';
-	bc += '    <td style="border: 0 none; min-width: 115px;"><div class="form-inline"><input type="button" id="wifi2_b" class="btn btn-mini '+enabled2Gclass+'" style="'+style_2g+'" value='+title_2g+' onclick="go_setting(2);">&nbsp;<input type="button" id="wifi5_b" style="'+style_5g+'" class="btn btn-mini '+enabled5Gclass+'" value="5G" onclick="go_setting(5);"></div></td>\n';
+	bc += '    <td style="border: 0 none; min-width: 115px;"><div class="form-inline"><input type="button" id="wifi2_b" class="btn btn-mini '+enabled2Gclass+'" style="'+style_2g+'" value='+title_2g+' onclick="go_setting(2);">&nbsp;<input type="button" id="wifi5_b" style="'+style_5g+'" class="btn btn-mini '+enabled5Gclass+'" value='+title_5g+' onclick="go_setting(5);"></div></td>\n';
 	bc += '  </tr>\n';
 	bc += '  <tr>\n';
 	bc += '    <td><#menu5_1_2#>:</td>\n';
-	bc += '    <td><div class="form-inline"><input type="button" id="wifi2_b_g" class="btn btn-mini '+enabledGuest2Gclass+'" style="'+style_2g+'" value='+title_2g+' onclick="go_wguest(2);">&nbsp;<input type="button" id="wifi5_b_g" style="'+style_5g+'" class="btn btn-mini '+enabledGuest5Gclass+'" value="5G" onclick="go_wguest(5);"></div></td>\n';
+	bc += '    <td><div class="form-inline"><input type="button" id="wifi2_b_g" class="btn btn-mini '+enabledGuest2Gclass+'" style="'+style_2g+'" value='+title_2g+' onclick="go_wguest(2);">&nbsp;<input type="button" id="wifi5_b_g" style="'+style_5g+'" class="btn btn-mini '+enabledGuest5Gclass+'" value='+title_5g+' onclick="go_wguest(5);"></div></td>\n';
 	bc += '  </tr>\n';
 	bc += '  <tr>\n';
 	bc += '    <td><#General_x_FirmwareVersion_itemname#></td>\n';
 	bc += '    <td><a href="/Advanced_FirmwareUpgrade_Content.asp"><span id="firmver" class="time"></span></a></td>\n';
 	bc += '  </tr>\n';
 	bc += '  <tr>\n';
-	bc += '    <td><button type="button" id="commit_btn" class="btn btn-mini" style="width: 114px; height: 21px; outline:0; '+enabledBtnCommit+'" onclick="commit();"><i class="icon icon-fire"></i>&nbsp;<#CTL_Commit#></button></td>\n';
-	bc += '    <td><button type="button" id="logout_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#t1Logout#>" onclick="logout();"><i class="icon icon-user"></i></button> <button type="button" id="reboto_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#BTN_REBOOT#>" onclick="reboot();"><i class="icon icon-repeat"></i></button> <button type="button" id="freememory_trash" class="btn btn-mini" style="height: 21px; outline:0;" title="<#BTN_FREEMEMORY#>" onclick="freememory();"><i class="icon icon-trash"></i></button></td>\n';
+	bc += '    <td><input type="button" class="btn btn-info" value=<#CTL_refresh#> onClick="parent.location.reload();"> <input type="button" class="btn btn-primary" value="<#CTL_apply#>" onclick="applyRule();"></td>\n';
+	bc += '    <td><button type="button" id="freememory_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#BTN_FREEMEMORY#>" onclick="freememory();"><i class="icon icon-trash"></i></button> <button type="button" id="logout_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#t1Logout#>" onclick="logout();"><i class="icon icon-user"></i></button> <button type="button" id="reboto_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#BTN_REBOOT#>" onclick="reboot();"><i class="icon icon-repeat"></i></button> <button type="button" id="shutdown_btn" class="btn btn-mini" style="margin-left: 15px; height: 21px; outline:0;" title="<#BTN_SHUTDOWN#>" onclick="shutdown();"><i class="icon icon-off"></i></button></td>\n';
 	bc += '  </tr>\n';
 	bc += '</table>\n';
 	bc += '</div>\n';
@@ -421,7 +419,7 @@ if (found_app_aldriver()){
 	tabtitle[17] = new Array("", "<#menu5_36#>");
 }
 if (found_app_sqm()){
-	tabtitle[18] = new Array("", "QoS限速");
+	tabtitle[18] = new Array("", "<#menu5_37#>");
 }
 if (found_app_frp()){
 	tabtitle[19] = new Array("", "<#menu5_25#>");
@@ -530,7 +528,7 @@ if (found_app_aldriver()){
 } else menuL2_title.push("");
 
 if (found_app_sqm()){
-	menuL2_title.push("QoS限速");
+	menuL2_title.push("<#menu5_37#>");
 } else menuL2_title.push("");
 
 if (found_app_frp()){
@@ -741,9 +739,8 @@ function show_footer(){
 	footer_code = '<div align="center" class="bottom-image"></div>\n';
 	footer_code +='<div align="center" class="copyright"><#footer_copyright_desc#></div>\n';
 	footer_code +='<div align="center">\n';
-	footer_code +='  <span>Highcharts by Torstein Hønsi & <a href="http://www.highcharts.com">Highsoft</a></span></br>\n';
-	footer_code +='  <span>Big icons designed by <a href="http://www.freepik.com">Freepik</a></br></span>\n';
-	footer_code +='  <span>Non-Commercial Use Only</span></br>\n';
+	footer_code +='  <span>Developed by © <a href="https://bitbucket.org/padavan/rt-n56u/">Andy Padavan</a> &amp; <a href="https://github.com/hanwckf/padavan-4.4">hanwckf</a> &amp; <a href="https://github.com/MeIsReallyBa/padavan-4.4">MeIsReallyBa</a> &amp; <a href="https://github.com/tsl0922/padavan">tsl0922</a> &amp; <a href="https://github.com/TurBoTse/padavan">TurBoTse</a></span></br>\n';
+	footer_code +='  <span>Firmware distribution is prohibited , Non-Commercial Use Only</span></br>\n';
 	footer_code +='</div>\n';
 
 	$("footer").innerHTML = footer_code;
@@ -824,18 +821,14 @@ function show_loading_obj(){
 function submit_language(){
 	if($("select_lang").value != $("preferred_lang").value){
 		showLoading();
-		
 		with(document.titleForm){
 			action = "/start_apply.htm";
-			
 			if(location.pathname == "/")
 				current_page.value = "/index.asp";
 			else
 				current_page.value = location.pathname;
-			
 			preferred_lang.value = $("select_lang").value;
 			flag.value = "set_language";
-			
 			submit();
 		}
 	}
@@ -848,7 +841,7 @@ function logout(){
 }
 
 function reboot(){
-	if(!confirm('<#Main_content_Login_Item7#>'))
+	if(!confirm('<#JS_reboot#>'))
 		return;
 	showLoading(board_boot_time());
 	var $j = jQuery.noConflict();
@@ -858,12 +851,22 @@ function reboot(){
 	});
 }
 
+function shutdown(){
+	if(!confirm('<#JS_shutdown#>'))
+		return;
+	var $j = jQuery.noConflict();
+	$j.post('/apply.cgi',
+	{
+		'action_mode': ' Shutdown ',
+		'current_page': 'Main_LogStatus_Content.asp'
+	});
+}
+
 function freememory(){
 	var $j = jQuery.noConflict();
 	$j.post('/apply.cgi',
 	{
 		'action_mode': ' FreeMemory ',
-		'current_page': 'Main_LogStatus_Content.asp'
 	});
 }
 
@@ -1065,10 +1068,10 @@ function validate_string(string_obj, flag){
 	if(string_obj.value.charAt(0) == '"'){
 		if(flag != "noalert")
 			alert('<#JS_validstr1#> ["]');
-		
+
 		string_obj.value = "";
 		string_obj.focus();
-		
+
 		return false;
 	}
 	else{
@@ -1109,7 +1112,7 @@ function validate_psk(psk_obj){
 		psk_obj.value = "00000000";
 		psk_obj.focus();
 		psk_obj.select();
-		
+
 		return false;
 	}
 	if(psk_length > 64){
@@ -1117,7 +1120,7 @@ function validate_psk(psk_obj){
 		psk_obj.value = psk_obj.value.substring(0, 64);
 		psk_obj.focus();
 		psk_obj.select();
-		
+
 		return false;
 	}
 	if(psk_length >= 8 && psk_length <= 63 && !validate_string(psk_obj)){
@@ -1143,10 +1146,9 @@ function checkDuplicateName(newname, targetArray){
 	var existing_string = targetArray.join(',');
 	existing_string = ","+existing_string+",";
 	var newstr = ","+trim(newname)+",";
-	
 	var re = new RegExp(newstr, "gi");
 	var matchArray = existing_string.match(re);
-	
+
 	if(matchArray != null)
 		return true;
 	else

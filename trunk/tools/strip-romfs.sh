@@ -21,7 +21,7 @@ if [ ! -x "$(command -v $OBJCOPY)" ] ; then
 	exit 1
 fi
 
-echo ---------------------------------- STRIP ROMFS ------------------------------------
+echo "\033[32m======================>>> STRIP ROMFS <<<======================\033[0m"
 find ${ROMFSDIR} -type f -a -exec file {} \; | \
   sed -n -e 's/^\(.*\):.*ELF.*\(executable\|relocatable\|shared object\).*,.*/\1:\2/p' | \
 (
@@ -50,4 +50,4 @@ find ${ROMFSDIR} -type f -a -exec file {} \; | \
   true
 )
 sync
-echo ---------------------------------- ROMFS STRIP OK ---------------------------------
+echo "\033[32m======================>>> ROMFS STRIP OK <<<======================\033[0m"

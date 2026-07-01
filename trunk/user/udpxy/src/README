@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2012 Pavel V. Cherenkov (pcherenkov@gmail.com)
+# Copyright 2008-2018 Pavel V. Cherenkov (pcherenkov@gmail.com)
 #
 #  This file is part of udpxy.
 #
@@ -25,6 +25,14 @@ it forwards UDP traffic from a given multicast subscription
 to the requesting HTTP client.
 
 udpxy is released under GPL v.3
+
+Project status
+--------------
+
+udpxy has not been extended or supported for 4+ years, having been
+replaced by Gigapxy - a superior enterprise-oriented product.
+Please see more info at <http://gigapxy.com>, thank you.
+
 
 Building and installing
 --------------
@@ -66,7 +74,7 @@ connection.
 
 The command to relay traffic is in the format as below:
 
-http://address:port/cmd/mgroup_address[SEP]mgroup_port/
+http://<address>:<port>/<cmd>/[src_address@]<mgroup_address><sep><mgroup_port>/
 
 [SEP] ::= :|%|~|+|-|^
 i.e:
@@ -81,7 +89,8 @@ are acceptable and should all work in the same manner.
 cmd ::= udp | rtp
 
 where ip and port match the listening address/port combination of udpxy,
-and mgroup_address:mgroup_port identify the multicast group to subscribe to.
+and [src_address@]mgroup_address:mgroup_port identify the multicast group
+(and optional source) to subscribe to.
 
 Using 'udp' command will instruct udpxy to probe for known types of payload
 (such as MPEG-TS and RTP over MPEG-TS); using 'rtp' makes udpxy assume RTP

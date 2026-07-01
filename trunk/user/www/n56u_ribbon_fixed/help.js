@@ -9,7 +9,8 @@ helpcontent[3] = new Array("");
 helpcontent[4] = new Array("",
 				"<#LANHostConfig_IPRouters_itemdesc#>",
 				"<#LANHostConfig_SubnetMask_itemdesc#>",
-				"<#LANHostConfig_x_Gateway_itemdesc#>");
+				"<#LANHostConfig_x_Gateway_itemdesc#>",
+				"<#LAN_STP_itemdesc#>");
 helpcontent[5] = new Array("",
 				"<#LANHostConfig_DHCPServerConfigurable_itemdesc#>",
 				"<#LANHostConfig_DomainName_itemdesc#> <#LANHostConfig_x_DDNS_alarm_hostname#> <#LANHostConfig_DomainName_itemdesc2#>",
@@ -20,9 +21,16 @@ helpcontent[5] = new Array("",
 				"<#LANHostConfig_x_LDNSServer1_itemdesc#>",
 				"<#LANHostConfig_x_LDNSServer1_itemdesc#>",
 				"<#LANHostConfig_x_LDNSServer1_itemdesc#>",
+				"<#LANHostConfig_x_LDNSServer6_itemdesc#>",
 				"<#LANHostConfig_x_WINSServer_itemdesc#>",
+				"<#LANHostConfig_ForceDNS_itemdesc#>",
+				"<#LANHostConfig_DHCPFilterAAAA_itemdesc#>",
+				"<#LANHostConfig_DHCPAllservers_itemdesc#>",
+				"<#LANHostConfig_DHCPStrictorder_itemdesc#>",
+				"<#LANHostConfig_DHCPStopDNSRebind_itemdesc#>",
+				"<#LANHostConfig_DHCPProxyDNSSEC_itemdesc#>",
 				"<#LANHostConfig_ManualDHCPEnable_itemdesc#>",
-				"<#LANHostConfig_x_LDNSServer6_itemdesc#>");
+				"<#LANHostConfig_ManualARP_itemdesc#>");
 helpcontent[6] = new Array("",
 				"<#RHELP_desc4#>",
 				"<#RHELP_desc5#>",
@@ -165,7 +173,10 @@ helpcontent[22] = new Array("",
 				"<#OP_AP_desc1#>");
 // Tweaks
 helpcontent[23] = new Array("",
-				"<#TweaksWdg_desc#>");
+				"<#TweaksWdg_desc#>",
+				"<#Adm_Svc_vlmcsd_desc#>",
+				"<#Adm_Svc_iperf3_desc#>",
+				"<#Adm_Svc_ttyd_desc#>");
 
 // DDNS
 helpcontent[24] = new Array("",
@@ -200,19 +211,19 @@ function openTooltip(obj, hint_array_id, hint_show_id)
 function openHint(hint_array_id, hint_show_id){
 	if (help_enable == "0" && hint_show_id > 0)
 		return;
-	
+
 	$('hintofPM').style.display = "";
-	
+
 	showtext($('helpname'), "<#CTL_help#>");
-	
+
 	if($("statusframe")){
 		$("statusframe").src = "";
 		$("statusframe").style.display = "none";
 	}
-	
+
 	$('hint_body').style.display = "";
 	$("statusframe").style.display = "none";
-	
+
 	showtext($('helpname'), "<#CTL_help#>");
 	showtext($('hint_body'), helpcontent[hint_array_id][hint_show_id]);
 }
@@ -220,4 +231,3 @@ function openHint(hint_array_id, hint_show_id){
 function closeHint(){
 	$('hintofPM').style.display = "none";
 }
-

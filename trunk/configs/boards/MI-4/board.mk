@@ -4,6 +4,6 @@
 # MI-4 # Xiaomi Mi 4   # MT7621  #
 ##################################################################
 
-CFLAGS += -DBOARD_MI-4
+CFLAGS += -DBOARD_MI_4
 BOARD_NUM_USB_PORTS=0
 CONFIG_BOARD_RAM_SIZE=128

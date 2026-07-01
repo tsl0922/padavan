@@ -1274,6 +1274,8 @@ void announce_802_3_packet(
 			RTMP_CHIP_CAP *cap = hc_get_chip_cap(pAd->hdev_ctrl);
 			BOOLEAN whnat_rx_en = pAd->CommonCfg.whnat_en &&
 									(cap->tkn_info.feature & TOKEN_RX);
+#else
+			BOOLEAN whnat_rx_en = FALSE;
 #endif
 #ifdef PKTLOSS_CHK
 			if (pAd->pktloss_chk.enable)

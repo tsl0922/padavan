@@ -1045,36 +1045,45 @@ sym_re_search_free:
 /*
  * When we check for recursive dependencies we use a stack to save
  * current state so we can print out relevant info to user.
- * The entries are located on the call stack so no need to free memory.
- * Note insert() remove() must always match to properly clear the stack.
+ * Use a static memory pool to avoid dangling pointers.
  */
+#define MAX_STACK_DEPTH 32
 static struct dep_stack {
 	struct dep_stack *prev, *next;
 	struct symbol *sym;
 	struct property *prop;
 	struct expr *expr;
-} *check_top;
+} stack_pool[MAX_STACK_DEPTH];
+static int stack_index = 0;
+static struct dep_stack *check_top;
 
 static void dep_stack_insert(struct dep_stack *stack, struct symbol *sym)
 {
-	memset(stack, 0, sizeof(*stack));
-	if (check_top)
-		check_top->next = stack;
-	stack->prev = check_top;
-	stack->sym = sym;
-	check_top = stack;
+	if (stack_index < MAX_STACK_DEPTH) {
+		stack_pool[stack_index] = *stack; /* Copy contents */
+		stack_pool[stack_index].sym = sym; /* Update symbol */
+		if (check_top)
+			check_top->next = &stack_pool[stack_index];
+		stack_pool[stack_index].prev = check_top;
+		check_top = &stack_pool[stack_index];
+		stack_index++;
+	}
 }
 
 static void dep_stack_remove(void)
 {
-	check_top = check_top->prev;
-	if (check_top)
-		check_top->next = NULL;
+	if (check_top) {
+		check_top = check_top->prev;
+		if (check_top)
+			check_top->next = NULL;
+		if (stack_index > 0)
+			stack_index--;
+	}
 }
 
 /*
  * Called when we have detected a recursive dependency.
- * check_top point to the top of the stact so we use
+ * check_top points to the top of the stack, so we use
  * the ->prev pointer to locate the bottom of the stack.
  */
 static void sym_check_print_recursive(struct symbol *last_sym)
@@ -1083,10 +1092,15 @@ static void sym_check_print_recursive(struct symbol *last_sym)
 	struct symbol *sym, *next_sym;
 	struct menu *menu = NULL;
 	struct property *prop;
-	struct dep_stack cv_stack;
 
 	if (sym_is_choice_value(last_sym)) {
-		dep_stack_insert(&cv_stack, last_sym);
+		/* Allocate from pool instead of local variable */
+		if (stack_index < MAX_STACK_DEPTH) {
+			stack_pool[stack_index].sym = last_sym;
+			stack_pool[stack_index].prop = NULL;
+			stack_pool[stack_index].expr = NULL;
+			dep_stack_insert(&stack_pool[stack_index], last_sym);
+		}
 		last_sym = prop_get_symbol(sym_get_choice_prop(last_sym));
 	}
 
@@ -1147,7 +1161,8 @@ static void sym_check_print_recursive(struct symbol *last_sym)
 		}
 	}
 
-	if (check_top == &cv_stack)
+	/* Remove cv_stack if it was added */
+	if (check_top && check_top->sym == last_sym)
 		dep_stack_remove();
 }
 
@@ -1190,9 +1205,14 @@ static struct symbol *sym_check_sym_deps(struct symbol *sym)
 {
 	struct symbol *sym2;
 	struct property *prop;
-	struct dep_stack stack;
+	struct dep_stack *stack;
 
-	dep_stack_insert(&stack, sym);
+	if (stack_index < MAX_STACK_DEPTH) {
+		stack = &stack_pool[stack_index];
+		dep_stack_insert(stack, sym);
+	} else {
+		return NULL; /* Stack overflow, skip checking */
+	}
 
 	sym2 = sym_check_expr_deps(sym->rev_dep.expr);
 	if (sym2)
@@ -1201,17 +1221,17 @@ static struct symbol *sym_check_sym_deps(struct symbol *sym)
 	for (prop = sym->prop; prop; prop = prop->next) {
 		if (prop->type == P_CHOICE || prop->type == P_SELECT)
 			continue;
-		stack.prop = prop;
+		stack->prop = prop;
 		sym2 = sym_check_expr_deps(prop->visible.expr);
 		if (sym2)
 			break;
 		if (prop->type != P_DEFAULT || sym_is_choice(sym))
 			continue;
-		stack.expr = prop->expr;
+		stack->expr = prop->expr;
 		sym2 = sym_check_expr_deps(prop->expr);
 		if (sym2)
 			break;
-		stack.expr = NULL;
+		stack->expr = NULL;
 	}
 
 out:
@@ -1225,9 +1245,14 @@ static struct symbol *sym_check_choice_deps(struct symbol *choice)
 	struct symbol *sym, *sym2;
 	struct property *prop;
 	struct expr *e;
-	struct dep_stack stack;
+	struct dep_stack *stack;
 
-	dep_stack_insert(&stack, choice);
+	if (stack_index < MAX_STACK_DEPTH) {
+		stack = &stack_pool[stack_index];
+		dep_stack_insert(stack, choice);
+	} else {
+		return NULL; /* Stack overflow, skip checking */
+	}
 
 	prop = sym_get_choice_prop(choice);
 	expr_list_for_each_sym(prop->expr, e, sym)
@@ -1261,6 +1286,7 @@ struct symbol *sym_check_deps(struct symbol *sym)
 {
 	struct symbol *sym2;
 	struct property *prop;
+	struct dep_stack *stack;
 
 	if (sym->flags & SYMBOL_CHECK) {
 		sym_check_print_recursive(sym);
@@ -1270,10 +1296,14 @@ struct symbol *sym_check_deps(struct symbol *sym)
 		return NULL;
 
 	if (sym_is_choice_value(sym)) {
-		struct dep_stack stack;
-
-		/* for choice groups start the check with main choice symbol */
-		dep_stack_insert(&stack, sym);
+		/* Allocate from pool instead of local variable */
+		if (stack_index < MAX_STACK_DEPTH) {
+			stack = &stack_pool[stack_index];
+			stack->sym = sym;
+			stack->prop = NULL;
+			stack->expr = NULL;
+			dep_stack_insert(stack, sym);
+		}
 		prop = sym_get_choice_prop(sym);
 		sym2 = sym_check_deps(prop_get_symbol(prop));
 		dep_stack_remove();

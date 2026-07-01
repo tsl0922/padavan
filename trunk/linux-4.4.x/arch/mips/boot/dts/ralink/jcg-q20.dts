@@ -78,18 +78,28 @@
 			};
 
 			partition@180000 {
+				label = "Crash";
+				reg = <0x180000 0x80000>; /* 512k */
+			};
+
+			partition@200000 {
 				label = "firmware";
-				reg = <0x180000 0x1800000>;	/* 24M */
+				reg = <0x200000 0x1800000>; /* 24M */
 			};
 
-			partition@1980000 {
+			partition@1a00000 {
+				label = "Config";
+				reg = <0x1a00000 0x80000>; /* 512K */
+			};
+
+			partition@1a80000 {
 				label = "Storage";
-				reg = <0x1980000 0x400000>; /* 4096K */
+				reg = <0x1a80000 0x400000>; /* 4096K */
 			};
 
-			partition@1d80000 {
+			partition@1e80000 {
 				label = "RWFS";
-				reg = <0x1d80000 0x6200000>;
+				reg = <0x1e80000 0x6100000>;
 			};
 
 			partition@all {

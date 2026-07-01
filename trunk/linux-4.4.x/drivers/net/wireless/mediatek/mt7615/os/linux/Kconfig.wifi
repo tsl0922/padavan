@@ -9,7 +9,7 @@ source "drivers/net/rt_rdm/Kconfig"
 # Wire
 #############
 
-source "drivers/net/raeth/Kconfig"
+source "drivers/net/ethernet/raeth/Kconfig"
 
 #############
 # Wireless

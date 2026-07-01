@@ -47,7 +47,7 @@ read_http_footer (char* buf, size_t len)
         n = txtf_read (ev, buf, len, stderr);
     }
 
-    return (n<0) ? 1 : 0;
+    return (n<0) ? -1 : 0;
 }
 
 
@@ -159,6 +159,8 @@ init_recopt( struct udpxrec_opt* ro )
         (flag_t)get_flagval( "UDPXY_DSOCKBUF_NOSYNC", 0 );
 
     ro->rcv_tmout       = 0;
+
+    ro->mcast_refresh   = DEFAULT_MCAST_REFRESH;
 
     return rc;
 }

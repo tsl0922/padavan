@@ -212,8 +212,8 @@ get_eeprom_params(void)
 
 	nvram_set_temp("il0macaddr", macaddr_lan); // LAN
 	nvram_set_temp("il1macaddr", macaddr_wan); // WAN
-	nvram_set_temp("wl_macaddr", macaddr_wl);  // 5 GHz
-	nvram_set_temp("rt_macaddr", macaddr_rt);  // 2.4 GHZ
+	nvram_set_temp("wl_macaddr", macaddr_wl);  // 5GHz
+	nvram_set_temp("rt_macaddr", macaddr_rt);  // 2.4GHz
 
 #if defined (VENDOR_ASUS)
 	/* reserved for Ralink. used as ASUS country code. */
@@ -252,7 +252,6 @@ get_eeprom_params(void)
 			if ((unsigned char)regspec_code[i] > 0x7f)
 				regspec_code[i] = 0;
 		}
-		
 		if (!check_regspec_code(regspec_code))
 			strcpy(regspec_code, "CE");
 	}
@@ -349,6 +348,7 @@ get_eeprom_params(void)
 #endif
 #endif
 
+	// TXBF, not used yet
 	{
 		int i, count_0xff = 0;
 		unsigned char txbf_para[33];
@@ -362,10 +362,22 @@ get_eeprom_params(void)
 					count_0xff++;
 			}
 		}
-		
 		nvram_wlan_set_int(1, "txbf_en", (count_0xff == 33) ? 0 : 1);
+		if(count_0xff !=33)
+		{
+		 count_0xff = 0;
+		i_ret = flash_mtd_read(MTD_PART_NAME_FACTORY, 0x81A0, txbf_para, 33);
+		if (i_ret < 0) {
+			dbg("READ TXBF PARA address: Out of scope\n");
+		} else {
+			for (i = 0; i < 33; i++) {
+				if (txbf_para[i] == 0xff)
+					count_0xff++;
+			}
+		}
+		nvram_wlan_set_int(1, "txbf_en", (count_0xff == 33) ? 0 : 1);
+		}
 	}
-
 }
 
 void
@@ -427,15 +439,14 @@ char_to_ascii(char *output, char *input)
 	char *ptr;
 
 	ptr = output;
-
-	for ( i=0; i<strlen(input); i++ ) {
-		if ((input[i]>='0' && input[i] <='9')
-		   ||(input[i]>='A' && input[i]<='Z')
-		   ||(input[i] >='a' && input[i]<='z')
-		   || input[i] == '!' || input[i] == '*'
-		   || input[i] == '(' || input[i] == ')'
-		   || input[i] == '_' || input[i] == '-'
-		   || input[i] == '\'' || input[i] == '.') {
+	for (i = 0; i < strlen(input); i++) {
+		if ((input[i] >= '0' && input[i] <= '9')
+			||(input[i] >= 'A' && input[i] <= 'Z')
+			||(input[i] >= 'a' && input[i] <= 'z')
+			|| input[i] == '!' || input[i] == '*'
+			|| input[i] == '(' || input[i] == ')'
+			|| input[i] == '_' || input[i] == '-'
+			|| input[i] == '\'' || input[i] == '.') {
 			*ptr = input[i];
 			ptr ++;
 		} else {

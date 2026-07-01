@@ -12,6 +12,7 @@ enum {
 	O_TO_PORTS = 0,
 	O_RANDOM,
 	O_RANDOM_FULLY,
+	O_MODE,
 };
 
 static void MASQUERADE_help(void)
@@ -23,13 +24,17 @@ static void MASQUERADE_help(void)
 " --random\n"
 "				Randomize source port.\n"
 " --random-fully\n"
-"				Fully randomize source port.\n");
+"				Fully randomize source port.\n"
+" --mode <fullcone|symmetric>\n"
+"				NAT mode.\n");
+
 }
 
 static const struct xt_option_entry MASQUERADE_opts[] = {
 	{.name = "to-ports", .id = O_TO_PORTS, .type = XTTYPE_STRING},
 	{.name = "random", .id = O_RANDOM, .type = XTTYPE_NONE},
 	{.name = "random-fully", .id = O_RANDOM_FULLY, .type = XTTYPE_NONE},
+	{.name = "mode", .id = O_MODE, .type = XTTYPE_STRING},
 	XTOPT_TABLEEND,
 };
 
@@ -89,6 +94,7 @@ static void MASQUERADE_parse(struct xt_option_call *cb)
 		portok = 1;
 	else
 		portok = 0;
+	mr->range[0].min_ip = 0;
 
 	xtables_option_parse(cb);
 	switch (cb->entry->id) {
@@ -103,6 +109,15 @@ static void MASQUERADE_parse(struct xt_option_call *cb)
 		break;
 	case O_RANDOM_FULLY:
 		mr->range[0].flags |=  NF_NAT_RANGE_PROTO_RANDOM_FULLY;
+		break;
+	case O_MODE:
+		if (strcasecmp(cb->arg, "fullcone") == 0)
+			mr->range[0].min_ip = 1;
+		else if (strcasecmp(cb->arg, "symmetric") == 0)
+			mr->range[0].min_ip = 0;
+		else
+			xtables_error(PARAMETER_PROBLEM,
+				   "Unknown mode %s", cb->arg);
 		break;
 	}
 }
@@ -126,6 +141,8 @@ MASQUERADE_print(const void *ip, const struct xt_entry_target *target,
 
 	if (r->flags & NF_NAT_RANGE_PROTO_RANDOM_FULLY)
 		printf(" random-fully");
+	if (r->min_ip == 1)
+		printf(" mode: fullcone");
 }
 
 static void
@@ -145,6 +162,8 @@ MASQUERADE_save(const void *ip, const struct xt_entry_target *target)
 
 	if (r->flags & NF_NAT_RANGE_PROTO_RANDOM_FULLY)
 		printf(" --random-fully");
+	if (r->min_ip == 1)
+		printf(" --mode fullcone");
 }
 
 static int MASQUERADE_xlate(struct xt_xlate *xl,

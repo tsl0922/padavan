@@ -20,7 +20,6 @@
 <script type="text/javascript" src="/itoggle.js"></script>
 <script type="text/javascript" src="/popup.js"></script>
 <script type="text/javascript" src="/help.js"></script>
-<script type="text/javascript" src="/help_b.js"></script>
 <script>
 var $j = jQuery.noConflict();
 
@@ -119,9 +118,7 @@ function getclient(flag_mac,flag_all){
 			if (ipmonitor[i][5] == "1")
 				continue;
 		}
-		
 		clients[j] = new Array(8);
-		
 		clients[j][0] = ipmonitor[i][2];	// Device name
 		clients[j][1] = ipmonitor[i][0];	// IP
 		clients[j][2] = ipmonitor[i][1];	// MAC
@@ -130,15 +127,12 @@ function getclient(flag_mac,flag_all){
 		clients[j][5] = ipmonitor[i][3];	// TYPE
 		clients[j][6] = ipmonitor[i][4];	// host has a HTTP service
 		clients[j][7] = "u";
-		
 		if(clients[j][0] == null || clients[j][0].length < 1)
 			clients[j][0] = "*";
-		
 		if (flag_mac == 1)
 			clients[j][2] = simplyMAC(clients[j][2]);
 		++j;
 	}
-
 	clients.sort(function(a,b){
 		var ret;
 		if (sort_mode == 1 || sort_mode == -1) { // Name
@@ -158,30 +152,22 @@ function getclient(flag_mac,flag_all){
 		}
 		return (sort_mode < 0) ? (ret * -1) : ret;
 	});
-
 	return clients;
 }
-
 function simplyMAC(fullMAC){
 	var ptr;
 	var tempMAC;
 	var pos1, pos2;
-	
 	ptr = fullMAC;
 	tempMAC = "";
 	pos1 = pos2 = 0;
-	
 	for(var i = 0; i < 5; ++i){
 		pos2 = pos1+ptr.indexOf(":");
-		
 		tempMAC += fullMAC.substring(pos1, pos2);
-		
 		pos1 = pos2+1;
 		ptr = fullMAC.substring(pos1);
 	}
-	
 	tempMAC += fullMAC.substring(pos1);
-	
 	return tempMAC;
 }
 function applyRule(){
@@ -193,11 +179,9 @@ function applyRule(){
 		document.form.action_mode.value = " Apply ";
 		document.form.current_page.value = "/Advanced_WAN_Content.asp";
 		document.form.next_page.value = "";
-		
 		document.form.submit();
 	}
 }
-
 
 function validForm(){
 	var lan_addr = document.form.lan_ipaddr.value;
@@ -214,27 +198,27 @@ function validForm(){
 		addr_obj = document.form.wan_ipaddr;
 		mask_obj = document.form.wan_netmask;
 		gate_obj = document.form.wan_gateway;
-		
+
 		if(!validate_ipaddr_final(addr_obj, 'wan_ipaddr')
 				|| !validate_ipaddr_final(mask_obj, 'wan_netmask')
 				|| !validate_ipaddr_final(gate_obj, 'wan_gateway')
 				)
 			return false;
-		
+
 		if(gate_obj.value == addr_obj.value){
 			alert("<#IPConnection_warning_WANIPEQUALGatewayIP#>");
 			gate_obj.select();
 			gate_obj.focus();
 			return false;
 		}
-		
+
 		if(matchSubnet2(lan_addr, lan_mask, addr_obj.value, mask_obj.value)){
 			alert("<#JS_validsubnet#>");
 			mask_obj.focus();
 			mask_obj.select();
 			return false;
 		}
-		
+
 		if(!validate_range(document.form.wan_mtu, 1300, 1500))
 			return false;
 	}
@@ -258,11 +242,11 @@ function validForm(){
 		if(!validate_range(document.form.wan_pppoe_mtu, 1000, 1492)
 				|| !validate_range(document.form.wan_pppoe_mru, 1000, 1492))
 			return false;
-		
+
 		if(!validate_string(document.form.wan_pppoe_service)
 				|| !validate_string(document.form.wan_pppoe_ac))
 			return false;
-		
+
 		if(!validate_range(document.form.wan_pppoe_idletime, 0, 86400))
 			return false;
 	}
@@ -270,7 +254,7 @@ function validForm(){
 		if(!validate_range(document.form.wan_pptp_mtu, 1000, 1476)
 				|| !validate_range(document.form.wan_pptp_mru, 1000, 1500))
 			return false;
-		
+
 		if(document.form.wan_ppp_peer.value.length > 0)
 			if(!validate_string(document.form.wan_ppp_peer))
 				return false;
@@ -279,7 +263,7 @@ function validForm(){
 		if(!validate_range(document.form.wan_l2tp_mtu, 1000, 1460)
 				|| !validate_range(document.form.wan_l2tp_mru, 1000, 1500))
 			return false;
-		
+
 		if(document.form.wan_ppp_peer.value.length > 0)
 			if(!validate_string(document.form.wan_ppp_peer))
 				return false;
@@ -297,7 +281,7 @@ function validForm(){
 			if(!validate_range(document.form.vlan_pri_cpu, 0, 7))
 				return false;
 		}
-		
+
 		vlan_obj = document.form.vlan_vid_iptv;
 		if(vlan_obj.value.length > 0){
 			if(vlan_obj.value!="2" && !validate_range(vlan_obj, min_vlan, 4094))
@@ -305,7 +289,7 @@ function validForm(){
 			if(!validate_range(document.form.vlan_pri_iptv, 0, 7))
 				return false;
 		}
-		
+
 		if (wan_stb_x == "1" || wan_stb_x == "6" || wan_stb_x == "7"){
 			vlan_obj = document.form.vlan_vid_lan1;
 			if(vlan_obj.value.length > 0){
@@ -315,7 +299,7 @@ function validForm(){
 					return false;
 			}
 		}
-		
+
 		if (wan_stb_x == "2" || wan_stb_x == "6" || wan_stb_x == "7"){
 			vlan_obj = document.form.vlan_vid_lan2;
 			if(vlan_obj.value.length > 0){
@@ -325,7 +309,7 @@ function validForm(){
 					return false;
 			}
 		}
-		
+
 		if (wan_stb_x == "3" || wan_stb_x == "5" || wan_stb_x == "7"){
 			vlan_obj = document.form.vlan_vid_lan3;
 			if(vlan_obj.value.length > 0){
@@ -335,7 +319,7 @@ function validForm(){
 					return false;
 			}
 		}
-		
+
 		if (wan_stb_x == "4" || wan_stb_x == "5"){
 			vlan_obj = document.form.vlan_vid_lan4;
 			if(vlan_obj.value.length > 0){
@@ -345,7 +329,7 @@ function validForm(){
 					return false;
 			}
 		}
-		
+
 		if (document.form.viptv_mode.value == "2"){
 			addr_obj = document.form.viptv_ipaddr;
 			mask_obj = document.form.viptv_netmask;
@@ -354,7 +338,7 @@ function validForm(){
 				|| !validate_ipaddr_final(mask_obj, 'viptv_netmask')
 				)
 				return false;
-			
+
 			if(matchSubnet2(lan_addr, lan_mask, addr_obj.value, mask_obj.value)){
 				alert("<#JS_validsubnet#>");
 				mask_obj.focus();
@@ -415,12 +399,12 @@ function change_wan_type(wan_type, flag){
 	if(is_pppoe||is_pptp||is_l2tp){
 		$("dhcp_sect_desc").innerHTML = "<#WAN_MAN_desc#>";
 		$("dhcp_auto_desc").innerHTML = "<#WAN_MAN_DHCP#>";
-		
+
 		var dhcp_sect = 1;
 		if (is_pppoe && document.form.wan_pppoe_man.value != "1")
 			dhcp_sect = 0;
 		showhide_div("tbl_dhcp_sect", dhcp_sect);
-		
+
 		showhide_div("row_ppp_peer", is_pptp||is_l2tp);
 		showhide_div("row_ppp_mppe", is_pptp||is_l2tp);
 		showhide_div("row_pppoe_svc", is_pppoe);
@@ -464,9 +448,9 @@ function fixed_change_wan_type(wan_type){
 	if(wan_type == "static"){
 		inputRCtrl2(document.form.wan_dnsenable_x, 1);
 		$j('#wan_dnsenable_x_on_of').iState(0);
-		
+
 		set_wan_dns_auto(0);
-		
+
 		if(flag == true && document.form.wan_dns1_x.value.length == 0)
 			document.form.wan_dns1_x.focus();
 	}
@@ -533,12 +517,12 @@ function change_wan_dhcp_enable(wan_type){
 		var dhcp_auto = original_wan_dhcp_auto;
 		inputRCtrl2(document.form.x_DHCPClient, !dhcp_auto);
 		$j('#x_DHCPClient_on_of').iState(dhcp_auto);
-		
+
 		inputCtrl(document.form.x_DHCPClient[0], 1);
 		inputCtrl(document.form.x_DHCPClient[1], 1);
 		$j('input[name="x_DHCPClient"]').removeAttr('disabled');
 		$j('#x_DHCPClient_on_of').iClickable(1);
-		
+
 		set_wan_dhcp_auto(dhcp_auto);
 	}
 	else if(wan_type == "static"){
@@ -549,7 +533,7 @@ function change_wan_dhcp_enable(wan_type){
 		inputCtrl(document.form.x_DHCPClient[1], 0);
 		$j('input[name="x_DHCPClient"]').attr('disabled','disabled');
 		$j('#x_DHCPClient_on_of').iClickable(0);
-		
+
 		set_wan_dhcp_auto(0);
 	}
 	else{
@@ -560,7 +544,7 @@ function change_wan_dhcp_enable(wan_type){
 		inputCtrl(document.form.x_DHCPClient[1], 0);
 		$j('input[name="x_DHCPClient"]').attr('disabled','disabled');
 		$j('#x_DHCPClient_on_of').iClickable(0);
-		
+
 		set_wan_dhcp_auto(1);
 	}
 }
@@ -767,8 +751,6 @@ function pullLANIPList(obj){
 		hideClients_Block();
 }
 
-
-
 function setClientMAC(num){
 	document.form.pppoemwan_mac_x_0.value = clients_info[num][2];
 	document.form.pppoemwan_ip_x_0.value = clients_info[num][1];
@@ -799,7 +781,6 @@ function change_pppoemwan_enabled(){
 	showhide_div('row_static_header', v);
 	showhide_div('row_static_body', v);}
 }
-
 
 function markGroupMDHCP(o, c, b) {
 	document.form.group_id.value = "pppoemwanIPList";
@@ -1058,7 +1039,7 @@ function simplyMAC(fullMAC){
                                             <td><input type="text" name="wan_gateway" maxlength="15" class="input" size="15" value="<% nvram_get_x("","wan_gateway"); %>" onKeyPress="return is_ipaddr(this,event);"/></td>
                                         </tr>
                                         <tr id="row_wan_mtu">
-                                            <th>MTU:</th>
+                                            <th><#WAN_MTU#></th>
                                             <td>
                                                 <input type="text" name="wan_mtu" maxlength="4" class="input" size="5" value="<% nvram_get_x("","wan_mtu"); %>" onkeypress="return is_number(this,event);"/>
                                                 &nbsp;<span style="color:#888;">[1300..1500]</span>
@@ -1125,50 +1106,47 @@ function simplyMAC(fullMAC){
                                             </td>
                                         </tr>
                                         <tr id="pppoemwan4">
-					<th width="30%" style="border-top: 0 none;">启用多拨(兼容HWNAT)</th>
-												  						     <td style="border-top: 0 none;">
-													<div class="main_itoggle">
-													<div id="pppoemwan_enable_on_of">
-														<input type="checkbox" id="pppoemwan_enable_fake" <% nvram_match_x("", "pppoemwan_enable", "1", "value=1 checked"); %><% nvram_match_x("", "pppoemwan_enable", "0", "value=0"); %>  />
-													</div>
-												</div>
-												<div style="position: absolute; margin-left: -10000px;">
-													<input type="radio" value="1" name="pppoemwan_enable" id="pppoemwan_enable_1" class="input"  onclick="change_pppoemwan_enabled()" value="1" <% nvram_match_x("", "pppoemwan_enable", "1", "checked"); %> /><#checkbox_Yes#>
-													<input type="radio" value="0" name="pppoemwan_enable" id="pppoemwan_enable_0" class="input"  onclick="change_pppoemwan_enabled()" value="0" <% nvram_match_x("", "pppoemwan_enable", "0", "checked"); %> /><#checkbox_No#>
-												</div>
+										    <th width="50%" style="border-top: 0 none;"><#pppoemwan4#></th>
+											<td style="border-top: 0 none;">
+                                            <div class="main_itoggle">
+                                                <div id="pppoemwan_enable_on_of">
+                                                        <input type="checkbox" id="pppoemwan_enable_fake" <% nvram_match_x("", "pppoemwan_enable", "1", "value=1 checked"); %><% nvram_match_x("", "pppoemwan_enable", "0", "value=0"); %>  />
+                                                </div>
+                                            </div>
+                                            <div style="position: absolute; margin-left: -10000px;">
+                                                    <input type="radio" value="1" name="pppoemwan_enable" id="pppoemwan_enable_1" class="input"  onclick="change_pppoemwan_enabled()" value="1" <% nvram_match_x("", "pppoemwan_enable", "1", "checked"); %> /><#checkbox_Yes#>
+                                                    <input type="radio" value="0" name="pppoemwan_enable" id="pppoemwan_enable_0" class="input"  onclick="change_pppoemwan_enabled()" value="0" <% nvram_match_x("", "pppoemwan_enable", "0", "checked"); %> /><#checkbox_No#>
+                                            </div>
 											</td>
-
-					</tr>
+                                        </tr>
                                         <tr id="pppoemwan3">
-					<th width="30%" style="border-top: 0 none;">并发多拨</th>
-												  						     <td style="border-top: 0 none;">
-													<div class="main_itoggle">
-													<div id="pppoesync_enable_on_of">
-														<input type="checkbox" id="pppoesync_enable_fake" <% nvram_match_x("", "pppoesync_enable", "1", "value=1 checked"); %><% nvram_match_x("", "pppoesync_enable", "0", "value=0"); %>  />
-													</div>
-												</div>
-												<div style="position: absolute; margin-left: -10000px;">
-													<input type="radio" value="1" name="pppoesync_enable" id="pppoesync_enable_1" class="input" value="1" <% nvram_match_x("", "pppoesync_enable", "1", "checked"); %> /><#checkbox_Yes#>
-													<input type="radio" value="0" name="pppoesync_enable" id="pppoesync_enable_0" class="input" value="0" <% nvram_match_x("", "pppoesync_enable", "0", "checked"); %> /><#checkbox_No#>
-												</div>
+                                            <th width="50%" style="border-top: 0 none;"><#pppoemwan3#></th>
+                                            <td style="border-top: 0 none;">
+                                            <div class="main_itoggle">
+                                                <div id="pppoesync_enable_on_of">
+                                                        <input type="checkbox" id="pppoesync_enable_fake" <% nvram_match_x("", "pppoesync_enable", "1", "value=1 checked"); %><% nvram_match_x("", "pppoesync_enable", "0", "value=0"); %>  />
+                                                </div>
+                                            </div>
+                                            <div style="position: absolute; margin-left: -10000px;">
+                                                    <input type="radio" value="1" name="pppoesync_enable" id="pppoesync_enable_1" class="input" value="1" <% nvram_match_x("", "pppoesync_enable", "1", "checked"); %> /><#checkbox_Yes#>
+                                                    <input type="radio" value="0" name="pppoesync_enable" id="pppoesync_enable_0" class="input" value="0" <% nvram_match_x("", "pppoesync_enable", "0", "checked"); %> /><#checkbox_No#>
+                                            </div>
 											</td>
-
-					</tr>
-					<tr id="pppoemwan2" >
-										<th>多拨次数</th>
-				<td>
-					<input type="text" class="input" name="pppoe_num" id="pppoe_num" style="width: 100px" value="<% nvram_get_x("","pppoe_num"); %>" />
-				</td>   
-					</tr>
-					<tr id="pppoemwan1" >
-					 <th width="30%" style="border-top: 0 none;">内网IP分流控制</th>
-                                             <td style="border-top: 0 none;">
+                                        </tr>
+                                        <tr id="pppoemwan2" >
+                                            <th><#pppoemwan2#></th>
+                                            <td>
+                                            <input type="text" class="input" name="pppoe_num" id="pppoe_num" style="width: 200px" value="<% nvram_get_x("","pppoe_num"); %>" />
+											</td>
+                                        </tr>
+                                        <tr id="pppoemwan1" >
+                                            <th width="50%" style="border-top: 0 none;"><#pppoemwan1#></th>
+                                            <td style="border-top: 0 none;">
                                                 <div class="main_itoggle">
                                                     <div id="pppoemwan_rules_x_on_of">
                                                         <input type="checkbox" id="pppoemwan_rules_x_fake" <% nvram_match_x("", "pppoemwan_rules_x", "1", "value=1 checked"); %><% nvram_match_x("", "pppoemwan_rules_x", "0", "value=0"); %>>
                                                     </div>
                                                 </div>
-
                                                 <div style="position: absolute; margin-left: -10000px;">
                                                     <input type="radio" value="1" name="pppoemwan_rules_x" id="pppoemwan_rules_x_1" onclick="change_pppoemwan_rules_enabled()" <% nvram_match_x("", "pppoemwan_rules_x", "1", "checked"); %> /><#checkbox_Yes#>
                                                     <input type="radio" value="0" name="pppoemwan_rules_x" id="pppoemwan_rules_x_0" onclick="change_pppoemwan_rules_enabled()" <% nvram_match_x("", "pppoemwan_rules_x", "0", "checked"); %> /><#checkbox_No#>
@@ -1185,8 +1163,8 @@ function simplyMAC(fullMAC){
                                             <th width="25%">
                                                 <#LANHostConfig_ManualName_itemname#> <a href="javascript:sortbyName();" style="outline:0;"><i class="icon-circle-arrow-down"></i></a>
                                             </th>
-					    <th width="20%">
-                                                出口序号(1开始) <a href="javascript:sortbyName();" style="outline:0;"><i class="icon-circle-arrow-down"></i></a>
+                                            <th width="20%">
+                                                <#pppoemwan1_1#> <a href="javascript:sortbyName();" style="outline:0;"><i class="icon-circle-arrow-down"></i></a>
                                             </th>
                                             <th width="5%">
                                                 <center><a href="javascript:sortbyId();" style="outline:0;"><i class="icon-th-list"></i></a></center>
@@ -1201,16 +1179,16 @@ function simplyMAC(fullMAC){
                                                 </div>
                                             </td>
                                             <td width="25%">
-                                                <input type="text" maxlength="15" class="span12" size="15" name="pppoemwan_ip_x_0"  value="<% nvram_get_x("", "pppoemwan_ip_x_0"); %>" onkeypress="return is_ipaddr(this,event);"/>
+                                                <input type="text" maxlength="15" class="span12" size="15" name="pppoemwan_ip_x_0" value="<% nvram_get_x("", "pppoemwan_ip_x_0"); %>" onkeypress="return is_ipaddr(this,event);"/>
                                             </td>
                                             <td width="25%">
-                                                <input type="text" maxlength="24" class="span12" size="20" name="pppoemwan_name_x_0"  value="<% nvram_get_x("", "pppoemwan_name_x_0"); %>" onKeyPress="return is_string(this,event);"/>
+                                                <input type="text" maxlength="24" class="span12" size="20" name="pppoemwan_name_x_0" value="<% nvram_get_x("", "pppoemwan_name_x_0"); %>" onKeyPress="return is_string(this,event);"/>
                                             </td>
-					     <td width="20%">
-                                                <input type="text" maxlength="24" class="span12" size="20" name="pppoemwan_interface_x_0"   value="<% nvram_get_x("", "pppoemwan_interface_x_0"); %>" onKeyPress="return is_string(this,event);"/>
+                                            <td width="20%">
+                                                <input type="text" maxlength="24" class="span12" size="20" name="pppoemwan_interface_x_0" value="<% nvram_get_x("", "pppoemwan_interface_x_0"); %>" onKeyPress="return is_string(this,event);"/>
                                             </td>
                                             <td width="5%">
-                                                <button class="btn" style="max-width: 219px" type="submit" onclick="markGroupMDHCP(this, 64, ' Add ');" name="ManualDHCPList2" value="<#CTL_add#>" size="12"><i class="icon icon-plus"></i></button>
+                                                <button class="btn" style="max-width: 219px" type="submit" onclick="return markGroupMDHCP(this, 64, ' Add ');" name="ManualDHCPList2" value="<#CTL_add#>" size="12"><i class="icon icon-plus"></i></button>
                                             </td>
                                         </tr>
                                         <tr id="row_static_body" style="display:none">
@@ -1219,21 +1197,20 @@ function simplyMAC(fullMAC){
                                             </td>
                                         </tr>
                                         <tr id="pppoemwan0">
-					<th width="30%" style="border-top: 0 none;">禁用443负载均衡（避免影响网页浏览，可能影响测速）</th>
-												  						     <td style="border-top: 0 none;">
-													<div class="main_itoggle">
-													<div id="pppoemwan_443_on_of">
-														<input type="checkbox" id="pppoemwan_443_fake" <% nvram_match_x("", "pppoemwan_443", "1", "value=1 checked"); %><% nvram_match_x("", "pppoemwan_443", "0", "value=0"); %>  />
-													</div>
-												</div>
-												<div style="position: absolute; margin-left: -10000px;">
-													<input type="radio" value="1" name="pppoemwan_443" id="pppoemwan_443_1" class="input" value="1" <% nvram_match_x("", "pppoemwan_443", "1", "checked"); %> /><#checkbox_Yes#>
-													<input type="radio" value="0" name="pppoemwan_443" id="pppoemwan_443_0" class="input" value="0" <% nvram_match_x("", "pppoemwan_443", "0", "checked"); %> /><#checkbox_No#>
-												</div>
-											</td>
-
-					</tr>
-					<tr>
+                                        	<th width="50%" style="border-top: 0 none;"><#pppoemwan0#></th>
+			                                <td style="border-top: 0 none;">
+                                            <div class="main_itoggle">
+                                                    <div id="pppoemwan_443_on_of">
+                                                    	<input type="checkbox" id="pppoemwan_443_fake" <% nvram_match_x("", "pppoemwan_443", "1", "value=1 checked"); %><% nvram_match_x("", "pppoemwan_443", "0", "value=0"); %>  />
+                                                    </div>
+                                            </div>
+                                            <div style="position: absolute; margin-left: -10000px;">
+                                                    <input type="radio" value="1" name="pppoemwan_443" id="pppoemwan_443_1" class="input" value="1" <% nvram_match_x("", "pppoemwan_443", "1", "checked"); %> /><#checkbox_Yes#>
+                                                    <input type="radio" value="0" name="pppoemwan_443" id="pppoemwan_443_0" class="input" value="0" <% nvram_match_x("", "pppoemwan_443", "0", "checked"); %> /><#checkbox_No#>
+                                            </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
                                             <th width="50%"><a class="help_tooltip" href="javascript:void(0);" onmouseover="openTooltip(this,7,4);"><#PPPConnection_UserName_itemname#></a></th>
                                             <td>
                                                <input type="text" maxlength="64" class="input" size="32" name="wan_pppoe_username" value="<% nvram_get_x("","wan_pppoe_username"); %>" onkeypress="return is_string(this,event);"/>

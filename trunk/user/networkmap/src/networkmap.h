@@ -32,7 +32,7 @@ typedef struct net_client {
 	unsigned char probed:1;
 	unsigned char macval:1;
 	unsigned char pending:4;
-	char          device_name[19];
+	char          device_name[33];
 } NET_CLIENT, *PNET_CLIENT;
 
 typedef struct net_client_list {

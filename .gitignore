@@ -1,3 +1,7 @@
 .vscode
 toolchain/crosstool-ng-*/
 toolchain/toolchain-*/
+toolchain/mipsel-linux-*/
+
+# MacOS
+.DS_Store

@@ -1519,7 +1519,7 @@ static VOID ReceiveBTMRsp(IN PRTMP_ADAPTER pAd,
 	UINT32 Len = 0;
 #endif /* CONFIG_11KV_API_SUPPORT */
 
-	printk("%s\n", __func__);
+	MTWF_LOG(DBG_CAT_PROTO, CATPROTO_WNM, DBG_LVL_ERROR, ("%s\n", __func__));
 
 	for (APIndex = 0; APIndex < MAX_MBSSID_NUM(pAd); APIndex++) {
 		if (MAC_ADDR_EQUAL(WNMFrame->Hdr.Addr3, pAd->ApCfg.MBSSID[APIndex].wdev.bssid)) {
@@ -1664,13 +1664,13 @@ static VOID SendBTMQueryIndication(
 	BTM_EVENT_DATA *Event = (BTM_EVENT_DATA *)Elem->Msg;
 	PNET_DEV NetDev = pAd->ApCfg.MBSSID[Event->ControlIndex].wdev.if_dev;
 
-	printk("%s\n", __func__);
-		/* Send BTM query indication to daemon */
-		SendBTMQueryEvent(NetDev,
-						  Event->PeerMACAddr,
-						  Event->u.PEER_BTM_QUERY_DATA.BTMQuery,
-						  Event->u.PEER_BTM_QUERY_DATA.BTMQueryLen,
-						  RA_WEXT);
+	MTWF_LOG(DBG_CAT_PROTO, CATPROTO_WNM, DBG_LVL_ERROR, ("%s\n", __func__));
+	/* Send BTM query indication to daemon */
+	SendBTMQueryEvent(NetDev,
+						Event->PeerMACAddr,
+						Event->u.PEER_BTM_QUERY_DATA.BTMQuery,
+						Event->u.PEER_BTM_QUERY_DATA.BTMQueryLen,
+						RA_WEXT);
 	BTMStartWaitBTMReqTimer(pAd, Elem);
 
 	BTMSetPeerCurrentState(pAd, Elem, WAIT_BTM_REQ);
@@ -2184,7 +2184,7 @@ static VOID SendBTMConfirm(
 	PNET_DEV NetDev = pAd->ApCfg.MBSSID[Event->ControlIndex].wdev.if_dev;
 	INT32 Ret;
 
-	printk("%s\n", __func__);
+	MTWF_LOG(DBG_CAT_PROTO, CATPROTO_WNM, DBG_LVL_ERROR, ("%s\n", __func__));
 	/* Send BTM confirm to daemon */
 	SendBTMConfirmEvent(NetDev,
 						Event->PeerMACAddr,
@@ -3270,7 +3270,7 @@ VOID WaitPeerWNMNotifyRspTimeout(
 	INT32 Ret;
 	BOOLEAN Cancelled;
 
-	printk("%s\n", __func__);
+	MTWF_LOG(DBG_CAT_PROTO, CATPROTO_WNM, DBG_LVL_ERROR, ("%s\n", __func__));
 
 	if (!WNMNotifyPeerEntry)
 		return;
@@ -3391,7 +3391,7 @@ VOID ReceiveWNMNotifyRsp(IN PRTMP_ADAPTER pAd,
 	INT32 Ret;
 	BOOLEAN IsFound = FALSE, Cancelled;
 
-	printk("%s\n", __func__);
+	MTWF_LOG(DBG_CAT_PROTO, CATPROTO_WNM, DBG_LVL_ERROR, ("%s\n", __func__));
 
 	for (APIndex = 0; APIndex < MAX_MBSSID_NUM(pAd); APIndex++) {
 		if (MAC_ADDR_EQUAL(WNMFrame->Hdr.Addr3, pAd->ApCfg.MBSSID[APIndex].wdev.bssid)) {
@@ -3577,8 +3577,8 @@ VOID SendWNMNotifyConfirm(
 	PWNM_CTRL pWNMCtrl = &pAd->ApCfg.MBSSID[Event->ControlIndex].WNMCtrl;
 	INT32 Ret;
 
-	printk("%s\n", __func__);
-	printk("Receive WNM Notify Response Status:%d\n", Event->u.WNM_NOTIFY_RSP_DATA.WNMNotifyRsp[0]);
+	MTWF_LOG(DBG_CAT_PROTO, CATPROTO_WNM, DBG_LVL_ERROR, ("%s: Receive WNM Notify Response Status:%d\n",
+		__func__, Event->u.WNM_NOTIFY_RSP_DATA.WNMNotifyRsp[0]));
 	/* Delete BTM peer entry */
 	RTMP_SEM_EVENT_WAIT(&pWNMCtrl->WNMNotifyPeerListLock, Ret);
 	DlListForEachSafe(WNMNotifyPeerEntry, WNMNotifyPeerEntryTmp, &pWNMCtrl->WNMNotifyPeerList, WNM_NOTIFY_PEER_ENTRY, List) {

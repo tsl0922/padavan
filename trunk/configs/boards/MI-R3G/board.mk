@@ -1,9 +1,9 @@
 ##################################################################
 # Board PID # Board Name       # PRODUCT # Note
 ##################################################################
-# MI-R3P # Xiaomi R3G  # MT7621  #
+# MI-R3P    # Xiaomi R3G       # MT7621  #
 ##################################################################
 
-CFLAGS += -DBOARD_MIR3G
+CFLAGS += -DBOARD_MI_R3G
 BOARD_NUM_USB_PORTS=1
 CONFIG_BOARD_RAM_SIZE=256

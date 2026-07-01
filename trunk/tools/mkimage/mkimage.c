@@ -260,8 +260,8 @@ main (int argc, char **argv)
 				if ((argc-=2) < 0)
 					usage ();
 				memset(&tail_pre, 0, sizeof(tail_pre));
-				sscanf(argv[1], "%d.%d", &tail_pre.kernel.major, &tail_pre.kernel.minor);
-				sscanf(argv[2], "%d.%d%c", &tail_pre.fs.major, &tail_pre.fs.minor, &tail_pre.sub_fs);   
+				sscanf(argv[1], "%hhu.%hhu", &tail_pre.kernel.major, &tail_pre.kernel.minor);
+				sscanf(argv[2], "%hhu.%hhu%c", &tail_pre.fs.major, &tail_pre.fs.minor, &tail_pre.sub_fs);   
 //				for(i=0; i<8; i++)
 //					sscanf(argv[i+3], "%d.%d", &tail_pre.hw[i].major, &tail_pre.hw[i].minor);
 //				argv+=10;

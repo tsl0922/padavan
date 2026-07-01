@@ -1,11 +1,11 @@
 include $(ROOTDIR)/rules.mk
 
 PKG_NAME:=curl
-PKG_VERSION:=8.4.0
+PKG_VERSION:=8.13.0
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_SOURCE_URL:=https://github.com/curl/curl/releases/download/curl-$(subst .,_,$(PKG_VERSION))/
-PKG_HASH:=16c62a9c4af0f703d28bda6d7bbf37ba47055ad3414d70dec63e2e6336f2a82d
+PKG_HASH:=4a093979a3c2d02de2fbc00549a32771007f2e78032c6faa5ecd2f7a9e152025
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -27,6 +27,7 @@ CONFIGURE_ARGS += \
 	--disable-dict \
 	--disable-ares \
 	--disable-debug \
+	--disable-docs \
 	--disable-curldebug \
 	--disable-manual \
 	--disable-verbose \
@@ -39,6 +40,7 @@ CONFIGURE_ARGS += \
 	--without-krb4 \
 	--without-nss \
 	--without-ca-path \
+	--without-libpsl \
 	--with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
 	--with-random=/dev/urandom \
 	--with-zlib=$(STAGING_DIR) \

@@ -538,7 +538,7 @@ http_login_check(const uaddr *ip_now)
 		return 2;
 	}
 
-	return 0;
+	return 3;
 }
 
 static int
@@ -873,7 +873,6 @@ handle_request(FILE *conn_fp, const conn_item_t *item)
 		if ( strcmp( cur, "\n" ) == 0 || strcmp( cur, "\r\n" ) == 0 ) {
 			break;
 		}
-		
 		if (strncasecmp(cur, "Accept-Language:", 16) == 0) {
 			if (!http_has_lang)
 				http_has_lang = set_preferred_lang(cur + 16);
@@ -949,14 +948,13 @@ handle_request(FILE *conn_fp, const conn_item_t *item)
 	usockaddr_to_uaddr(&item->usa, &conn_ip);
 
 	login_state = http_login_check(&conn_ip);
-	
+
 	if (login_state == 0) {
 		if (strstr(file, ".htm") != NULL || strstr(file, ".asp") != NULL) {
 			file = "Nologin.asp";
 			query = NULL;
 		}
 	}
-	
 
 	/* special case for reset browser credentials */
 	if (strcmp(file, "logout") == 0) {
@@ -988,7 +986,7 @@ handle_request(FILE *conn_fp, const conn_item_t *item)
 			send_authenticate(conn_fp);
 			return;
 		}
-		
+
 		if (login_state == 2)
 			http_login(&conn_ip);
 	}

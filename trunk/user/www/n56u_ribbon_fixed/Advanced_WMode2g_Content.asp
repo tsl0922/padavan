@@ -123,6 +123,7 @@ function change_wireless_bridge(){
 	}
 
 	if (is_apc){
+		rescan();
 		if (!support_2g_inic_mii())
 			is_apc_auto = 1;
 		if (!get_ap_mode() && !support_2g_inic_mii())
@@ -428,6 +429,14 @@ function hideClients_Block(){
                                                 <div class="input-append">
                                                     <input type="password" name="rt_sta_wpa_psk" id="rt_sta_wpa_psk" maxlength="64" size="32" value="" style="width: 175px;">
                                                     <button style="margin-left: -5px;" class="btn" type="button" onclick="passwordShowHide('rt_sta_wpa_psk')"><i class="icon-eye-close"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3">
+                                                <i class="icon-hand-right"></i> <a href="javascript:spoiler_toggle('ap_script')"><span><#AP_Relay#></span></a>
+                                                <div id="ap_script" style="display:none;">
+                                                    <textarea rows="24" wrap="off" spellcheck="false" maxlength="314571" class="span12" name="scripts.ap_script.sh" style="font-family:'Courier New'; font-size:12px;"><% nvram_dump("scripts.ap_script.sh",""); %></textarea>
                                                 </div>
                                             </td>
                                         </tr>

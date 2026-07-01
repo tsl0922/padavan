@@ -1,11 +1,11 @@
 include $(ROOTDIR)/rules.mk
 
 PKG_NAME:=msd_lite
-PKG_SOURCE_DATE:=2023-02-17
+PKG_SOURCE_DATE:=2025-05-02
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/rozhuk-im/msd_lite
-PKG_SOURCE_VERSION:=744d2ef91797471e26b3b117e7aa0ffebbb91106
+PKG_SOURCE_VERSION:=79a6c62c8fced6128a5e445ee110709b3b51bb78
 
 PKG_FIXUP:=autoreconf
 

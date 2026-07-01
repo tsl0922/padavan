@@ -26,7 +26,7 @@ var $j = jQuery.noConflict();
 $j(document).ready(function() {
 	init_itoggle('wan_nat_x', change_nat_enable);
 	init_itoggle('nf_nat_loop');
-    init_itoggle('fw_pt_pppoe');
+	init_itoggle('fw_pt_pppoe');
 	init_itoggle('nf_alg_pptp');
 	init_itoggle('nf_alg_h323');
 	init_itoggle('nf_alg_sip');
@@ -192,6 +192,7 @@ function done_validating(action){
                                                 <select name="nf_nat_type" class="input">
                                                     <option value="2" <% nvram_match_x("","nf_nat_type", "2", "selected"); %>>Classical Linux Hybrid NAT</option>
                                                     <option value="1" <% nvram_match_x("","nf_nat_type", "1", "selected"); %>>Full Cone NAT</option>
+                                                    <option value="0" <% nvram_match_x("","nf_nat_type", "0", "selected"); %>>Restricted Cone NAT</option>
                                                 </select>
                                             </td>
                                         </tr>

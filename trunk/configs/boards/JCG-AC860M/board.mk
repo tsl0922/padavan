@@ -1,9 +1,9 @@
 ##################################################################
-# Board PID # Board Name       # PRODUCT # Note
+# Board PID     # Board Name       # PRODUCT # Note
 ##################################################################
-# AC860M    # AC860M           # MT7621  #
+# JCG-AC860M    # JCG-AC860M       # MT7621  #
 ##################################################################
 
-CFLAGS += -DBOARD_AC860M
+CFLAGS += -DBOARD_JCG_AC860M
 BOARD_NUM_USB_PORTS=1
 CONFIG_BOARD_RAM_SIZE=256

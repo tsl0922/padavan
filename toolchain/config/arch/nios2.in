@@ -1,0 +1,15 @@
+# NIOS232 specific configuration file
+
+## no-package
+## select ARCH_SUPPORTS_32
+## select ARCH_DEFAULT_32
+## select ARCH_SUPPORTS_BOTH_MMU
+## select ARCH_DEFAULT_LE
+## select ARCH_SUPPORTS_WITH_ARCH
+## select ARCH_SUPPORTS_FLAT_FORMAT
+## select GCC_REQUIRE_older_than_15
+## select GDB_REQUIRE_older_than_16 if DEBUG_GDB
+## select GLIBC_REQUIRE_older_than_2_41 if LIBC_GLIBC
+##
+## help The NIOS2 architecture, as defined by:
+## help     http://www.altera.com

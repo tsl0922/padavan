@@ -3,13 +3,15 @@
 # Copyright (C) 2017 openwrt-ssr
 # Copyright (C) 2017 yushi studio <ywb94@qq.com>
 # Copyright (C) 2019 chongshengB
+# Copyright (c) 2023 simonchen
 #
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
 #
+# Fix rule to not be removed, $TAG has wrongly added underscore(_) at beginning of $TAG
 modprobe xt_TPROXY
 modprobe xt_set
-TAG="_SS_SPEC_"   # comment tag
+TAG="SS_SPEC_"   # comment tag
 ipt_n="iptables -t nat"  # alias of iptables
 ipt_m="iptables -t mangle"  # alias of iptables
 FWI=/tmp/shadowsocks_iptables.save  # firewall include file
@@ -33,7 +35,7 @@ usage() {
 		    -w <wan_ips>            wan ip of will be forwarded
 		    -p <fp_lan_ips>         lan ip of will be global proxy
 		    -G <gm_lan_ips>         lan ip of will be game mode proxy
-			-D <proxy_ports>        proxy ports
+		    -D <proxy_ports>        proxy ports
 		    -e <extra_options>      extra options for iptables
 		    -o                      apply the rules to the OUTPUT chain
 		    -O                      apply the global rules to the OUTPUT chain
@@ -58,10 +60,10 @@ flush_r() {
 	flush_iptables() {
 		ipt="iptables -t $1"
 		DAT=$(iptables-save -t $1)
-		CHAINS=$(echo "$DAT" | awk '/^:SS_SPEC/{print $1}' | sed -e 's/://g')
 		eval $(echo "$DAT" | grep "$TAG" | sed -e 's/^-A/$ipt -D/' -e 's/$/;/')
-		for chain in $CHAINS; do $ipt -F $chain 2>/dev/null; done
-		for chain in $CHAINS; do $ipt -X $chain 2>/dev/null; done
+		for chain in $(echo "$DAT" | awk '/^:SS_SPEC/{print $1}'); do
+			$ipt -F ${chain:1} 2>/dev/null && $ipt -X ${chain:1}
+		done
 	}
 	sed -i '/dnsmasq.dom/d' /etc/storage/dnsmasq/dnsmasq.conf
 	flush_iptables nat
@@ -74,6 +76,7 @@ flush_r() {
 	ipset -X china 2>/dev/null
 	ipset -X fplan 2>/dev/null
 	ipset -X gmlan 2>/dev/null
+	ipset -X gfwlist 2>/dev/null
 	ipset -X oversea 2>/dev/null
 	ipset -X blacklist 2>/dev/null
 	ipset -X whitelist 2>/dev/null
@@ -82,9 +85,10 @@ flush_r() {
 }
 
 ipset_r() {
-    mkdir -p /tmp/dnsmasq.dom
+	mkdir -p /tmp/dnsmasq.dom
 	ipset -N china hash:net 2>/dev/null
 	ipset -N gmlan hash:net 2>/dev/null
+	ipset -N gfwlist hash:net 2>/dev/null
 	for ip in $LAN_GM_IP; do ipset -! add gmlan $ip; done
 	$ipt_n -N SS_SPEC_WAN_AC
 	$ipt_n -I SS_SPEC_WAN_AC -p tcp ! --dport 53 -d $server -j RETURN
@@ -94,13 +98,18 @@ ipset_r() {
 		$(gen_iplist | sed -e "s/^/add ss_spec_wan_ac /")
 EOF
 	ipset -N china hash:net 2>/dev/null
+	# [2023-2-17] by simonchen
+	# 运行在router模式下也创建ipset:gfwlist
+	# 目的是将dnsmasq.dom/gfwlist_list.conf中查询出的ip加入，应用到iptables规则中
+	ipset -N gfwlist hash:net 2>/dev/null
 	$ipt_n -A SS_SPEC_WAN_AC -m set --match-set ss_spec_wan_ac dst -j RETURN
 	$ipt_n -A SS_SPEC_WAN_AC -m set --match-set china dst -j RETURN
+	$ipt_n -A SS_SPEC_WAN_AC -m set --match-set gfwlist dst -j SS_SPEC_WAN_FW # [2023-2-17] by simonchen (see below)
 	$ipt_n -A SS_SPEC_WAN_AC -m set --match-set gmlan src -m set ! --match-set china dst -j SS_SPEC_WAN_FW
 	$ipt_n -A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
-	if [ ! -f "/etc/storage/gfwlist/gfwlist_listnew.conf" ] ; then
+	if [ ! -f "/etc/storage/gfwlist/gfwlist_list.conf" ] ; then
 	mkdir -p /etc/storage/gfwlist
-	cp -rf /etc_ro/gfwlist_list.conf /etc/storage/gfwlist/gfwlist_listnew.conf
+	cp -rf /etc_ro/gfwlist_list.conf /etc/storage/gfwlist/gfwlist_list.conf
 	fi
 	if [ ! -f "/tmp/dnsmasq.dom/gfwlist_list.conf" ] ; then
 	lua /etc_ro/ss/gfwcreate.lua
@@ -110,9 +119,10 @@ EOF
 	$ipt_n -A SS_SPEC_WAN_AC -m set --match-set china dst -j RETURN
 	$ipt_n -A SS_SPEC_WAN_AC -m set --match-set gfwlist dst -j SS_SPEC_WAN_FW
 	$ipt_n -A SS_SPEC_WAN_AC -m set --match-set gmlan src -m set ! --match-set china dst -j SS_SPEC_WAN_FW
-	if [ ! -f "/etc/storage/gfwlist/gfwlist_listnew.conf" ] ; then
+	$ipt_n -A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW # gfwlist ipset几乎没有，必须加！[simonchen]
+	if [ ! -f "/etc/storage/gfwlist/gfwlist_list.conf" ] ; then
 	mkdir -p /etc/storage/gfwlist
-	cp -rf /etc_ro/gfwlist_list.conf /etc/storage/gfwlist/gfwlist_listnew.conf
+	cp -rf /etc_ro/gfwlist_list.conf /etc/storage/gfwlist/gfwlist_list.conf
 	fi
 	if [ ! -f "/tmp/dnsmasq.dom/gfwlist_list.conf" ] ; then
 	lua /etc_ro/ss/gfwcreate.lua
@@ -125,15 +135,13 @@ EOF
 	elif [ "$RUNMODE" = "all" ] ;then
 	$ipt_n -A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
 	fi
+	# commented by simonchen
+	# 下面是自定义ip规则白名单和黑名单
 	$ipt_n -I PREROUTING $SSNU -m comment --comment "$TAG" -j SS_SPEC_WAN_AC
 	ipset -N whitelist hash:net 2>/dev/null
 	ipset -N blacklist hash:net 2>/dev/null
-	cat /etc/storage/ss_dom.sh | grep -v '^!' | grep -v "^$" > /tmp/ss_dom.txt
-	awk '{printf("ipset=/%s/blacklist\n", $1, $1 )}' /tmp/ss_dom.txt > /tmp/dnsmasq.dom/ss_dom.conf
-	cat /etc/storage/uss_dom.sh | grep -v '^!' | grep -v "^$" > /tmp/uss_dom.txt
-	awk '{printf("ipset=/%s/whitelist\n", $1, $1 )}' /tmp/uss_dom.txt > /tmp/dnsmasq.dom/uss_dom.conf
-    rm -f /tmp/ss_dom.txt
-	rm -f /tmp/uss_dom.txt
+	cat /etc/storage/ss_dom.sh | grep -v '^!' | grep -v "^$" | awk '{printf("server=/%s/127.0.0.1#5353\nipset=/%s/blacklist\n", $1, $1 )}' > /tmp/dnsmasq.dom/ss_dom.conf
+	cat /etc/storage/uss_dom.sh | grep -v '^!' | grep -v "^$" | awk '{printf("ipset=/%s/whitelist\n", $1 )}' > /tmp/dnsmasq.dom/uss_dom.conf
 	$ipt_n -I SS_SPEC_WAN_AC 2 -m set --match-set blacklist dst -j SS_SPEC_WAN_FW
 	$ipt_n -I SS_SPEC_WAN_AC 2 -m set --match-set whitelist dst -j RETURN
 
@@ -158,6 +166,7 @@ fw_rule() {
 	$ipt_n -A SS_SPEC_WAN_FW -d 192.168.0.0/16 -j RETURN
 	$ipt_n -A SS_SPEC_WAN_FW -d 224.0.0.0/4 -j RETURN
 	$ipt_n -A SS_SPEC_WAN_FW -d 240.0.0.0/4 -j RETURN
+  	echo $LANCON
 	if [ "$LANCON" = "all" ];then
 	ipset -N fplan hash:net 2>/dev/null
 	for ip in $LAN_FP_IP; do ipset -! add fplan $ip ; done
@@ -214,7 +223,7 @@ tp_rule() {
 	fi
 
 	#$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS $lanbip \
-		#-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 100
+	#-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 100
 
 	if [ "$RUNMODE" = "router" ] ;then
 	$ipt_m -A SS_SPEC_TPROXY -p udp -m set --match-set ss_spec_wan_ac dst -j RETURN
@@ -245,8 +254,8 @@ tp_rule() {
 	$ipt_m -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
 	fi
 	$ipt_m -A PREROUTING -p udp -m comment --comment "$TAG" -j SS_SPEC_TPROXY
-    $ipt_m -I SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set blacklist dst \
-    -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
+	$ipt_m -I SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set blacklist dst \
+	-j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
 	$ipt_m -I SS_SPEC_TPROXY -p udp -m set --match-set whitelist dst -j RETURN
 
 	return $?
@@ -360,7 +369,7 @@ while getopts ":s:l:S:L:i:e:a:b:w:p:G:D:k:oOuUfgrczh" arg; do
 			LAN_GM_IP=$(while read ip; do echo $ip; done < $OPTARG)
 			;;
 		D)
-		    PROXY_PORTS=$OPTARG
+			PROXY_PORTS=$OPTARG
 			;;
 		o)
 			OUTPUT=SS_SPEC_WAN_AC

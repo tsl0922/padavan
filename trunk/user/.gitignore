@@ -17,3 +17,6 @@ ralinkiappd/ralinkiappd
 rc/rc
 resolveip/resolveip
 shared/libshared.so
+
+# MacOS
+.DS_Store

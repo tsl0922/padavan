@@ -15,8 +15,8 @@ index 1e7b30f..0cc318f 100644
  */
  
  #define FTABSIZ 150 /* max number of outstanding requests (default) */
--#define MAX_PROCS 20 /* max no children for TCP requests */
-+#define MAX_PROCS 4 /* max no children for TCP requests */
+-#define MAX_PROCS 20 /* default max no children for TCP requests */
++#define MAX_PROCS 4 /* default max no children for TCP requests */
  #define CHILD_LIFETIME 150 /* secs 'till terminated (RFC1035 suggests > 120s) */
  #define TCP_MAX_QUERIES 100 /* Maximum number of queries per incoming TCP connection */
  #define TCP_BACKLOG 32  /* kernel backlog limit for TCP connections */

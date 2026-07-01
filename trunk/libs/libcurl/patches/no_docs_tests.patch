@@ -1,0 +1,89 @@
+diff -urN curl-8.13.0-orig/Makefile.am curl-8.13.0/Makefile.am
+--- curl-8.13.0-orig/Makefile.am	2025-04-02 08:47:41.000000000 +0300
++++ curl-8.13.0/Makefile.am	2025-04-02 16:31:42.141823801 +0300
+@@ -93,7 +93,7 @@
+ bin_SCRIPTS = curl-config
+ 
+-SUBDIRS = lib docs src scripts
+-DIST_SUBDIRS = $(SUBDIRS) tests packages include docs
++SUBDIRS = lib src
++DIST_SUBDIRS = $(SUBDIRS) packages include
+ 
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = libcurl.pc
+@@ -188,14 +188,11 @@
+ # We extend the standard install with a custom hook:
+ if BUILD_DOCS
+ install-data-hook:
+ 	(cd include && $(MAKE) install)
+-	(cd docs && $(MAKE) install)
+-	(cd docs/libcurl && $(MAKE) install)
+ else
+ install-data-hook:
+ 	(cd include && $(MAKE) install)
+-	(cd docs && $(MAKE) install)
+ endif
+ 
+ # We extend the standard uninstall with a custom hook:
+ uninstall-hook:
+diff -rupw curl-8.13.0-orig/Makefile.in curl-8.13.0/Makefile.in
+--- curl-8.13.0-orig/Makefile.in	2025-04-02 08:47:41.000000000 +0300
++++ curl-8.13.0/Makefile.in	2025-04-02 16:31:42.142823732 +0300
+@@ -509,7 +509,7 @@
+ 
+ bin_SCRIPTS = curl-config
+-SUBDIRS = lib docs src scripts
+-DIST_SUBDIRS = $(SUBDIRS) tests packages include docs
++SUBDIRS = lib src
++DIST_SUBDIRS = $(SUBDIRS) packages include
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = libcurl.pc
+ LIB_VAUTH_CFILES = \
+@@ -1144,11 +1144,8 @@
+ # We extend the standard install with a custom hook:
+ @BUILD_DOCS_TRUE@install-data-hook:
+ @BUILD_DOCS_TRUE@	(cd include && $(MAKE) install)
+-@BUILD_DOCS_TRUE@	(cd docs && $(MAKE) install)
+-@BUILD_DOCS_TRUE@	(cd docs/libcurl && $(MAKE) install)
+ @BUILD_DOCS_FALSE@install-data-hook:
+ @BUILD_DOCS_FALSE@	(cd include && $(MAKE) install)
+-@BUILD_DOCS_FALSE@	(cd docs && $(MAKE) install)
+ 
+ # We extend the standard uninstall with a custom hook:
+ uninstall-hook:
+diff -urN curl-8.13.0-orig/configure.ac curl-8.13.0/configure.ac
+--- curl-8.13.0-orig/configure.ac	2025-04-02 08:47:41.000000000 +0300
++++ curl-8.13.0/configure.ac	2025-04-02 16:31:42.143823663 +0300
+@@ -5390,32 +5390,16 @@
+ CURL_PREPARE_CONFIGUREHELP_PM
+ 
+ AC_CONFIG_FILES([\
+   Makefile \
+-  docs/Makefile \
+-  docs/examples/Makefile \
+-  docs/libcurl/Makefile \
+-  docs/libcurl/opts/Makefile \
+-  docs/cmdline-opts/Makefile \
+   include/Makefile \
+   include/curl/Makefile \
+   src/Makefile \
+   lib/Makefile \
+   scripts/Makefile \
+   lib/libcurl.vers \
+-  tests/Makefile \
+-  tests/config \
+-  tests/configurehelp.pm \
+-  tests/certs/Makefile \
+-  tests/data/Makefile \
+-  tests/server/Makefile \
+-  tests/libtest/Makefile \
+-  tests/unit/Makefile \
+-  tests/http/config.ini \
+-  tests/http/Makefile \
+-  tests/http/clients/Makefile \
+   packages/Makefile \
+   packages/vms/Makefile \
+   curl-config \
+   libcurl.pc
+ ])
+ AC_OUTPUT

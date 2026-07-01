@@ -7,10 +7,10 @@ local ssrindext = io.popen("dbus get ssconf_basic_json_" .. server_section)
 local servertmp = ssrindext:read("*all")
 local server = cjson.decode(servertmp)
 local v2ray = {
-log = {
-	-- error = "/var/ssrplus.log",
-	loglevel = "warning"
-},
+	log = {
+		-- error = "/tmp/ssrplus.log",
+		loglevel = "warning"
+	},
 	-- 传入连接
 	inbound = (local_port ~= "0") and {
 		port = local_port,

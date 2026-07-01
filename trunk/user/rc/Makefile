@@ -25,6 +25,7 @@ romfs:
 	$(LN) rc $(ROMFSDIR)/sbin/reboot
 	$(LN) rc $(ROMFSDIR)/sbin/ddns_updated
 	$(LN) rc $(ROMFSDIR)/sbin/ntpc_updated
+	$(LN) rc $(ROMFSDIR)/sbin/ntpc_syncnow
 	$(LN) rc $(ROMFSDIR)/sbin/start_ddns
 	$(LN) rc $(ROMFSDIR)/sbin/restart_dns
 	$(LN) rc $(ROMFSDIR)/sbin/restart_dhcpd

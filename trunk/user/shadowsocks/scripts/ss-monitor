@@ -6,6 +6,8 @@
 # This is free software, licensed under the GNU General Public License v3.
 # See /LICENSE for more information.
 #
+# changed by simonchen 2023
+
 NAME=shadowsocksr
 server_process_count=$1
 redir_tcp_process=$2
@@ -39,6 +41,27 @@ run_bin() {
 	) &
 }
 
+stop_dns_proxy() {
+	pgrep dns2tcp | args kill
+	pgrep dnsproxy | args kill	
+}
+
+start_dns_proxy() {
+	pdnsd_enable=$(nvram get pdnsd_enable) # 0: dnsproxy , 1: dns2tcp
+	pdnsd_enable_flag=$pdnsd_enable
+	if [ $pdnsd_enable = 1 ]; then
+	    log "启动 dns2tcp：5353 端口..."
+		dns2tcp -L"127.0.0.1#5353" -R"$(nvram get tunnel_forward)" >/dev/null 2>&1 &
+	elif [ $pdnsd_enable = 0 ]; then
+		remote_ip=`echo "$(nvram get tunnel_forward)" | awk -F '#' '{print $1}'`
+		log "启动 dnsproxy：5353 端口..."
+		dnsproxy -d -p 5353 -R $remote_ip >/dev/null 2>&1 &
+	else
+		log "DNS解析方式不支持该选项: $pdnsd_enable , 建议选择dnsproxy"
+	fi
+}
+
+#TODO 这个监控还可以优化！
 while [ "1" = "1" ]  #死循环
 do 
 	sleep 10
@@ -46,7 +69,7 @@ do
 	if [ $redir_tcp_process -gt 0 ] ;then
 		icount=`ps -w | grep ssr-retcp | grep -v grep | wc -l`
 		if [ $icount = 0 ] ;then
-			log "检测到SS进程挂掉, 重新启动!"
+			log "检测到 SS 进程挂掉，正在重启..."
 			/usr/bin/shadowsocks.sh restart 
 			exit 0
 		fi
@@ -55,7 +78,7 @@ do
 	if [ $redir_udp_process -gt 0 ] ;then
 		icount=`ps -w | grep ssr-reudp | grep -v grep | wc -l`
 		if [ $icount = 0 ] ;then
-			log "检测到SS进程挂掉, 重新启动!"
+			log "检测到 SS 进程挂掉，正在重启..."
 			/usr/bin/shadowsocks.sh restart  
 			exit 0
 		fi
@@ -82,10 +105,10 @@ do
 		icount=`ps -w | grep $bin | grep -v grep| wc -l`
 		if [ $icount -lt $v2ray_process ]  #如果进程挂掉就重启它
 		then
-			log "检测到 $bin 进程挂掉，重新启动!"
+			log "检测到 $bin 进程挂掉，正在重启..."
 			killall -q -9 $bin
 			run_bin /usr/bin/$bin --config $conf
-		fi   
+		fi
 	fi
 	#local
 	if [ $local_process -gt 0 ] ;then
@@ -95,18 +118,28 @@ do
 			log "ssr local error.restart!"
 			/usr/bin/shadowsocks.sh restart
 			exit 0
-		fi   
+		fi
 	fi
-	#pdnsd
-	if [ $pdnsd_process -gt 0 ] ;then
-		icount=`ps -w | grep pdnsd | grep -v grep | wc -l`
-		if [ $icount -lt $pdnsd_process ]  #如果进程挂掉就重启它
+	#dnsproxy
+	if [ $pdnsd_process = 0 ] ;then
+		icount=`ps -w | grep dnsproxy | grep -v grep | wc -l`
+		if [ $icount = 0 ]  #如果进程挂掉就重启它
 		then
-			log "pdnsd tunnel error.restart!"
-			kill -9 pdnsd
-			/usr/sbin/pdnsd -c /tmp/pdnsd.conf -d &
-		fi   
-	fi      
+			log "dnsproxy is restarted!"
+			stop_dns_proxy
+			start_dns_proxy
+		fi
+	fi
+	#dns2tcp
+	if [ $pdnsd_process = 1 ] ;then
+		icount=`ps -w | grep dns2tcp | grep -v grep | wc -l`
+		if [ $icount = 0 ]  #如果进程挂掉就重启它
+		then
+			log "dns2tcp is restarted!"
+			stop_dns_proxy
+			start_dns_proxy
+		fi
+	fi
 	#chinadns-ng
 	if [ $chinadnsng_process -gt 0 ] ;then
 		icount=`ps -w | grep chinadns-ng | grep -v grep | wc -l`
@@ -114,30 +147,24 @@ do
 		then
 			log "chinadns-ng tunnel error.restart!"
 			kill -9 chinadns-ng
-			kill -9 dns2tcp
-			dns2tcp -L"127.0.0.1#5353" -R"$(nvram get tunnel_forward)" >/dev/null 2>&1 &
-			chinadns-ng -b 0.0.0.0 -l 65353 -c $(nvram get china_dns) -t 127.0.0.1#5353 -4 china -M -m /tmp/cdn.txt >/dev/null 2>&1 &
+			#kill -9 dns2tcp
+			#dns2tcp -L"127.0.0.1#5353" -R"$(nvram get tunnel_forward)" >/dev/null 2>&1 &
+			stop_dns_proxy
+			start_dns_proxy
+			local_chnlist_file='/etc/storage/chinadns/chnlist_mini.txt'
+			if [ -f "$local_chnlist_file" ]; then
+			  log "启动chinadns分流，仅国外域名走DNS代理..."
+			  chinadns-ng -b 0.0.0.0 -l 65353 -c $(nvram get china_dns) -t 127.0.0.1#5353 -4 china -M -m $local_chnlist_file >/dev/null 2>&1 &
+			else
+			  log "启动chinadns分流，全部域名走DNS代理...本次不使用本地cdn域名文件$local_chnlist_file, 下次你自已可以创建它，文件中每行表示一个域名（不用要子域名）"
+			  chinadns-ng -b 0.0.0.0 -l 65353 -c $(nvram get china_dns) -t 127.0.0.1#5353 -4 china >/dev/null 2>&1 &
+			fi
 			sed -i '/no-resolv/d' /etc/storage/dnsmasq/dnsmasq.conf
 			sed -i '/server=127.0.0.1/d' /etc/storage/dnsmasq/dnsmasq.conf
 			cat >> /etc/storage/dnsmasq/dnsmasq.conf << EOF
 no-resolv
 server=127.0.0.1#65353
 EOF
-		fi   
-		icount=`ps -w  | grep dns2tcp |grep -v grep| wc -l`
-		if [ $icount -lt $chinadnsng_process ]  #如果进程挂掉就重启它
-		then
-			log "chinadns-ng tunnel error.restart!"
-			kill -9 chinadns-ng
-			kill -9 dns2tcp
-			dns2tcp -L"127.0.0.1#5353" -R"$(nvram get tunnel_forward)" >/dev/null 2>&1 &
-			chinadns-ng -b 0.0.0.0 -l 65353 -c $(nvram get china_dns) -t 127.0.0.1#5353 -4 china -M -m /tmp/cdn.txt >/dev/null 2>&1 &
-			sed -i '/no-resolv/d' /etc/storage/dnsmasq/dnsmasq.conf
-			sed -i '/server=127.0.0.1/d' /etc/storage/dnsmasq/dnsmasq.conf
-			cat >> /etc/storage/dnsmasq/dnsmasq.conf << EOF
-no-resolv
-server=127.0.0.1#65353
-EOF
-		fi   
+		fi
 	fi
 done

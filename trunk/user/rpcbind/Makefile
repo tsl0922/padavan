@@ -1,4 +1,4 @@
-SRC_NAME=rpcbind-91973cc
+SRC_NAME=rpcbind-1.2.6
 
 CFLAGS += -fvisibility=hidden
 
@@ -14,9 +14,10 @@ config_test:
 
 configure:
 	( cd $(SRC_NAME) ; \
-	PKG_CONFIG_PATH=$(STAGEDIR)/lib/pkgconfig \
+	autoreconf -fi ; \
 	./configure \
 		--prefix=/ \
+		$(if $(CONFIG_IPV6),--enable-ipv6,--disable-ipv6) \
 		--disable-libwrap \
 		--disable-debug \
 		--disable-warmstarts \

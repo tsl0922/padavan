@@ -42,11 +42,9 @@ function initial(){
 function applyRule(){
 	if(validForm()){
 		showLoading();
-		
 		document.form.action_mode.value = " Apply ";
 		document.form.current_page.value = "Advanced_LAN_Content.asp";
 		document.form.next_page.value = "";
-		
 		document.form.submit();
 	}
 }
@@ -207,25 +205,22 @@ function done_validating(action){
                                             <th width="50%" style="border-top: 0 none;"><a class="help_tooltip" href="javascript: void(0)" onmouseover="openTooltip(this, 4, 1);"><#LANHostConfig_IPRouters_itemname#></a></th>
                                             <td style="border-top: 0 none;">
                                                 <input type="text" maxlength="15" class="input" size="15" id="lan_ipaddr" name="lan_ipaddr" value="<% nvram_get_x("LANHostConfig","lan_ipaddr"); %>" onKeyPress="return is_ipaddr(this,event);" />
-                                                &nbsp;<span style="color:#888;">192.168.1.1</span>
                                             </td>
                                         </tr>
                                         <tr>
                                             <th><a class="help_tooltip"  href="javascript:void(0);" onmouseover="openTooltip(this, 4,2);"><#LANHostConfig_SubnetMask_itemname#></a></th>
                                             <td>
                                                 <input type="text" maxlength="15" class="input" size="15" name="lan_netmask" value="<% nvram_get_x("LANHostConfig","lan_netmask"); %>" onkeypress="return is_ipaddr(this,event);" />
-                                                &nbsp;<span style="color:#888;">255.255.255.0</span>
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th><#LAN_STP#></th>
+                                            <th><a class="help_tooltip"  href="javascript:void(0);" onmouseover="openTooltip(this, 4,4);"><#LAN_STP_itemname#></a></th>
                                             <td>
                                                 <div class="main_itoggle">
                                                     <div id="lan_stp_on_of">
                                                         <input type="checkbox" id="lan_stp_fake" <% nvram_match_x("", "lan_stp", "1", "value=1 checked"); %><% nvram_match_x("", "lan_stp", "0", "value=0"); %>>
                                                     </div>
                                                 </div>
-
                                                 <div style="position: absolute; margin-left: -10000px;">
                                                     <input type="radio" value="1" name="lan_stp" id="lan_stp_1" <% nvram_match_x("", "lan_stp", "1", "checked"); %>><#checkbox_Yes#>
                                                     <input type="radio" value="0" name="lan_stp" id="lan_stp_0" <% nvram_match_x("", "lan_stp", "0", "checked"); %>><#checkbox_No#>

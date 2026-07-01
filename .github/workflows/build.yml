@@ -1,63 +1,64 @@
-name: build
+name: Build Firmware
 
-on: 
+on:
   push:
     branches:
-    - "*"
+      - "*"
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
     strategy:
+      fail-fast: false
       matrix:
-        target: [K2P, K2P-NANO, K2P-USB]
+        target: [K2P, K2P-USB]
         toolchain: [mipsel-linux-musl]
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: hendrikmuhs/ccache-action@v1.2
+      - uses: actions/checkout@main
+        with:
+          fetch-depth: 1
+      - uses: hendrikmuhs/ccache-action@main
         with:
           key: ${{ matrix.target }}-${{ matrix.toolchain }}
-      - uses: actions/setup-go@v4
+
+      - uses: actions/setup-go@main
         with:
-          go-version: '1.20'
+          go-version: '1.24.x'
           check-latest: true
           cache: false
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          check-latest: true
-      - name: Prepare
+
+      - name: Install Build Dependencies
         run: |
-          sudo apt update
-          sudo apt install libtool-bin gperf python3-docutils autopoint gettext ccache
-      - name: Build
+          sudo apt-get update
+          sudo apt-get install -y \
+            bison flex gperf help2man libtool-bin texinfo python3-docutils autopoint gettext ccache \
+            autoconf automake liblzma-dev libltdl-dev liblzo2-dev
+          echo "BUILD_DATE=$(TZ='Asia/Shanghai' date +%Y%m%d)" >> $GITHUB_ENV
+
+      - name: Build Firmware
         run: |
           make ${{ matrix.target }} TOOLCHAIN=${{ matrix.toolchain }}
-          if [ "${{ matrix.target }}" = "K2P-NANO" ]; then
-            image=$(ls trunk/images/*.trx)
-            mv $image $(echo $image | sed 's/K2P/K2P-NANO/')
-          fi
-      - uses: actions/upload-artifact@v3
+
+      - uses: actions/upload-artifact@main
         with:
-          name: ${{ matrix.toolchain }}
+          name: ${{ matrix.target }}-${{ matrix.toolchain }}-${{ env.BUILD_DATE }}
           path: trunk/images/*.trx
-  publish:
-    needs: [build]
-    runs-on: ubuntu-22.04
-    if: ${{ github.ref == 'refs/heads/main' }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
-      - name: Set Tag Name
-        run: echo "TAG_ANME=$(date +%Y%m%d)" >> $GITHUB_ENV
-      - uses: rickstaa/action-create-tag@v1
-        with:
-          tag: ${{ env.TAG_ANME }}
-          force_push_tag: true
-      - uses: ncipollo/release-action@v1
+
+      - uses: ncipollo/release-action@main
         with:
           commit: ${{ github.sha }}
-          tag: ${{ env.TAG_ANME }}
-          artifacts: "mipsel-linux-musl/*.trx"
+          tag: ${{ env.BUILD_DATE }}
+          artifacts: trunk/images/*.trx
           allowUpdates: true
+          omitBodyDuringUpdate: true
+
+      - uses: Mattraks/delete-workflow-runs@main
+        with:
+          retain_days: 0
+          keep_minimum_runs: 1

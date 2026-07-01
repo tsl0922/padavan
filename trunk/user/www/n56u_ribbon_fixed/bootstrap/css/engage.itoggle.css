@@ -19,7 +19,7 @@ div.main_itoggle label.ilabel{
 div.main_itoggle label.itoggle,
 div.main_itoggle label.itoggle span{
     display: block;
-    width: 93px;
+    width: 59px;
     height: 27px;
     /*margin-bottom: 20px;*/
     background: url(../img/itoggle.png) left bottom no-repeat;

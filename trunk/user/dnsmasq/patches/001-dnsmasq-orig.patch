@@ -1,0 +1,135 @@
+diff -urN dnsmasq-2.90-orig/Makefile dnsmasq-2.90/Makefile
+--- dnsmasq-2.90-orig/Makefile	2024-02-13 15:49:15.000000000 +0200
++++ dnsmasq-2.90/Makefile	2024-02-14 20:57:22.011207847 +0200
+@@ -18,14 +18,14 @@
+ 
+ # Variables you may well want to override.
+ 
+-PREFIX        = /usr/local
++PREFIX        = /usr
+ BINDIR        = $(PREFIX)/sbin
+ MANDIR        = $(PREFIX)/share/man
+ LOCALEDIR     = $(PREFIX)/share/locale
+ BUILDDIR      = $(SRC)
+ DESTDIR       = 
+-CFLAGS        = -Wall -W -O2
+-LDFLAGS       = 
++CFLAGS        = -Wall -W -O2 -ffunction-sections -fdata-sections
++LDFLAGS       = -Wl,--gc-sections
+ COPTS         = 
+ RPM_OPT_FLAGS = 
+ LIBS          = 
+diff -urN dnsmasq-2.90-orig/src/config.h dnsmasq-2.90/src/config.h
+--- dnsmasq-2.90-orig/src/config.h	2024-02-13 15:49:15.000000000 +0200
++++ dnsmasq-2.90/src/config.h	2024-02-14 20:57:22.031206933 +0200
+@@ -49,7 +49,7 @@
+ #define DEFLEASE 3600 /* default DHCPv4 lease time, one hour */
+ #define DEFLEASE6 (3600*24) /* default lease time for DHCPv6. One day. */
+ #define CHUSER "nobody"
+-#define CHGRP "dip"
++#define CHGRP "nogroup"
+ #define TFTP_MAX_CONNECTIONS 50 /* max simultaneous connections */
+ #define LOG_MAX 5 /* log-queue length */
+ #define RANDFILE "/dev/urandom"
+@@ -188,6 +188,8 @@
+ #define HAVE_LOOP
+ #define HAVE_DUMPFILE
+ 
++#define LEASEFILE "/tmp/dnsmasq.leases"
++
+ /* Build options which require external libraries.
+    
+    Defining HAVE_<opt>_STATIC as _well_ as HAVE_<opt> will link the library statically.
+@@ -267,6 +269,8 @@
+ #  ifndef IPV6_V6ONLY
+ #    define IPV6_V6ONLY 26
+ #  endif
++#elif !defined(NO_IPV6)
++#  define NO_IPV6
+ #endif
+ 
+ /* This is for glibc 2.x */
+diff -urN dnsmasq-2.90-orig/src/lease.c dnsmasq-2.90/src/lease.c
+--- dnsmasq-2.90-orig/src/lease.c	2024-02-13 15:49:15.000000000 +0200
++++ dnsmasq-2.90/src/lease.c	2024-02-14 20:57:22.011207847 +0200
+@@ -976,8 +976,11 @@
+   struct dhcp_lease *lease_tmp;
+   char *new_name = NULL, *new_fqdn = NULL;
+ 
++#if 0
++/* disable warning, noisy */
+   if (config_domain && (!domain || !hostname_isequal(domain, config_domain)))
+     my_syslog(MS_DHCP | LOG_WARNING, _("Ignoring domain %s for DHCP host name %s"), config_domain, name);
++#endif
+   
+   if (lease->hostname && name && hostname_isequal(lease->hostname, name))
+     {
+diff -urN dnsmasq-2.90-orig/src/network.c dnsmasq-2.90/src/network.c
+--- dnsmasq-2.90-orig/src/network.c	2024-02-13 15:49:15.000000000 +0200
++++ dnsmasq-2.90/src/network.c	2024-02-14 20:57:22.011207847 +0200
+@@ -1633,7 +1633,10 @@
+ 	  break;
+       if (iface)
+ 	{
++#if 0
++/* disable warning, noisy */
+ 	  my_syslog(LOG_WARNING, _("ignoring nameserver %s - local interface"), daemon->namebuff);
++#endif
+ 	  serv->flags |= SERV_MARK;
+ 	  continue;
+ 	}
+diff -urN dnsmasq-2.90-orig/src/rfc2131.c dnsmasq-2.90/src/rfc2131.c
+--- dnsmasq-2.90-orig/src/rfc2131.c	2024-02-13 15:49:15.000000000 +0200
++++ dnsmasq-2.90/src/rfc2131.c	2024-02-14 20:57:22.011207847 +0200
+@@ -1699,7 +1699,7 @@
+ static void log_packet(char *type, void *addr, unsigned char *ext_mac, 
+ 		       int mac_len, char *interface, char *string, char *err, u32 xid)
+ {
+-  if (!err && !option_bool(OPT_LOG_OPTS) && option_bool(OPT_QUIET_DHCP))
++  if (/*!err && */!option_bool(OPT_LOG_OPTS) && option_bool(OPT_QUIET_DHCP))
+     return;
+   
+   daemon->addrbuff[0] = 0;
+diff -urN dnsmasq-2.90-orig/src/rfc3315.c dnsmasq-2.90/src/rfc3315.c
+--- dnsmasq-2.90-orig/src/rfc3315.c	2024-02-13 15:49:15.000000000 +0200
++++ dnsmasq-2.90/src/rfc3315.c	2024-02-14 20:57:22.015207665 +0200
+@@ -178,8 +178,11 @@
+ 	  
+       if (!state->context)
+ 	{
++#if 0
++/* disable DHCPv6 noaddr messages, noisy */
+ 	  my_syslog(MS_DHCP | LOG_WARNING, 
+ 		    _("no address range available for DHCPv6 request via %s"), state->iface_name);
++#endif
+ 	  return 0;
+ 	}
+ 
+@@ -815,7 +818,7 @@
+ 	    for (c = state->context; c; c = c->current)
+ 	      if (!(c->flags & CONTEXT_RA_STATELESS))
+ 		{
+-		  log6_packet(state, state->lease_allocate ? "DHCPREPLY" : "DHCPADVERTISE", NULL, _("no addresses available"));
++		  log6_quiet(state, state->lease_allocate ? "DHCPREPLY" : "DHCPADVERTISE", NULL, _("no addresses available"));
+ 		  break;
+ 		}
+ 	  }
+@@ -930,7 +933,7 @@
+ 	    put_opt6_short(DHCP6NOADDRS);
+ 	    put_opt6_string(_("no addresses available"));
+ 	    end_opt6(o1);
+-	    log6_packet(state, "DHCPREPLY", NULL, _("no addresses available"));
++	    log6_quiet(state, "DHCPREPLY", NULL, _("no addresses available"));
+ 	  }
+ 
+ 	tagif = add_options(state, 0);
+@@ -1043,9 +1046,6 @@
+ 		    message = _("address invalid");
+ 		  } 
+ 
+-		if (message && (message != state->hostname))
+-		  log6_packet(state, "DHCPREPLY", &req_addr, message);	
+-		else
+ 		  log6_quiet(state, "DHCPREPLY", &req_addr, message);
+ 	
+ 		o1 =  new_opt6(OPTION6_IAADDR);

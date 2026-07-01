@@ -1,6 +1,6 @@
 THISDIR = $(shell pwd)
 
-SRC_VER = v4.29-9680
+SRC_VER = v4.38-9760
 SRC_BRANCH = rtm
 
 SRC_NAME = softether-src-$(SRC_VER)-$(SRC_BRANCH)

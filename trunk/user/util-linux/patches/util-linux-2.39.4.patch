@@ -1,0 +1,159 @@
+diff -ur util-linux-2.39.4-ref/libblkid/src/partitions/dos.c util-linux-2.39.4/libblkid/src/partitions/dos.c
+--- util-linux-2.39.4-ref/libblkid/src/partitions/dos.c	2024-05-29 12:25:26.166835866 +0000
++++ util-linux-2.39.4/libblkid/src/partitions/dos.c	2024-05-29 12:34:27.029687352 +0000
+@@ -28,10 +28,7 @@
+ } dos_nested[] = {
+ 	{ MBR_FREEBSD_PARTITION, &bsd_pt_idinfo },
+ 	{ MBR_NETBSD_PARTITION, &bsd_pt_idinfo },
+-	{ MBR_OPENBSD_PARTITION, &bsd_pt_idinfo },
+-	{ MBR_UNIXWARE_PARTITION, &unixware_pt_idinfo },
+-	{ MBR_SOLARIS_X86_PARTITION, &solaris_x86_pt_idinfo },
+-	{ MBR_MINIX_PARTITION, &minix_pt_idinfo }
++	{ MBR_OPENBSD_PARTITION, &bsd_pt_idinfo }
+ };
+ 
+ static inline int is_extended(struct dos_partition *p)
+diff -ur util-linux-2.39.4-ref/libblkid/src/partitions/partitions.c util-linux-2.39.4/libblkid/src/partitions/partitions.c
+--- util-linux-2.39.4-ref/libblkid/src/partitions/partitions.c	2024-05-29 12:25:26.166835866 +0000
++++ util-linux-2.39.4/libblkid/src/partitions/partitions.c	2024-05-29 12:35:19.321187058 +0000
+@@ -123,19 +123,11 @@
+  */
+ static const struct blkid_idinfo *idinfos[] =
+ {
+-	&aix_pt_idinfo,
+-	&sgi_pt_idinfo,
+-	&sun_pt_idinfo,
+ 	&dos_pt_idinfo,
+ 	&gpt_pt_idinfo,
+ 	&pmbr_pt_idinfo,	/* always after GPT */
+ 	&mac_pt_idinfo,
+-	&ultrix_pt_idinfo,
+-	&bsd_pt_idinfo,
+-	&unixware_pt_idinfo,
+-	&solaris_x86_pt_idinfo,
+-	&minix_pt_idinfo,
+-	&atari_pt_idinfo
++	&bsd_pt_idinfo
+ };
+ 
+ /*
+diff -ur util-linux-2.39.4-ref/libblkid/src/superblocks/superblocks.c util-linux-2.39.4/libblkid/src/superblocks/superblocks.c
+--- util-linux-2.39.4-ref/libblkid/src/superblocks/superblocks.c	2024-05-29 12:25:26.162835903 +0000
++++ util-linux-2.39.4/libblkid/src/superblocks/superblocks.c	2024-05-29 12:37:31.843917937 +0000
+@@ -94,89 +94,20 @@
+  */
+ static const struct blkid_idinfo *idinfos[] =
+ {
+-	/* RAIDs */
+-	&linuxraid_idinfo,
+-	&ddfraid_idinfo,
+-	&iswraid_idinfo,
+-	&lsiraid_idinfo,
+-	&viaraid_idinfo,
+-	&silraid_idinfo,
+-	&nvraid_idinfo,
+-	&pdcraid_idinfo,
+-	&highpoint45x_idinfo,
+-	&highpoint37x_idinfo,
+-	&adraid_idinfo,
+-	&jmraid_idinfo,
+-
+-	&bcache_idinfo,
+-	&bcachefs_idinfo,
+-	&bluestore_idinfo,
+-	&drbd_idinfo,
+-	&drbdmanage_idinfo,
+-	&drbdproxy_datalog_idinfo,
+-	&lvm2_idinfo,
+-	&lvm1_idinfo,
+-	&snapcow_idinfo,
+-	&verity_hash_idinfo,
+-	&integrity_idinfo,
+-	&luks_idinfo,
+-	&vmfs_volume_idinfo,
+-	&ubi_idinfo,
+-	&vdo_idinfo,
+-	&stratis_idinfo,
+-	&bitlocker_idinfo,
+-	&cs_fvault2_idinfo,
+-
+ 	/* Filesystems */
+ 	&vfat_idinfo,
+ 	&swsuspend_idinfo,
+ 	&swap_idinfo,
+ 	&xfs_idinfo,
+-	&xfs_log_idinfo,
+-	&exfs_idinfo,
+ 	&ext4dev_idinfo,
+ 	&ext4_idinfo,
+ 	&ext3_idinfo,
+ 	&ext2_idinfo,
+ 	&jbd_idinfo,
+-	&reiser_idinfo,
+-	&reiser4_idinfo,
+-	&jfs_idinfo,
+-	&udf_idinfo,
+-	&iso9660_idinfo,
+-	&zfs_idinfo,
+ 	&hfsplus_idinfo,
+ 	&hfs_idinfo,
+-	&ufs_idinfo,
+-	&hpfs_idinfo,
+-	&sysv_idinfo,
+-        &xenix_idinfo,
+ 	&ntfs_idinfo,
+-	&refs_idinfo,
+-	&cramfs_idinfo,
+-	&romfs_idinfo,
+-	&minix_idinfo,
+-	&gfs_idinfo,
+-	&gfs2_idinfo,
+-	&ocfs_idinfo,
+-	&ocfs2_idinfo,
+-	&oracleasm_idinfo,
+-	&vxfs_idinfo,
+-	&squashfs_idinfo,
+-	&squashfs3_idinfo,
+-	&netware_idinfo,
+-	&btrfs_idinfo,
+-	&ubifs_idinfo,
+-	&bfs_idinfo,
+-	&vmfs_fs_idinfo,
+-	&befs_idinfo,
+-	&nilfs2_idinfo,
+ 	&exfat_idinfo,
+-	&f2fs_idinfo,
+-	&mpool_idinfo,
+-	&apfs_idinfo,
+-	&zonefs_idinfo,
+-	&erofs_idinfo,
+ };
+ 
+ /*
+diff -ur util-linux-2.39.4-ref/libblkid/src/topology/topology.c util-linux-2.39.4/libblkid/src/topology/topology.c
+--- util-linux-2.39.4-ref/libblkid/src/topology/topology.c	2024-05-29 12:25:26.162835903 +0000
++++ util-linux-2.39.4/libblkid/src/topology/topology.c	2024-05-29 12:38:03.603613558 +0000
+@@ -79,11 +79,7 @@
+ {
+ #ifdef __linux__
+ 	&sysfs_tp_idinfo,
+-	&ioctl_tp_idinfo,
+-	&md_tp_idinfo,
+-	&dm_tp_idinfo,
+-	&lvm_tp_idinfo,
+-	&evms_tp_idinfo
++	&ioctl_tp_idinfo
+ #endif
+ };
+ 
+diff -ur util-linux-2.39.4-ref/sys-utils/setarch.c util-linux-2.39.4/sys-utils/setarch.c
+--- util-linux-2.39.4-ref/sys-utils/setarch.c	2024-05-29 12:25:26.302834580 +0000
++++ util-linux-2.39.4/sys-utils/setarch.c	2024-05-29 12:33:50.074040732 +0000
+@@ -103,7 +103,6 @@
+     X(PER_SUNOS) \
+     X(PER_XENIX) \
+     X(PER_LINUX32) \
+-    X(PER_LINUX32_3GB) \
+     X(PER_IRIX32) \
+     X(PER_IRIXN32) \
+     X(PER_IRIX64) \

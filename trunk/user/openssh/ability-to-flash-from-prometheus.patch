@@ -1,0 +1,10 @@
+diff -urN openssh-9.7p1-orig/ssh_config openssh-9.7p1/ssh_config
+--- openssh-9.7p1-orig/ssh_config	2023-10-04 07:34:10.000000000 +0300
++++ openssh-9.7p1/ssh_config	2023-12-01 08:58:48.247673882 +0200
+@@ -45,2 +45,6 @@
+ #   RekeyLimit 1G 1h
+ #   UserKnownHostsFile ~/.ssh/known_hosts.d/%k
++   KexAlgorithms diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1,diffie-hellman-group1-sha1
++   Ciphers aes128-cbc,3des-cbc,aes192-cbc,aes256-cbc
++   HostKeyAlgorithms ssh-rsa,ssh-dss
++   PubkeyAcceptedKeyTypes ssh-rsa,ssh-dss

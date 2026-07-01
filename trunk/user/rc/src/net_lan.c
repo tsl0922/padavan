@@ -372,6 +372,7 @@ switch_config_base(void)
 
 	phy_jumbo_frames(nvram_get_int("ether_jumbo"));
 	phy_green_ethernet(nvram_get_int("ether_green"));
+	phy_eee_lpi(nvram_get_int("ether_eee"));
 }
 
 void

@@ -5,6 +5,7 @@ rsa_key="$dir_storage/rsa_host_key"
 dss_key="$dir_storage/dss_host_key"
 ecdsa_key="$dir_storage/ecdsa_host_key"
 ed25519_key="$dir_storage/ed25519_host_key"
+extra_args="$dir_storage/extra_args"
 
 func_createkeys()
 {
@@ -24,9 +25,15 @@ func_createkeys()
 	chmod 600 "$ed25519_key"
 }
 
+func_get_extra_args()
+{
+    [ -f $extra_args ] || echo "-p 22" > $extra_args
+    cat $extra_args
+}
+
 func_start()
 {
-	key_s=""
+	args=$(func_get_extra_args)
 
 	[ ! -d "$dir_storage" ] && mkdir -p -m 755 $dir_storage
 
@@ -39,21 +46,21 @@ func_start()
 		func_createkeys
 	fi
 
-	if [ ! -f "$ecdsa_key" ] ; then
+	if [ ! -f "$ecdsa_key" ]; then
 		/usr/bin/dropbearkey -t ecdsa -f "$ecdsa_key"
 		chmod 600 "$ecdsa_key"
 	fi
 
-	if [ ! -f "$ed25519_key" ] ; then
+	if [ ! -f "$ed25519_key" ]; then
 		/usr/bin/dropbearkey -t ed25519 -f "$ed25519_key"
 		chmod 600 "$ed25519_key"
 	fi
 
-	if [ -n "$1" ] ; then
-		key_s="-s"
+	if [ -n "$1" ]; then
+		args="$1 $args"
 	fi
 
-	/usr/sbin/dropbear $key_s
+	echo $args | xargs /usr/sbin/dropbear
 }
 
 func_stop()

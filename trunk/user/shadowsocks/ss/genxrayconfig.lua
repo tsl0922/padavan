@@ -6,9 +6,9 @@ local socks_port = arg[4] or "0"
 local ssrindext = io.popen("dbus get ssconf_basic_json_" .. server_section)
 local servertmp = ssrindext:read("*all")
 local server = cjson.decode(servertmp)
-local v2ray = {
+local xray = {
 	log = {
-		-- error = "/var/ssrplus.log",
+		-- error = "/tmp/ssrplus.log",
 		loglevel = "warning"
 	},
 	-- 传入连接
@@ -46,7 +46,7 @@ local v2ray = {
 					users = {
 						{
 							id = server.vmess_id,
-							flow = (server.flow == '1') and "xtls-rprx-direct" or ((server.flow == '2') and "xtls-rprx-splice" or ""),
+							flow = (server.flow == '1') and "xtls-rprx-vision" or ((server.flow == '2') and "xtls-rprx-vision-udp443" or ""),
 							level = tonumber(server.alter_id),
 							encryption = server.security
 						}
@@ -57,14 +57,14 @@ local v2ray = {
 	-- 底层传输配置
 		streamSettings = {
 			network = server.transport,
-			security = (server.tls == '1') and "tls" or ((server.tls == '2') and "xtls" or "none"),
+			security = (server.tls == '1') and "tls" or ((server.tls == '2') and "reality" or "none"),
 			tlsSettings = (server.tls == '1') and 
 			{
 				allowInsecure = (server.insecure ~= "0") and true or false,
 				serverName=server.tls_host
 			} or nil,
 
-			xtlsSettings = (server.tls == '2') and
+			realitySettings = (server.tls == '2') and
 			{
 				allowInsecure = (server.insecure ~= "0") and true or false,
 				serverName = server.tls_host
@@ -111,7 +111,19 @@ local v2ray = {
 				header = {
 					type = server.quic_guise
 				}
-			} or nil
+			} or nil,
+			httpupgradeSettings = (server.transport == "httpupgrade") and (server.httpupgrade_path ~= nil or server.httpupgrade_host ~= nil) and {
+				path = server.httpupgrade_path,
+				headers = (server.httpupgrade_host ~= nil) and {
+					Host = server.httpupgrade_host
+				} or nil,
+			} or nil,
+			splithttpSettings = (server.transport == "splithttp") and (server.splithttp_path ~= nil or server.splithttp_host ~= nil) and {
+				path = server.splithttp_path,
+				headers = (server.splithttp_host ~= nil) and {
+					Host = server.splithttp_host
+				} or nil,
+			} or nil,
 		},
 		mux = {
 			enabled = (server.mux == "1") and true or false,
@@ -129,5 +141,4 @@ local v2ray = {
 	}
 }
 
-print(cjson.encode(v2ray))
-
+print(cjson.encode(xray))

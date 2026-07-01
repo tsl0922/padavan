@@ -153,7 +153,7 @@ typedef struct usb_ctrlrequest devctrlrequest;
 #define AP_RTMP_FIRMWARE_FILE_NAME "/etc_ro/Wireless/iNIC/RT2860AP.bin"
 #else
 
-#if defined(CONFIG_RT_FIRST_IF_MT7603E) || defined(CONFIG_RT_SECOND_IF_MT7603E)
+#if defined(CONFIG_FIRST_IF_MT7603E) || defined(CONFIG_SECOND_IF_MT7603E)
 //for SDK's PATH
 #define AP_PROFILE_PATH			"/etc/Wireless/RT2860/RT2860AP.dat"
 #else

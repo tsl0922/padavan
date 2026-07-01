@@ -87,6 +87,12 @@ dl_handle_link_wan(void)
 	int front_led_x;
 
 	if (dl_status_wan_old != dl_status_wan) {
+		const char *script_postw = SCRIPT_POST_WAN;
+		const char *wan_ifname = get_man_ifname(0);
+		const char *wan_addr = get_wan_unit_value(0, "ipaddr");
+		if (!is_valid_ipv4(wan_addr))
+			wan_addr = "0.0.0.0";
+
 		dl_status_wan_old = dl_status_wan;
 		
 		nvram_set_int_temp("link_wan", (dl_status_wan) ? 1 : 0);
@@ -127,8 +133,11 @@ dl_handle_link_wan(void)
 			}
 		}
 		
-		if (dl_counter_total > 1)
+		if (dl_counter_total > 1) {
 			logmessage("detect_link", "WAN port link %s!", (dl_status_wan) ? "restored" : "down detected");
+			if (check_if_file_exist(script_postw))
+				doSystem("%s %s %s %s", script_postw, (dl_status_wan) ? "up" : "down", wan_ifname, wan_addr);
+		}
 	}
 
 	if ((dl_counter_dhcpc_renew > 0) && (dl_counter_total >= dl_counter_dhcpc_renew)) {

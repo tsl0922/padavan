@@ -26,7 +26,7 @@ end
 local function generate_gfwlist()
 	local domains = {}
 	local out = io.open("/tmp/dnsmasq.dom/gfwlist_list.conf", "w")
-	for line in io.lines("/etc/storage/gfwlist/gfwlist_listnew.conf") do
+	for line in io.lines("/etc/storage/gfwlist/gfwlist_list.conf") do
 		if not (string.find(line, comment_pattern) or string.find(line, ip_pattern) or check_excluded_domain(line)) then
 			local start, finish, match = string.find(line, domain_pattern)
 			if (start) then
@@ -42,4 +42,3 @@ local function generate_gfwlist()
 end
 
 generate_gfwlist()
-	
